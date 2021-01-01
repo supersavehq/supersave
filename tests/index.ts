@@ -2,6 +2,7 @@ import assert from 'assert';
 import { SuperSafe, EntityDefinition, Repository, BaseEntity } from '../build';
 
 function check(message: string) {
+  //eslint-disable-next-line no-console
   console.log('✔️', message);
 }
 
@@ -51,7 +52,7 @@ const main = async () => {
   const earthMoon: Moon = await moonRepository.create({ name: 'Moon', planet: earth });
   assert.strictEqual('Moon', earthMoon.name);
   assert.strictEqual('Earth', earthMoon.planet.name);
-  console.log('✔️ Create entity with relation.');
+  check('Create entity with relation.');
 };
 
 main();

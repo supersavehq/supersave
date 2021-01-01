@@ -1,7 +1,7 @@
-import database from "./database";
-import EntityManager from "./database/EntityManager";
-import Repository from "./database/EntityManager/Repository";
-import { EntityDefinition } from "./database/types";
+import database from './database';
+import EntityManager from './database/EntityManager';
+import Repository from './database/EntityManager/Repository';
+import { EntityDefinition } from './database/types';
 
 class SuperSafe {
   private constructor(private em: EntityManager) {
