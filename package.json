@@ -1,0 +1,52 @@
+{
+  "name": "supersafe",
+  "version": "0.0.1",
+  "description": "A package to create a simple datastore with generic API for hobby projects.",
+  "main": "build/index.js",
+  "scripts": {
+    "watch": "tsc -w",
+    "build": "tsc",
+    "test": "cross-env DEBUG=supersafe:* ts-node tests/index.ts",
+    "test-dev": "nodemon --watch build --watch tests --exec npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daangemist/supersafe.git"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "keywords": [
+    "sqlite",
+    "database",
+    "store",
+    "api",
+    "headless",
+    "mysql",
+    "supersafe",
+    "super"
+  ],
+  "author": "daangemist",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/daangemist/supersafe/issues"
+  },
+  "homepage": "https://github.com/daangemist/supersafe#readme",
+  "devDependencies": {
+    "@tsconfig/node14": "^1.0.0",
+    "@types/debug": "^4.1.5",
+    "@types/node": "^14.14.17",
+    "@types/slug": "^0.9.1",
+    "cross-env": "^7.0.3",
+    "debug": "^4.3.1",
+    "nodemon": "^2.0.6",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.1.3"
+  },
+  "dependencies": {
+    "short-uuid": "^4.1.0",
+    "slug": "^4.0.2",
+    "sqlite": "^4.0.19",
+    "sqlite3": "^5.0.0"
+  }
+}
