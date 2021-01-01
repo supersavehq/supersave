@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { SuperSafe, EntityDefinition, Repository, BaseEntity } from '../build';
+import { SuperSave, EntityDefinition, Repository, BaseEntity } from '../build';
 
 function check(message: string) {
   //eslint-disable-next-line no-console
@@ -16,7 +16,7 @@ interface Moon extends BaseEntity {
 }
 
 const main = async () => {
-  const superSafe = await SuperSafe.create(':memory:');
+  const superSave = await SuperSave.create(':memory:');
 
   const planetEntity: EntityDefinition = {
     name: 'planet',
@@ -39,8 +39,8 @@ const main = async () => {
   }
 
 
-  const planetRepository: Repository<Planet> = await superSafe.addEntity<Planet>(planetEntity);
-  const moonRepository: Repository<Moon> = await superSafe.addEntity<Moon>(moonEntity);
+  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+  const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(moonEntity);
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
   const mars: Planet = await planetRepository.create({ name: 'Mars' });

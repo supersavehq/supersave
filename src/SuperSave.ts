@@ -3,15 +3,15 @@ import EntityManager from './database/EntityManager';
 import Repository from './database/EntityManager/Repository';
 import { EntityDefinition } from './database/types';
 
-class SuperSafe {
+class SuperSave {
   private constructor(private em: EntityManager) {
 
   }
 
-  public static async create(file: string): Promise<SuperSafe> {
+  public static async create(file: string): Promise<SuperSave> {
     const em = await database(file);
 
-    return new SuperSafe(em);
+    return new SuperSave(em);
   }
 
   public addEntity<T>(entity: EntityDefinition): Promise<Repository<T>> {
@@ -23,4 +23,4 @@ class SuperSafe {
   }
 }
 
-export default SuperSafe;
+export default SuperSave;

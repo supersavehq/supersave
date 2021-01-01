@@ -1,5 +1,5 @@
 {
-  "name": "supersafe",
+  "name": "supersave",
   "version": "0.0.1",
   "description": "A package to create a simple datastore with generic API for hobby projects.",
   "main": "build/index.js",
@@ -8,12 +8,12 @@
     "build": "tsc",
     "lint": "eslint ./src",
     "lint-fix": "eslint --fix ./src",
-    "test": "cross-env DEBUG=supersafe:* ts-node tests/index.ts",
-    "test-dev": "nodemon --watch build --watch tests --exec npm run test"
+    "test": "cross-env DEBUG=supersave:* ts-node tests/index.ts",
+    "test-watch": "nodemon --watch build --watch tests --exec npm run test"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/daangemist/supersafe.git"
+    "url": "git+https://github.com/daangemist/supersave.git"
   },
   "husky": {
     "hooks": {
@@ -31,15 +31,15 @@
     "api",
     "headless",
     "mysql",
-    "supersafe",
+    "supersave",
     "super"
   ],
   "author": "daangemist",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/daangemist/supersafe/issues"
+    "url": "https://github.com/daangemist/supersave/issues"
   },
-  "homepage": "https://github.com/daangemist/supersafe#readme",
+  "homepage": "https://github.com/daangemist/supersave#readme",
   "devDependencies": {
     "@tsconfig/node14": "^1.0.0",
     "@types/debug": "^4.1.5",
