@@ -12,8 +12,16 @@ class EntityManager {
     const fullEntityName = this.getFullEntityName(entity.name, entity.namespace);
     const tableName = slug(fullEntityName);
     await this.createTable(tableName);
-    this.repositories.set(fullEntityName, new Repository(entity, tableName, this, this.connection));
-    return this.getRepository(fullEntityName);
+    this.repositories.set(
+      fullEntityName,
+      new Repository(
+        entity,
+        tableName,
+        (name: string, namespace?: string) => this.getRepository(name, namespace),
+        this.connection
+      )
+    );
+    return this.getRepository(entity.name, entity.namespace);
   }
 
   private getFullEntityName(name: string, namespace?: string): string {

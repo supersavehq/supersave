@@ -1,6 +1,5 @@
 import { Database } from 'sqlite';
 import shortUuid from 'short-uuid';
-import EntityManager from './index';
 import {
   BaseEntity, EntityDefinition, EntityRow, Relation,
 } from '../types';
@@ -9,7 +8,7 @@ class Repository<T extends BaseEntity> {
   constructor(
     readonly definition: EntityDefinition,
     readonly tableName: string,
-    readonly em: EntityManager,
+    readonly getRepository: (name: string, namespace?: string) => Repository<any>,
     readonly connection: Database,
   ) { }
 
@@ -118,7 +117,7 @@ class Repository<T extends BaseEntity> {
 
     const promises: Promise<any>[] = [];
     this.definition.relations.forEach(async (relation: Relation) => {
-      const repository = this.em.getRepository(relation.entity, relation.namespace);
+      const repository = this.getRepository(relation.entity, relation.namespace);
 
       if (relation.multiple !== true) {
         const id = clone[relation.field];
@@ -143,7 +142,7 @@ class Repository<T extends BaseEntity> {
   }
 
   private async mapRelationToMultiple(relation: Relation, arr: string[]): Promise<BaseEntity[]> {
-    const repository = this.em.getRepository(relation.entity, relation.namespace);
+    const repository = this.getRepository(relation.entity, relation.namespace);
     return repository.getByIds(arr);
   }
 
