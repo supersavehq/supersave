@@ -9,16 +9,22 @@ class EntityManager {
   constructor(readonly connection: Database) { }
 
   public async addEntity<T>(entity: EntityDefinition): Promise<Repository<T>> {
-    const tableName = slug(entity.name);
+    const fullEntityName = this.getFullEntityName(entity.name, entity.namespace);
+    const tableName = slug(fullEntityName);
     await this.createTable(tableName);
-    this.repositories.set(entity.name, new Repository(entity, tableName, this, this.connection));
-    return this.getRepository(entity.name);
+    this.repositories.set(fullEntityName, new Repository(entity, tableName, this, this.connection));
+    return this.getRepository(fullEntityName);
   }
 
-  public getRepository<T extends BaseEntity>(name: string): Repository<T> {
-    const repository = this.repositories.get(name);
+  private getFullEntityName(name: string, namespace?: string): string {
+    return typeof namespace !== 'undefined' ? `${namespace}_${name}` : name;
+  }
+
+  public getRepository<T extends BaseEntity>(name: string, namespace?: string): Repository<T> {
+    const fullEntityName = this.getFullEntityName(name, namespace);
+    const repository = this.repositories.get(fullEntityName);
     if (typeof repository === 'undefined') {
-      throw new Error(`Entity ${name} not defined. (${Array.from(this.repositories.keys()).join(', ')})`);
+      throw new Error(`Entity ${fullEntityName} not defined. Existing are: (${Array.from(this.repositories.keys()).join(', ')})`);
     }
     return repository;
   }
