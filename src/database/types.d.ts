@@ -43,4 +43,9 @@ export type QueryFilter = {
   value: QueryFilterValue,
 };
 
+export type QuerySort = {
+  field: string,
+  direction: 'asc'|'desc',
+}
+
 export type QueryFilterValue = string|number|any;

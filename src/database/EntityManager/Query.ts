@@ -1,7 +1,11 @@
-import { QueryFilter, QueryFilterValue, QueryOperatorEnum } from '../types';
+import {
+  QueryFilter, QueryFilterValue, QueryOperatorEnum, QuerySort,
+} from '../types';
 
 class Query {
   private where: QueryFilter[] = [];
+
+  private sortValues: QuerySort[] = [];
 
   private limitValue?: number;
 
@@ -36,6 +40,15 @@ class Query {
 
   public getOffset(): number|undefined {
     return this.offsetValue;
+  }
+
+  public sort(field: string, direction: 'asc'|'desc' = 'asc'): Query {
+    this.sortValues.push({ field, direction });
+    return this;
+  }
+
+  public getSort(): QuerySort[] {
+    return this.sortValues;
   }
 }
 

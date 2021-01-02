@@ -2,7 +2,7 @@ import Debug, { Debugger } from 'debug';
 import { Database } from 'sqlite';
 import shortUuid from 'short-uuid';
 import {
-  BaseEntity, EntityDefinition, EntityRow, QueryFilter, Relation,
+  BaseEntity, EntityDefinition, EntityRow, QueryFilter, QuerySort, Relation,
 } from '../types';
 import Query from './Query';
 
@@ -73,8 +73,11 @@ class Repository<T extends BaseEntity> {
     });
 
     let sqlQuery = `SELECT * FROM ${this.tableName}
-      WHERE ${where.join(' AND ')}`;
-
+      ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
+    `;
+    if (query.getSort().length > 0) {
+      sqlQuery = `${sqlQuery} ORDER BY ${query.getSort().map((sort: QuerySort) => `${sort.field} ${sort.direction}`).join(',')}`;
+    }
     if (query.getLimit()) {
       sqlQuery = `${sqlQuery} LIMIT ${typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()}`;
     }
