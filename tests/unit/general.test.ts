@@ -1,4 +1,6 @@
-import { SuperSave, EntityDefinition, Repository, BaseEntity } from '../../build';
+import { SuperSave, Repository } from '../../build';
+import { moonEntity, planetEntity } from './entities';
+import { Moon, Planet } from './types';
 
 let superSave: SuperSave;
 
@@ -6,19 +8,7 @@ beforeAll(async () => {
   superSave = await SuperSave.create(':memory:');
 });
 
-interface Planet extends BaseEntity {
-  name: string,
-}
-
 test('simple entity creation', async () => {
-
-  const planetEntity: EntityDefinition = {
-    name: 'planet',
-    template: {
-      name: '',
-    },
-    relations: [],
-  }
 
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
 
@@ -30,23 +20,6 @@ test('simple entity creation', async () => {
 });
 
 test('entity with relations', async () => {
-  interface Moon extends BaseEntity {
-    id?: string,
-    name: string,
-    planet: Planet,
-  }
-
-  const moonEntity: EntityDefinition = {
-    name: 'moon',
-    template: {
-      name: '',
-    },
-    relations: [{
-      entity: 'planet',
-      field: 'planet',
-      multiple: false,
-    }],
-  }
 
   const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(moonEntity);
   const planetRepository: Repository<Planet> = await superSave.getRepository('planet');
@@ -60,4 +33,26 @@ test('entity with relations', async () => {
 
   const retrievedMoon = await moonRepository.getById((earthMoon.id as string));
   expect(retrievedMoon).toBeDefined();
+});
+
+test('not existing relation entity throws an error', async () => {
+  const errorMoonEntity = {
+    ...moonEntity,
+    relations: [{
+      entity: 'not-existing',
+      field: 'planet',
+      multiple: false,
+    }],
+  }
+
+  const moonRepository = await superSave.addEntity<Moon>(errorMoonEntity);
+  await expect(async () => {
+    try {
+      await moonRepository.getAll();
+    } catch (error) {
+      // TODO rewrite this to work with jest and toThrow(), but was not able to
+      expect(false).toBe(true);
+      expect(error.message).toContain('not-existing')
+    }
+  });
 });

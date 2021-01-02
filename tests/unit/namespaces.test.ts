@@ -1,19 +1,9 @@
-import { SuperSave, EntityDefinition, Repository, BaseEntity } from '../../build';
+import { SuperSave, EntityDefinition, Repository } from '../../build';
+import { moonEntity, planetEntity } from './entities';
+import { Moon, Planet } from './types';
 
 test('there is a difference between with and without namespace', async () => {
   const superSave = await SuperSave.create(':memory:');
-
-  interface Planet extends BaseEntity {
-    name: string,
-  }
-
-  const planetEntity: EntityDefinition = {
-    name: 'planet',
-    template: {
-      name: '',
-    },
-    relations: [],
-  }
 
   const otherPlanetEntity: EntityDefinition = {
     ...planetEntity,
@@ -31,21 +21,13 @@ test('there is a difference between with and without namespace', async () => {
 test('there is a difference between different namespaces with same entity', async () => {
   const superSave = await SuperSave.create(':memory:');
 
-  interface Planet extends BaseEntity {
-    name: string,
-  }
-
-  const planetEntity: EntityDefinition = {
-    name: 'planet',
-    template: {
-      name: '',
-    },
+  const namespacedPlanetEntity: EntityDefinition = {
+    ...planetEntity,
     namespace: 'one',
-    relations: [],
   }
 
   const otherPlanetEntity: EntityDefinition = {
-    ...planetEntity,
+    ...namespacedPlanetEntity,
     namespace: 'other',
   }
 
@@ -60,42 +42,26 @@ test('there is a difference between different namespaces with same entity', asyn
 test('relations from different namespace', async () => {
   const superSave = await SuperSave.create(':memory:');
 
-  interface Planet extends BaseEntity {
-    name: string,
-  }
-  const planetEntity: EntityDefinition = {
-    name: 'planet',
-    template: {
-      name: '',
-    },
+  const namespacedPlanetEntity: EntityDefinition = {
+    ...planetEntity,
     namespace: 'one',
-    relations: [],
-  }
+  };
 
-  interface Moon extends BaseEntity {
-    id?: string,
-    name: string,
-    planet: Planet,
-  }
-
-  const moonEntity: EntityDefinition = {
-    name: 'moon',
+  const namespacedMoonEntity: EntityDefinition = {
+    ...moonEntity,
     namespace: 'space',
-    template: {
-      name: '',
-    },
     relations: [{
-      entity: planetEntity.name,
+      entity: namespacedPlanetEntity.name,
       namespace: 'one',
       field: 'planet',
       multiple: false,
     }],
   }
 
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(namespacedPlanetEntity);
   const earth = await planetRepository.create({ name: 'Earth' });
 
-  const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(moonEntity);
+  const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(namespacedMoonEntity);
   const earthMoon: Moon = await moonRepository.create({ name: 'Moon', planet: earth });
   expect(earthMoon.id).toBeDefined();
   expect(earthMoon.name).toEqual('Moon');

@@ -1,7 +1,14 @@
 import slug from 'slug';
 import { Database } from 'sqlite';
 import Repository from './Repository';
+import Query from './Query';
 import { BaseEntity, EntityDefinition } from '../types';
+import sync from './sync';
+
+export {
+  Repository,
+  Query,
+};
 
 class EntityManager {
   private repositories = new Map<string, Repository<any>>();
@@ -12,14 +19,24 @@ class EntityManager {
     const fullEntityName = this.getFullEntityName(entity.name, entity.namespace);
     const tableName = slug(fullEntityName);
     await this.createTable(tableName);
+
+    const repository: Repository<T> = new Repository(
+      entity,
+      tableName,
+      (name: string, namespace?: string) => this.getRepository(name, namespace),
+      this.connection,
+    );
+    await sync(
+      entity,
+      tableName,
+      this.connection,
+      repository,
+      (name: string, namespace?: string) => this.getRepository(name, namespace),
+    );
+
     this.repositories.set(
       fullEntityName,
-      new Repository(
-        entity,
-        tableName,
-        (name: string, namespace?: string) => this.getRepository(name, namespace),
-        this.connection
-      )
+      repository,
     );
     return this.getRepository(entity.name, entity.namespace);
   }
@@ -37,8 +54,8 @@ class EntityManager {
     return repository;
   }
 
-  private async createTable(tableName: string) {
-    await this.connection.exec(`CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents BLOG NOT NULL)`);
+  private async createTable(tableName: string): Promise<void> {
+    await this.connection.exec(`CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`);
   }
 }
 

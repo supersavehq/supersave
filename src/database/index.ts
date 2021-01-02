@@ -2,7 +2,7 @@ import Debug, { Debugger } from 'debug';
 import connection from './connection';
 import EntityManager from './EntityManager';
 
-const debug: Debugger = Debug('supersave:database');
+const debug: Debugger = Debug('supersave:db');
 
 export default async (file: string): Promise<EntityManager> => {
   debug('Setting up connection for', file);
