@@ -18,5 +18,5 @@ test('Existing id returns object', async() => {
     .expect('Content-Type', /json/)
     .expect(200);
 
-  expect(response.body.data).toStrictEqual(planet);
+  expect(response.body.data).toEqual(planet);
 });

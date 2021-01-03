@@ -10,17 +10,12 @@ export interface Relation {
   multiple: boolean,
 }
 
-export const enum FilterSortTypeEnum {
-  STRING = 'string',
-  NUMBER = 'number',
-}
-
 export interface EntityDefinition {
   name: string,
   template: Record<string, unknown>,
   relations: Relation[],
   namespace?: string,
-  filterSortFields?: {[key: string]: FilterSortTypeEnum}
+  filterSortFields?: {[key: string]: 'string'|'number'|'boolean'}
 }
 
 export interface BaseEntity {

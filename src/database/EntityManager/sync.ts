@@ -1,6 +1,6 @@
 import Debug, { Debugger } from 'debug';
 import { Database } from 'sqlite';
-import { EntityDefinition, FilterSortTypeEnum } from '../types';
+import { EntityDefinition } from '../types';
 import Repository from './Repository';
 
 const debug: Debugger = Debug('supersave:db:sync');
@@ -18,15 +18,16 @@ type SqlitePragmaColumn = {
 };
 
 const filterSortFieldSqliteTypeMap = {
-  [FilterSortTypeEnum.STRING]: SqliteType.TEXT,
-  [FilterSortTypeEnum.NUMBER]: SqliteType.INTEGER,
+  string: SqliteType.TEXT,
+  number: SqliteType.INTEGER,
+  boolean: SqliteType.INTEGER,
 };
 
 async function getTableColumns(
   connection: Database,
   tableName: string,
   entity: EntityDefinition,
-): Promise<Record<string, FilterSortTypeEnum>> {
+): Promise<Record<string, 'string'|'number'|'boolean'>> {
   const query = `pragma table_info('${tableName}');`;
   const columns = await connection.all<SqlitePragmaColumn[]>(query);
   if (columns === undefined) {
@@ -38,12 +39,13 @@ async function getTableColumns(
     return {};
   }
 
-  const sqliteTypeMap = {
-    [SqliteType.TEXT]: FilterSortTypeEnum.STRING,
-    [SqliteType.INTEGER]: FilterSortTypeEnum.NUMBER,
+  const sqliteTypeMap: Record<SqliteType, 'string'|'number'|'boolean'> = {
+    [SqliteType.TEXT]: 'string',
+    [SqliteType.INTEGER]: 'number',
+    [SqliteType.INTEGER]: 'number',
   };
 
-  const mappedColumns: Record<string, FilterSortTypeEnum> = {};
+  const mappedColumns: Record<string, 'string'|'number'|'boolean'> = {};
   columns.forEach((column: SqlitePragmaColumn) => {
     if (column.name === 'id' || column.name === 'contents') {
       return;
@@ -57,8 +59,8 @@ async function getTableColumns(
 }
 
 function hasTableChanged(
-  sqliteColumns: Record<string, FilterSortTypeEnum>,
-  filterSortTypeFields: Record<string, FilterSortTypeEnum>,
+  sqliteColumns: Record<string, 'string'|'number'|'boolean'>,
+  filterSortTypeFields: Record<string, 'string'|'number'|'boolean'>,
 ): boolean {
   return JSON.stringify(sqliteColumns) !== JSON.stringify(filterSortTypeFields);
 }

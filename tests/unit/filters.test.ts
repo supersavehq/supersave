@@ -1,4 +1,4 @@
-import { SuperSave, EntityDefinition, Query, FilterSortTypeEnum } from '../../build';
+import { SuperSave, EntityDefinition, Query } from '../../build';
 import { planetEntity } from '../entities';
 import { Planet } from '../types';
 
@@ -6,7 +6,9 @@ test('additional filter/sort fields can be defined', async() => {
   const filteredPlanetEntity: EntityDefinition = {
     ...planetEntity,
     filterSortFields: {
-      name: FilterSortTypeEnum.STRING,
+      name: 'string',
+      distance: 'number',
+      inhabitable: 'boolean',
     }
   }
 
@@ -20,7 +22,7 @@ test('data can be queried using a filter', async() => {
   const filteredPlanetEntity: EntityDefinition = {
     ...planetEntity,
     filterSortFields: {
-      name: FilterSortTypeEnum.STRING,
+      name: 'string',
     }
   }
 
@@ -40,7 +42,7 @@ test('results are filtered and sorted', async () => {
   const filteredPlanetEntity: EntityDefinition = {
     ...planetEntity,
     filterSortFields: {
-      name: FilterSortTypeEnum.STRING,
+      name: 'string',
     }
   }
 
@@ -71,7 +73,7 @@ test('results are filtered and sorted', async () => {
   const filteredPlanetEntity: EntityDefinition = {
     ...planetEntity,
     filterSortFields: {
-      name: FilterSortTypeEnum.STRING,
+      name: 'string',
     }
   }
 
@@ -100,7 +102,7 @@ test('results are properly limited', async () => {
   const filteredPlanetEntity: EntityDefinition = {
     ...planetEntity,
     filterSortFields: {
-      name: FilterSortTypeEnum.STRING,
+      name: 'string',
     }
   }
 

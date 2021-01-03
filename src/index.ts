@@ -2,7 +2,6 @@ import SuperSave from './SuperSave';
 import {
   EntityDefinition,
   BaseEntity,
-  FilterSortTypeEnum,
 } from './database/types';
 import { Query, Repository } from './database/EntityManager';
 import { Collection } from './collection/types';
@@ -12,7 +11,6 @@ export {
   Repository,
   Query,
   BaseEntity,
-  SuperSave,
-  FilterSortTypeEnum,
   Collection,
+  SuperSave,
 };

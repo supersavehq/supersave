@@ -1,7 +1,7 @@
 {
   "name": "supersave",
   "version": "0.0.1",
-  "description": "A package to create a simple datastore with generic API for hobby projects.",
+  "description": "A package to create a simple datastore with generic API for side projects.",
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc -w",
@@ -9,7 +9,8 @@
     "lint": "eslint ./src",
     "lint-fix": "eslint --fix ./src",
     "test": "jest",
-    "test-watch": "cross-env DEBUG=supersave:* jest --watch"
+    "test-watch": "cross-env DEBUG=supersave:* jest --watch",
+    "clean": "rimraf build"
   },
   "repository": {
     "type": "git",
@@ -57,6 +58,7 @@
     "eslint-plugin-import": "^2.22.1",
     "husky": "^4.3.6",
     "jest": "^26.6.3",
+    "rimraf": "^3.0.2",
     "supertest": "^6.0.1",
     "ts-jest": "^26.4.4",
     "ts-node": "^9.1.1",
