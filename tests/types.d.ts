@@ -1,4 +1,4 @@
-import { BaseEntity, } from '../../build';
+import { BaseEntity, } from '../build';
 
 export interface Planet extends BaseEntity {
   name: string,

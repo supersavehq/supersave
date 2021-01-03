@@ -1,11 +1,20 @@
+import express from 'express';
+import { Collection } from './collection/types';
 import database from './database';
 import EntityManager from './database/EntityManager';
 import Repository from './database/EntityManager/Repository';
 import { EntityDefinition } from './database/types';
+import CollectionManager from './collection/Manager';
+import CollectionHttp from './collection/Http';
 
 class SuperSave {
-  private constructor(private em: EntityManager) {
+  private collectionManager: CollectionManager;
 
+  private collectionHttp?: CollectionHttp;
+
+  private constructor(private em: EntityManager) {
+    this.collectionManager = new CollectionManager(
+    );
   }
 
   public static async create(file: string): Promise<SuperSave> {
@@ -18,8 +27,23 @@ class SuperSave {
     return this.em.addEntity<T>(entity);
   }
 
+  public async addCollection<T>(collection: Collection): Promise<Repository<T>> {
+    const repository: Repository<T> = await this.addEntity(collection.entity);
+    const managedCollection = { ...collection, repository };
+    this.collectionManager.addCollection(managedCollection);
+    if (typeof this.collectionHttp !== 'undefined') {
+      this.collectionHttp.register(managedCollection);
+    }
+    return repository;
+  }
+
   public getRepository<T>(entityName: string, namespace?: string): Repository<T> {
     return this.em.getRepository(entityName, namespace);
+  }
+
+  public getRouter(): express.Router {
+    this.collectionHttp = new CollectionHttp(this.collectionManager);
+    return this.collectionHttp.getRouter();
   }
 }
 

@@ -1,6 +1,6 @@
 import { SuperSave, Repository } from '../../build';
-import { moonEntity, planetEntity } from './entities';
-import { Moon, Planet } from './types';
+import { moonEntity, planetEntity } from '../entities';
+import { Moon, Planet } from '../types';
 
 let superSave: SuperSave;
 
@@ -55,4 +55,29 @@ test('not existing relation entity throws an error', async () => {
       expect(error.message).toContain('not-existing')
     }
   });
+});
+
+test('entity update', async () => {
+  const superSave = await SuperSave.create(':memory:');
+  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+
+  const earth: Planet = await planetRepository.create({ name: 'Earth' });
+  await planetRepository.update({ id: (earth.id as string), name: 'Updated Earth' });
+
+  const checkEarth = await planetRepository.getById((earth.id as string));
+  expect(checkEarth).toBeDefined();
+  expect((checkEarth as Planet).name).toBe('Updated Earth');
+});
+
+test('entity delete', async () => {
+  const superSave = await SuperSave.create(':memory:');
+  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+
+  const earth: Planet = await planetRepository.create({ name: 'Earth' });
+  await planetRepository.create({ name: 'Mars' });
+  await planetRepository.deleteUsingId((earth.id as string));
+
+  const remainingEarths = await planetRepository.getAll();
+  expect(remainingEarths).toHaveLength(1);
+  expect(remainingEarths[0].name).toBe('Mars');
 });

@@ -1,6 +1,6 @@
 import { SuperSave, EntityDefinition, Query, FilterSortTypeEnum } from '../../build';
-import { planetEntity } from './entities';
-import { Planet } from './types';
+import { planetEntity } from '../entities';
+import { Planet } from '../types';
 
 test('additional filter/sort fields can be defined', async() => {
   const filteredPlanetEntity: EntityDefinition = {

@@ -1,6 +1,6 @@
 import { SuperSave, EntityDefinition, Repository } from '../../build';
-import { moonEntity, planetEntity } from './entities';
-import { Moon, Planet } from './types';
+import { moonEntity, planetEntity } from '../entities';
+import { Moon, Planet } from '../types';
 
 test('there is a difference between with and without namespace', async () => {
   const superSave = await SuperSave.create(':memory:');

@@ -5,6 +5,7 @@ import {
   FilterSortTypeEnum,
 } from './database/types';
 import { Query, Repository } from './database/EntityManager';
+import { Collection } from './collection/types';
 
 export {
   EntityDefinition,
@@ -13,4 +14,5 @@ export {
   BaseEntity,
   SuperSave,
   FilterSortTypeEnum,
+  Collection,
 };

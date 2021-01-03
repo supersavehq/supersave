@@ -131,6 +131,7 @@ class Repository<T extends BaseEntity> {
     const columns = ['contents'];
     const values: Record<string, string|number> = {
       ':contents': JSON.stringify(this.simplifyRelations(obj)),
+      ':id': obj.id || '',
     };
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
@@ -144,6 +145,7 @@ class Repository<T extends BaseEntity> {
       ${columns.map((column: string) => `${column} = :${column}`)}
       WHERE id = :id
     `;
+    debug('Generated update query.', query);
     await this.connection.run(
       query,
       values,

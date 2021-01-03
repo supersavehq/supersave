@@ -1,4 +1,4 @@
-import { EntityDefinition } from '../../build';
+import { EntityDefinition, Collection } from '../build';
 
 export const planetEntity: EntityDefinition = {
   name: 'planet',
@@ -7,6 +7,11 @@ export const planetEntity: EntityDefinition = {
   },
   relations: [],
 };
+
+export const planetCollection: Collection = {
+  entity: planetEntity,
+  name: 'planet',
+}
 
 export const moonEntity: EntityDefinition = {
   name: 'moon',
@@ -19,3 +24,8 @@ export const moonEntity: EntityDefinition = {
     multiple: false,
   }],
 };
+
+export const moonCollection: Collection = {
+  entity: moonEntity,
+  name: 'moon',
+}
