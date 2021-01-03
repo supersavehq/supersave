@@ -69,7 +69,11 @@ class Repository<T extends BaseEntity> {
 
     query.getWhere().forEach((queryFilter: QueryFilter) => {
       where.push(`${queryFilter.field} ${queryFilter.operator} :${queryFilter.field}`);
-      values[`:${queryFilter.field}`] = queryFilter.value;
+      if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
+        values[`:${queryFilter.field}`] = queryFilter.value === true ? 1 : 0;
+      } else {
+        values[`:${queryFilter.field}`] = queryFilter.value;
+      }
     });
 
     let sqlQuery = `SELECT * FROM ${this.tableName}
@@ -108,9 +112,13 @@ class Repository<T extends BaseEntity> {
       }),
     };
     if (typeof this.definition.filterSortFields !== 'undefined') {
-      Object.keys(this.definition.filterSortFields).forEach((field: string) => {
+      Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: 'string'|'number'|'boolean']) => {
         columns.push(field);
-        values[`:${field}`] = obj[field] || null;
+        if (type === 'boolean') {
+          values[`:${field}`] = obj[field] === true ? 1 : 0;
+        } else {
+          values[`:${field}`] = obj[field] || null;
+        }
       });
     }
 
@@ -135,9 +143,13 @@ class Repository<T extends BaseEntity> {
     };
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
-      Object.keys(this.definition.filterSortFields).forEach((field: string) => {
+      Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: 'string'|'number'|'boolean']) => {
         columns.push(field);
-        values[`:${field}`] = obj[field] || null;
+        if (type === 'boolean') {
+          values[`:${field}`] = obj[field] === true ? 1 : 0;
+        } else {
+          values[`:${field}`] = obj[field] || null;
+        }
       });
     }
 
