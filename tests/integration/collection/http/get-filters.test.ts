@@ -109,3 +109,32 @@ test('filter using lte()', async () => {
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(1);
 });
+
+test('filter using like()', async () => {
+  const app: express.Application = await appForFilter();
+
+  const response = await supertest(app)
+    .get('/planets')
+    .query({ 'name[~]': '*art*' })
+    .expect('Content-Type', /json/)
+    .expect(200);
+
+  expect(response.body.data).toBeDefined();
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.data).toHaveLength(1);
+  expect(response.body.data[0].name).toBe('Earth');
+});
+
+test('filter using in()', async () => {
+  const app: express.Application = await appForFilter();
+
+  const response = await supertest(app)
+    .get('/planets')
+    .query({ 'name[in]': 'Earth,Mars' })
+    .expect('Content-Type', /json/)
+    .expect(200);
+
+  expect(response.body.data).toBeDefined();
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.data).toHaveLength(2);
+});

@@ -2,7 +2,7 @@ import Debug, { Debugger } from 'debug';
 import { Database } from 'sqlite';
 import shortUuid from 'short-uuid';
 import {
-  BaseEntity, EntityDefinition, EntityRow, FilterSortField, QueryFilter, QuerySort, Relation,
+  BaseEntity, EntityDefinition, EntityRow, FilterSortField, QueryFilter, QueryOperatorEnum, QuerySort, Relation,
 } from '../types';
 import Query from './Query';
 
@@ -69,11 +69,24 @@ class Repository<T extends BaseEntity> {
     const where: string[] = [];
 
     query.getWhere().forEach((queryFilter: QueryFilter) => {
-      where.push(`${queryFilter.field} ${queryFilter.operator} :${queryFilter.field}`);
-      if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
-        values[`:${queryFilter.field}`] = queryFilter.value === true ? 1 : 0;
+      if (queryFilter.operator === QueryOperatorEnum.IN) {
+        const placeholders: string[] = [];
+        queryFilter.value.forEach((value: string, order: number) => {
+          const placeholder = `:${queryFilter.field}_${order}`;
+          placeholders.push(placeholder);
+          values[placeholder] = value; // TODO this one needs escaping
+        });
+
+        where.push(`${queryFilter.field} IN(${placeholders.join(',')})`);
       } else {
-        values[`:${queryFilter.field}`] = queryFilter.value;
+        where.push(`${queryFilter.field} ${queryFilter.operator} :${queryFilter.field}`);
+        if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
+          values[`:${queryFilter.field}`] = queryFilter.value === true ? 1 : 0;
+        } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
+          values[`:${queryFilter.field}`] = `${queryFilter.value}`.replace(/\*/g, '%');
+        } else {
+          values[`:${queryFilter.field}`] = queryFilter.value;
+        }
       }
     });
 

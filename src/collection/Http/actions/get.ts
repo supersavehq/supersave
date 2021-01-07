@@ -62,8 +62,12 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
         query.lte(filteredField, value);
         break;
       }
-      case (QueryOperatorEnum.IN): {
+      case ('in'): {
         query.in(filteredField, value.split(','));
+        break;
+      }
+      case ('~'): {
+        query.like(filteredField, value);
         break;
       }
       default:

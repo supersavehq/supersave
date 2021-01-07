@@ -37,6 +37,7 @@ export const enum QueryOperatorEnum {
   LESS_THAN = '<',
   LESS_THAN_EQUALS = '<=',
   IN = 'IN',
+  LIKE = 'LIKE',
 }
 
 export type QueryFilter = {

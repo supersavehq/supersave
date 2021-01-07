@@ -36,6 +36,10 @@ class Query {
     return this.addFilter(QueryOperatorEnum.LESS_THAN_EQUALS, field, value);
   }
 
+  public like(field: string, value: string): Query {
+    return this.addFilter(QueryOperatorEnum.LIKE, field, value);
+  }
+
   public in(field: string, value: string[]): Query {
     return this.addFilter(QueryOperatorEnum.IN, field, value);
   }
