@@ -2,7 +2,7 @@ import Debug, { Debugger } from 'debug';
 import { Database } from 'sqlite';
 import shortUuid from 'short-uuid';
 import {
-  BaseEntity, EntityDefinition, EntityRow, QueryFilter, QuerySort, Relation,
+  BaseEntity, EntityDefinition, EntityRow, FilterSortField, QueryFilter, QuerySort, Relation,
 } from '../types';
 import Query from './Query';
 
@@ -48,6 +48,7 @@ class Repository<T extends BaseEntity> {
   public async getAll(): Promise<T[]> {
     const query = `SELECT * FROM ${this.tableName}`;
     const result = await this.connection.all(query);
+
     if (result) {
       const newResults = await this.transformQueryResultRows(result);
       return newResults;
@@ -88,6 +89,7 @@ class Repository<T extends BaseEntity> {
 
     debug('Querying data using query.', sqlQuery);
     const result = await this.connection.all(sqlQuery, values);
+    debug('Found result count', result.length);
     if (result) {
       return this.transformQueryResultRows(result);
     }
@@ -112,12 +114,13 @@ class Repository<T extends BaseEntity> {
       }),
     };
     if (typeof this.definition.filterSortFields !== 'undefined') {
-      Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: 'string'|'number'|'boolean']) => {
+      // eslint-disable-next-line max-len
+      Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: FilterSortField]) => {
         columns.push(field);
         if (type === 'boolean') {
           values[`:${field}`] = obj[field] === true ? 1 : 0;
         } else {
-          values[`:${field}`] = obj[field] || null;
+          values[`:${field}`] = (typeof obj[field] !== 'undefined' && obj[field] !== null) ? obj[field] : null;
         }
       });
     }
@@ -143,7 +146,7 @@ class Repository<T extends BaseEntity> {
     };
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
-      Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: 'string'|'number'|'boolean']) => {
+      Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: FilterSortField]) => {
         columns.push(field);
         if (type === 'boolean') {
           values[`:${field}`] = obj[field] === true ? 1 : 0;

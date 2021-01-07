@@ -1,6 +1,6 @@
 import Debug, { Debugger } from 'debug';
 import { Database } from 'sqlite';
-import { EntityDefinition } from '../types';
+import { EntityDefinition, FilterSortField } from '../types';
 import Repository from './Repository';
 
 const debug: Debugger = Debug('supersave:db:sync');
@@ -27,7 +27,7 @@ async function getTableColumns(
   connection: Database,
   tableName: string,
   entity: EntityDefinition,
-): Promise<Record<string, 'string'|'number'|'boolean'>> {
+): Promise<Record<string, FilterSortField>> {
   const query = `pragma table_info('${tableName}');`;
   const columns = await connection.all<SqlitePragmaColumn[]>(query);
   if (columns === undefined) {
@@ -39,13 +39,13 @@ async function getTableColumns(
     return {};
   }
 
-  const sqliteTypeMap: Record<SqliteType, 'string'|'number'|'boolean'> = {
+  const sqliteTypeMap: Record<SqliteType, FilterSortField> = {
     [SqliteType.TEXT]: 'string',
     [SqliteType.INTEGER]: 'number',
     [SqliteType.INTEGER]: 'number',
   };
 
-  const mappedColumns: Record<string, 'string'|'number'|'boolean'> = {};
+  const mappedColumns: Record<string, FilterSortField> = {};
   columns.forEach((column: SqlitePragmaColumn) => {
     if (column.name === 'id' || column.name === 'contents') {
       return;
@@ -59,8 +59,8 @@ async function getTableColumns(
 }
 
 function hasTableChanged(
-  sqliteColumns: Record<string, 'string'|'number'|'boolean'>,
-  filterSortTypeFields: Record<string, 'string'|'number'|'boolean'>,
+  sqliteColumns: Record<string, FilterSortField>,
+  filterSortTypeFields: Record<string, FilterSortField>,
 ): boolean {
   return JSON.stringify(sqliteColumns) !== JSON.stringify(filterSortTypeFields);
 }

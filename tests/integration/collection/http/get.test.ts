@@ -1,4 +1,3 @@
-
 import supertest from 'supertest';
 import express from 'express';
 import { Planet, Moon } from '../../../types';
@@ -42,7 +41,7 @@ test('collection items are returned', async() => {
   expect(response.body.data[0].name).toBe('Earth');
 });
 
-describe('collection items are sorted when requested', async() => {
+test('collection items are sorted when requested: ascending', async () => {
   const app: express.Application = express();
   const superSave = await SuperSave.create(':memory:');
 
@@ -58,31 +57,42 @@ describe('collection items are sorted when requested', async() => {
   await repository.create({ name: 'Mars' });
   await repository.create({ name: 'Earth' });
 
-  test('ascending', async () => {
+  const response = await supertest(app)
+    .get('/planets')
+    .query({ sort: 'name' })
+    .expect('Content-Type', /json/)
+    .expect(200);
 
-    const response = await supertest(app)
-      .get('/planets')
-      .query({ sort: 'name' })
-      .expect('Content-Type', /json/)
-      .expect(200);
+  expect(response.body.data).toBeDefined();
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.data).toHaveLength(2);
+  expect(response.body.data[0].name).toBe('Earth');
+});
 
-    expect(response.body.data).toBeDefined();
-    expect(Array.isArray(response.body.data)).toBe(true);
-    expect(response.body.data).toHaveLength(2);
-    expect(response.body.data[0].name).toBe('Earth');
+test('collection items are sorted when requested: descending', async () => {
+  const app: express.Application = express();
+  const superSave = await SuperSave.create(':memory:');
+
+  const repository: Repository<Planet> = await superSave.addCollection<Planet>({
+    ...planetCollection,
+    entity: {
+      ...planetEntity,
+      filterSortFields: { name: 'string' }
+    }
   });
+  app.use('/', superSave.getRouter());
 
-  test('descending', async () => {
+  await repository.create({ name: 'Mars' });
+  await repository.create({ name: 'Earth' });
 
-    const response = await supertest(app)
-      .get('/planets')
-      .query({ sort: '-name' })
-      .expect('Content-Type', /json/)
-      .expect(200);
+  const response = await supertest(app)
+    .get('/planets')
+    .query({ sort: '-name' })
+    .expect('Content-Type', /json/)
+    .expect(200);
 
-    expect(response.body.data).toBeDefined();
-    expect(Array.isArray(response.body.data)).toBe(true);
-    expect(response.body.data).toHaveLength(2);
-    expect(response.body.data[0].name).toBe('Mars');
-  });
+  expect(response.body.data).toBeDefined();
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.data).toHaveLength(2);
+  expect(response.body.data[0].name).toBe('Mars');
 });

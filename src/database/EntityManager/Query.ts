@@ -20,6 +20,26 @@ class Query {
     return this.addFilter(QueryOperatorEnum.EQUALS, field, value);
   }
 
+  public gt(field: string, value: QueryFilterValue): Query {
+    return this.addFilter(QueryOperatorEnum.GREATER_THAN, field, value);
+  }
+
+  public gte(field: string, value: QueryFilterValue): Query {
+    return this.addFilter(QueryOperatorEnum.GREATER_THAN_EQUALS, field, value);
+  }
+
+  public lt(field: string, value: QueryFilterValue): Query {
+    return this.addFilter(QueryOperatorEnum.LESS_THAN, field, value);
+  }
+
+  public lte(field: string, value: QueryFilterValue): Query {
+    return this.addFilter(QueryOperatorEnum.LESS_THAN_EQUALS, field, value);
+  }
+
+  public in(field: string, value: string[]): Query {
+    return this.addFilter(QueryOperatorEnum.IN, field, value);
+  }
+
   public getWhere(): QueryFilter[] {
     return this.where;
   }
