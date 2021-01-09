@@ -138,3 +138,17 @@ test('filter using in()', async () => {
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(2);
 });
+
+
+test('not existing filters', async () => {
+  const app: express.Application = await appForFilter();
+
+  const response = await supertest(app)
+    .get('/planets')
+    .query({ 'foo': 'bar' })
+    .expect('Content-Type', /json/)
+    .expect(400);
+
+  expect(response.body.message).toBeDefined();
+  expect(response.body.message).toBe('Cannot filter on not defined field foo.');
+});

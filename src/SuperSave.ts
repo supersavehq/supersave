@@ -28,8 +28,19 @@ class SuperSave {
   }
 
   public async addCollection<T>(collection: Collection): Promise<Repository<T>> {
-    const repository: Repository<T> = await this.addEntity(collection.entity);
-    const managedCollection = { ...collection, repository };
+    const { filterSortFields = {} } = collection.entity;
+    filterSortFields.id = 'string';
+
+    const updatedCollection: Collection = {
+      ...collection,
+      entity: {
+        ...collection.entity,
+        filterSortFields,
+      },
+    };
+
+    const repository: Repository<T> = await this.addEntity(updatedCollection.entity);
+    const managedCollection = { ...updatedCollection, repository };
     this.collectionManager.addCollection(managedCollection);
     if (typeof this.collectionHttp !== 'undefined') {
       this.collectionHttp.register(managedCollection);

@@ -16,18 +16,26 @@ class EntityManager {
   constructor(readonly connection: Database) { }
 
   public async addEntity<T>(entity: EntityDefinition): Promise<Repository<T>> {
+    const { filterSortFields = {} } = entity;
+    filterSortFields.id = 'string';
+
+    const updatedEntity: EntityDefinition = {
+      ...entity,
+      filterSortFields,
+    };
+
     const fullEntityName = this.getFullEntityName(entity.name, entity.namespace);
     const tableName = slug(fullEntityName);
     await this.createTable(tableName);
 
     const repository: Repository<T> = new Repository(
-      entity,
+      updatedEntity,
       tableName,
       (name: string, namespace?: string) => this.getRepository(name, namespace),
       this.connection,
     );
     await sync(
-      entity,
+      updatedEntity,
       tableName,
       this.connection,
       repository,

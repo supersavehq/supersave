@@ -97,10 +97,13 @@ export default async (
       throw new Error(`Unrecognized field type ${filterSortFieldType}.`);
     }
 
-    columns.push(`${fieldName} ${filterSortFieldSqliteTypeMap[filterSortFieldType]} NULL`);
-    indexes.push(`CREATE INDEX idx_${fieldName} ON ${newTableName}(${fieldName})`);
+    if (fieldName !== 'id') {
+      columns.push(`"${fieldName}" ${filterSortFieldSqliteTypeMap[filterSortFieldType]} NULL`);
+      indexes.push(`CREATE INDEX IF NOT EXISTS idx_${fieldName} ON ${newTableName}("${fieldName}")`);
+    }
   }
 
+  await connection.run(`DROP TABLE IF EXISTS ${newTableName};`);
   const createQuery = `CREATE TABLE ${newTableName} (${columns.join(',')})`;
 
   // TODO start a transaction
@@ -121,7 +124,7 @@ export default async (
     await newRepository.create(oldAll[iter]);
   }
 
-  debug('Completed copy. Dropping table and renaming temporary table.');
+  debug(`Completed copy. Dropping table ${tableName} and renaming temporary table ${newTableName}.`);
   await connection.run(`DROP TABLE ${tableName}`);
   await connection.run(`ALTER TABLE ${newTableName} RENAME TO ${tableName}`);
 };

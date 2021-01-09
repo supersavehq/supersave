@@ -9,12 +9,16 @@ import Query from './Query';
 const debug: Debugger = Debug('supersave:db:repo');
 
 class Repository<T extends BaseEntity> {
+  private relationFields: string[];
+
   constructor(
     readonly definition: EntityDefinition,
     readonly tableName: string,
     readonly getRepository: (name: string, namespace?: string) => Repository<any>,
     readonly connection: Database,
-  ) { }
+  ) {
+    this.relationFields = definition.relations?.map((relation: Relation) => relation.field);
+  }
 
   public async getById(id: string): Promise<T | null> {
     return this.queryById(id);
@@ -30,7 +34,7 @@ class Repository<T extends BaseEntity> {
       whereValues[key] = value;
     });
 
-    const query = `SELECT * FROM ${this.tableName} WHERE id IN(${wherePlaceholders.join(',')})`;
+    const query = `SELECT id,contents FROM ${this.tableName} WHERE id IN(${wherePlaceholders.join(',')})`;
     const result = await this.connection.all(query, whereValues);
     if (result) {
       const promises = [];
@@ -46,7 +50,7 @@ class Repository<T extends BaseEntity> {
   }
 
   public async getAll(): Promise<T[]> {
-    const query = `SELECT * FROM ${this.tableName}`;
+    const query = `SELECT id,contents FROM ${this.tableName}`;
     const result = await this.connection.all(query);
 
     if (result) {
@@ -74,14 +78,14 @@ class Repository<T extends BaseEntity> {
         queryFilter.value.forEach((value: string, order: number) => {
           const placeholder = `:${queryFilter.field}_${order}`;
           placeholders.push(placeholder);
-          values[placeholder] = value; // TODO this one needs escaping
+          values[placeholder] = value;
         });
 
-        where.push(`${queryFilter.field} IN(${placeholders.join(',')})`);
+        where.push(`"${queryFilter.field}" IN(${placeholders.join(',')})`);
       } else {
-        where.push(`${queryFilter.field} ${queryFilter.operator} :${queryFilter.field}`);
+        where.push(`"${queryFilter.field}" ${queryFilter.operator} :${queryFilter.field}`);
         if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
-          values[`:${queryFilter.field}`] = queryFilter.value === true ? 1 : 0;
+          values[`:${queryFilter.field}`] = ['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0;
         } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
           values[`:${queryFilter.field}`] = `${queryFilter.value}`.replace(/\*/g, '%');
         } else {
@@ -90,18 +94,18 @@ class Repository<T extends BaseEntity> {
       }
     });
 
-    let sqlQuery = `SELECT * FROM ${this.tableName}
+    let sqlQuery = `SELECT id,contents FROM ${this.tableName}
       ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
     `;
     if (query.getSort().length > 0) {
-      sqlQuery = `${sqlQuery} ORDER BY ${query.getSort().map((sort: QuerySort) => `${sort.field} ${sort.direction}`).join(',')}`;
+      sqlQuery = `${sqlQuery} ORDER BY ${query.getSort().map((sort: QuerySort) => `"${sort.field}" ${sort.direction}`).join(',')}`;
     }
     if (query.getLimit()) {
       sqlQuery = `${sqlQuery} LIMIT ${typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()}`;
     }
 
     debug('Querying data using query.', sqlQuery);
-    const result = await this.connection.all(sqlQuery, values);
+    const result = await this.connection.all(sqlQuery, values, values);
     debug('Found result count', result.length);
     if (result) {
       return this.transformQueryResultRows(result);
@@ -116,13 +120,12 @@ class Repository<T extends BaseEntity> {
 
   public async create(obj: T): Promise<T> {
     const columns: string[] = ['id', 'contents'];
-    const uuid = shortUuid.generate();
+    const uuid = typeof obj.id === 'string' ? (obj.id as string) : shortUuid.generate();
 
     const values: Record<string, string|number> = {
       ':id': uuid,
       ':contents': JSON.stringify({
         ...this.definition.template,
-        id: uuid,
         ...this.simplifyRelations(obj),
       }),
     };
@@ -132,13 +135,15 @@ class Repository<T extends BaseEntity> {
         columns.push(field);
         if (type === 'boolean') {
           values[`:${field}`] = obj[field] === true ? 1 : 0;
-        } else {
+        } else if (this.relationFields.includes(field)) {
+          values[`:${field}`] = obj[field]?.id;
+        } else if (field !== 'id') {
           values[`:${field}`] = (typeof obj[field] !== 'undefined' && obj[field] !== null) ? obj[field] : null;
         }
       });
     }
 
-    const query = `INSERT INTO ${this.tableName} (${columns.join(',')}) VALUES(
+    const query = `INSERT INTO ${this.tableName} (${columns.map((column: string) => `"${column}"`).join(',')}) VALUES(
       ${columns.map((column: string) => `:${column}`)}
     )`;
     debug('Generated create query.', query);
@@ -153,24 +158,27 @@ class Repository<T extends BaseEntity> {
 
   public async update(obj: T): Promise<T> {
     const columns = ['contents'];
-    const values: Record<string, string|number> = {
-      ':contents': JSON.stringify(this.simplifyRelations(obj)),
+    const simplifiedObject: any = this.simplifyRelations(obj);
+    const values: Record<string, string|number|boolean|null> = {
+      ':contents': JSON.stringify(simplifiedObject),
       ':id': obj.id || '',
     };
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
       Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: FilterSortField]) => {
-        columns.push(field);
-        if (type === 'boolean') {
-          values[`:${field}`] = obj[field] === true ? 1 : 0;
-        } else {
-          values[`:${field}`] = obj[field] || null;
+        if (typeof obj[field] !== 'undefined') {
+          columns.push(field);
+          if (type === 'boolean') {
+            values[`:${field}`] = obj[field] === true ? 1 : 0;
+          } else {
+            values[`:${field}`] = simplifiedObject[field] || null;
+          }
         }
       });
     }
 
     const query = `UPDATE ${this.tableName} SET
-      ${columns.map((column: string) => `${column} = :${column}`)}
+      ${columns.map((column: string) => `"${column}" = :${column}`)}
       WHERE id = :id
     `;
     debug('Generated update query.', query);
@@ -182,11 +190,13 @@ class Repository<T extends BaseEntity> {
   }
 
   private async queryById(id: string): Promise<T | null> {
-    const query = `SELECT * FROM ${this.tableName} WHERE id = :id`;
+    const query = `SELECT id,contents FROM ${this.tableName} WHERE id = :id LIMIT 1`;
+    debug('Query for getById', query, id);
     const result = await this.connection.get(query, { ':id': id });
     if (result) {
       return this.transformQueryResultRow(result);
     }
+    debug('No result for queryById().');
     return null;
   }
 
@@ -204,14 +214,16 @@ class Repository<T extends BaseEntity> {
   }
 
   private async transformQueryResultRow(row: EntityRow): Promise<T> {
+    const parsedContents = JSON.parse(row.contents);
     return ({
       ...this.definition.template,
-      ...await this.fillInRelations(JSON.parse(row.contents)),
+      ...await this.fillInRelations(parsedContents),
+      id: row.id, // always make the row the leading ID field
     } as unknown as T);
   }
 
   private async fillInRelations(entity: T): Promise<T> {
-    if (this.definition.relations.length === 0) {
+    if (!this.definition.relations?.length) {
       return entity;
     }
 
@@ -244,6 +256,9 @@ class Repository<T extends BaseEntity> {
   }
 
   private async mapRelationToMultiple(relation: Relation, arr: string[]): Promise<BaseEntity[]> {
+    if (!Array.isArray(arr)) {
+      return [];
+    }
     const repository = this.getRepository(relation.entity, relation.namespace);
     return repository.getByIds(arr);
   }
@@ -258,7 +273,7 @@ class Repository<T extends BaseEntity> {
       if (!clone[relation.field]) {
         return;
       }
-      if (relation.multiple === true) {
+      if (relation.multiple) {
         clone[relation.field] = entity[relation.field].map(
           (relationEntity: BaseEntity) => relationEntity.id,
         );

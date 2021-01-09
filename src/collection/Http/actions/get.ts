@@ -22,7 +22,7 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
     return;
   }
   if (!collection.entity.filterSortFields) {
-    throw new Error('There are no fields available to filter on.');
+    throw new Error('There are no fields available to filter on, while filters were provided.');
   }
 
   // eslint-disable-next-line max-len
@@ -30,7 +30,14 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
   Object.entries(filters).forEach(([field, value]: [string, string]) => {
     const matches: string[]|null = (field || '').match(/(.*)\[(.*)\]$/);
     if (matches === null || matches.length !== 3) {
-      query.eq(field, value);
+      if (!filterSortFields[field]) {
+        throw new Error(`Cannot filter on not defined field ${field}.`);
+      }
+      if (collection.entity.filterSortFields && collection.entity.filterSortFields[field] === 'boolean') {
+        query.eq(field, ['1', 1, 'true', true].includes(value));
+      } else {
+        query.eq(field, value);
+      }
       return;
     }
 
@@ -103,8 +110,32 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
         debug('Ignoring query parameter', field, value);
       }
     });
-    filter(collection, query, filters);
 
-    const items = await collection.repository.getByQuery(query.limit(25));
-    res.json({ data: items }); // TODO also include the filter executed
+    try {
+      filter(collection, query, filters);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+
+    try {
+      const { limit } = req.params;
+      if (typeof limit !== 'undefined') {
+        query.limit(25);
+      } else if (limit !== '-1') {
+        query.limit(parseInt(limit, 10));
+      }
+      const items = await collection.repository.getByQuery(query.limit(25));
+      res.json({
+        data: items,
+        meta: {
+          sort: query.getSort(),
+          limit: query.getLimit(),
+          filters: query.getWhere(),
+        },
+      });
+    } catch (error) {
+      debug('Unexpected error while querying collection.', error);
+      res.status(500).json({ mesage: 'An unexpected error occurred, try again later.' });
+    }
   };

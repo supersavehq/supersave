@@ -13,7 +13,7 @@ export default (collection: ManagedCollection): (req: Request, rsp: Response) =>
 
       const item = await repository.getById(id);
       if (item === null) {
-        res.status(404).json({ message: 'Not found' });
+        res.status(404).json({ message: 'Not found', meta: { id } });
         return;
       }
       res.json({ data: item });

@@ -18,12 +18,15 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
       }
 
       const { body } = req;
+      debug('Incoming update request', body);
       collection.entity.relations.forEach((relation) => {
         if (body[relation.field]) {
-          if (relation.multiple) {
-            body[relation.field] = body[relation.field]
-              .map((relationId: string) => ({ id: relationId }));
-          } else {
+          if (relation.multiple && Array.isArray(body[relation.field]) && body[relation.field].length > 0) {
+            if (typeof body[relation.field][0] !== 'object') {
+              body[relation.field] = body[relation.field]
+                .map((relationId: string) => ({ id: relationId }));
+            }
+          } else if (!relation.multiple && typeof body[relation.field] === 'object') {
             body[relation.field] = {
               id: body[relation.field],
             };
@@ -35,6 +38,7 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
         ...item,
         ...body,
       };
+      debug('Updating entity.', updatedEntity);
 
       const updatedResult = await repository.update(updatedEntity);
       res.json({ data: updatedResult });

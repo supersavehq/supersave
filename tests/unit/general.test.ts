@@ -2,14 +2,8 @@ import { SuperSave, Repository } from '../../build';
 import { moonEntity, planetEntity } from '../entities';
 import { Moon, Planet } from '../types';
 
-let superSave: SuperSave;
-
-beforeAll(async () => {
-  superSave = await SuperSave.create(':memory:');
-});
-
 test('simple entity creation', async () => {
-
+  const superSave = await SuperSave.create(':memory:');
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
@@ -20,9 +14,13 @@ test('simple entity creation', async () => {
 });
 
 test('entity with relations', async () => {
-
+  const superSave = await SuperSave.create(':memory:');
   const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(moonEntity);
-  const planetRepository: Repository<Planet> = await superSave.getRepository('planet');
+  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+
+  await planetRepository.create({ name: 'Earth' });
+  await planetRepository.create({ name: 'Mars' });
+
   const planets = await planetRepository.getAll();
   expect(planets).toHaveLength(2);
 
@@ -45,13 +43,13 @@ test('not existing relation entity throws an error', async () => {
     }],
   }
 
+  const superSave = await SuperSave.create(':memory:');
   const moonRepository = await superSave.addEntity<Moon>(errorMoonEntity);
   await expect(async () => {
     try {
       await moonRepository.getAll();
     } catch (error) {
-      // TODO rewrite this to work with jest and toThrow(), but was not able to
-      expect(false).toBe(true);
+      // TODO rewrite this to work with jest and toThrow(), but was not able to get it to work.
       expect(error.message).toContain('not-existing')
     }
   });
@@ -62,8 +60,9 @@ test('entity update', async () => {
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
+  // @ts-ignore
   await planetRepository.update({ id: (earth.id as string), name: 'Updated Earth' });
-
+  // @ts-ignore
   const checkEarth = await planetRepository.getById((earth.id as string));
   expect(checkEarth).toBeDefined();
   expect((checkEarth as Planet).name).toBe('Updated Earth');
@@ -75,6 +74,7 @@ test('entity delete', async () => {
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
   await planetRepository.create({ name: 'Mars' });
+  // @ts-ignore
   await planetRepository.deleteUsingId((earth.id as string));
 
   const remainingEarths = await planetRepository.getAll();
