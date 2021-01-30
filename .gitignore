@@ -1,2 +1,2 @@
-build
+#build #uncomment later, when library is published to npm
 node_modules
