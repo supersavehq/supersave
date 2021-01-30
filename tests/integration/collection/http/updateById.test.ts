@@ -24,7 +24,7 @@ test('only collections with no namespace returns array', async() => {
   expect(typeof response.body.data).toBe('object');
   expect(response.body.data.name).toBe('Jupiter 2');
 
-  const checkPlanet: Planet = await planetRepository.getById(savedPlanet.id);
+  const checkPlanet: Planet|null = await planetRepository.getById(savedPlanet.id);
   expect(checkPlanet.name).toBe('Jupiter 2');
 });
 

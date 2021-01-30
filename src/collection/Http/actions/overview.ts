@@ -1,11 +1,10 @@
-import { Request, Response, Application } from 'express';
+import { Request, RequestHandler, Response } from 'express';
 import { HttpCollection, ManagedCollection } from '../../types';
 import { generatePath } from '../utils';
 
 export default (
   getRegisteredCollections: () => ManagedCollection[],
-  // @ts-ignore
-): Application => (_req: Request, res: Response): void => {
+): RequestHandler => (_req: Request, res: Response): void => {
   const output: { [key: string]: HttpCollection[] } = {};
 
   const collections = getRegisteredCollections();

@@ -21,15 +21,11 @@ class Http {
 
   public register(collection: ManagedCollection<any>): Http {
     const path = generatePath(collection);
-    // @ts-ignore
+
     this.router.get(path, actions.get(collection));
-    // @ts-ignore
     this.router.post(path, actions.create(collection));
-    // @ts-ignore
     this.router.patch(`${path}/:id`, actions.updateById(collection));
-    // @ts-ignore
     this.router.delete(`${path}/:id`, actions.deleteById(collection));
-    // @ts-ignore
     this.router.get(`${path}/:id`, actions.getById(collection));
     return this;
   }

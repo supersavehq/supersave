@@ -2,12 +2,14 @@ import Debug, { Debugger } from 'debug';
 import { Database } from 'sqlite';
 import { EntityDefinition, FilterSortField } from '../types';
 import Repository from './Repository';
+import { isEqual } from './utils';
 
 const debug: Debugger = Debug('supersave:db:sync');
 
 const enum SqliteType {
   TEXT = 'TEXT',
   INTEGER = 'INTEGER',
+  BOOLEAN = 'INTEGER',
 }
 
 type SqlitePragmaColumn = {
@@ -27,7 +29,7 @@ async function getTableColumns(
   connection: Database,
   tableName: string,
   entity: EntityDefinition,
-): Promise<Record<string, FilterSortField>> {
+): Promise<Record<string, SqliteType>> {
   const query = `pragma table_info('${tableName}');`;
   const columns = await connection.all<SqlitePragmaColumn[]>(query);
   if (columns === undefined) {
@@ -42,27 +44,39 @@ async function getTableColumns(
   const sqliteTypeMap: Record<SqliteType, FilterSortField> = {
     [SqliteType.TEXT]: 'string',
     [SqliteType.INTEGER]: 'number',
-    [SqliteType.INTEGER]: 'number',
+    [SqliteType.BOOLEAN]: 'number',
   };
 
-  const mappedColumns: Record<string, FilterSortField> = {};
+  const mappedColumns: Record<string, SqliteType> = {};
   columns.forEach((column: SqlitePragmaColumn) => {
-    if (column.name === 'id' || column.name === 'contents') {
+    if (column.name === 'contents') {
       return;
     }
     if (!sqliteTypeMap[column.type]) {
       throw new Error(`Unrecognized Sqlite column type ${column.type}`);
     }
-    mappedColumns[column.name] = sqliteTypeMap[column.type];
+    mappedColumns[column.name] = column.type;
   });
   return mappedColumns;
 }
 
 function hasTableChanged(
-  sqliteColumns: Record<string, FilterSortField>,
-  filterSortTypeFields: Record<string, FilterSortField>,
+  sqliteColumns: Record<string, SqliteType>,
+  mappedFilterSortTypeFields: Record<string, SqliteType>,
 ): boolean {
-  return JSON.stringify(sqliteColumns) !== JSON.stringify(filterSortTypeFields);
+  const tablesAreEqual: boolean = isEqual(sqliteColumns, mappedFilterSortTypeFields);
+  if (!tablesAreEqual) {
+    debug('Table changed', sqliteColumns, mappedFilterSortTypeFields);
+  }
+  return !tablesAreEqual;
+}
+
+function mapFilterSortFieldsToColumns(filterSortFields: Record<string, FilterSortField>): Record<string, SqliteType> {
+  const result: Record<string, SqliteType> = {};
+  Object.entries(filterSortFields).forEach(([fieldName, filter]: [string, FilterSortField]) => {
+    result[fieldName] = filterSortFieldSqliteTypeMap[filter];
+  });
+  return result;
 }
 
 export default async (
@@ -77,8 +91,9 @@ export default async (
   }
 
   const sqliteColumns = await getTableColumns(connection, tableName, entity);
-  if (!hasTableChanged(sqliteColumns, entity.filterSortFields)) {
-    debug('Table has not changed, skipping making changes.');
+  const newSqliteColumns: Record<string, SqliteType> = mapFilterSortFieldsToColumns(entity.filterSortFields);
+  if (!hasTableChanged(sqliteColumns, newSqliteColumns)) {
+    debug('Table has not changed, not making changes.');
     return;
   }
 
