@@ -96,3 +96,23 @@ test('collection items are sorted when requested: descending', async () => {
   expect(response.body.data).toHaveLength(2);
   expect(response.body.data[0].name).toBe('Mars');
 });
+
+test('undefined sort fields are not accepted.', async () => {
+  const app: express.Application = express();
+  const superSave = await SuperSave.create(':memory:');
+
+  await superSave.addCollection<Planet>({
+    ...planetCollection,
+    entity: {
+      ...planetEntity,
+      filterSortFields: { name: 'string' }
+    }
+  });
+  app.use('/', superSave.getRouter());
+
+  await supertest(app)
+    .get('/planets')
+    .query({ sort: 'foobar' })
+    .expect(400)
+    .expect('Content-Type', /json/);
+});

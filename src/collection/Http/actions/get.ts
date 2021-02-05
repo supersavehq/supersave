@@ -6,14 +6,20 @@ import { ManagedCollection } from '../../types';
 
 const debug: Debugger = Debug('supersave:http:get');
 
-function sort(query: Query, sortRequest: string): void {
+function sort(filterSortFields: Record<string, FilterSortField>, query: Query, sortRequest: string): void {
   const sorts = sortRequest.split(',');
   sorts.forEach((sortField: string) => {
+    let direction: 'asc'|'desc' = 'asc';
+    let parsedSortField = sortField;
+
     if (sortField.startsWith('-')) {
-      query.sort(sortField.substring(1), 'desc');
-    } else {
-      query.sort(sortField);
+      parsedSortField = sortField.substring(1);
+      direction = 'desc';
     }
+    if (typeof filterSortFields[parsedSortField] === 'undefined') {
+      throw new Error(`Requested sort field ${parsedSortField} is not defined.`);
+    }
+    query.sort(parsedSortField, direction);
   });
 }
 
@@ -87,9 +93,13 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (req: Request, res: Response): Promise<void> => {
     const query: Query = collection.repository.createQuery();
-
     if (req.query.sort) {
-      sort(query, (req.query.sort as string));
+      try {
+        sort(collection.entity.filterSortFields || {}, query, (req.query.sort as string));
+      } catch (error) {
+        res.status(400).json({ message: error.message });
+        return;
+      }
     }
 
     const filters: Record<string, string> = {};

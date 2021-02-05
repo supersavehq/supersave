@@ -5,15 +5,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const debug_1 = __importDefault(require("debug"));
 const debug = debug_1.default('supersave:http:get');
-function sort(query, sortRequest) {
+function sort(filterSortFields, query, sortRequest) {
     const sorts = sortRequest.split(',');
     sorts.forEach((sortField) => {
+        let direction = 'asc';
+        let parsedSortField = sortField;
         if (sortField.startsWith('-')) {
-            query.sort(sortField.substring(1), 'desc');
+            parsedSortField = sortField.substring(1);
+            direction = 'desc';
         }
-        else {
-            query.sort(sortField);
+        if (typeof filterSortFields[parsedSortField] === 'undefined') {
+            throw new Error(`Requested sort field ${parsedSortField} is not defined.`);
         }
+        query.sort(parsedSortField, direction);
     });
 }
 function filter(collection, query, filters) {
@@ -83,7 +87,13 @@ exports.default = (collection) =>
 async (req, res) => {
     const query = collection.repository.createQuery();
     if (req.query.sort) {
-        sort(query, req.query.sort);
+        try {
+            sort(collection.entity.filterSortFields || {}, query, req.query.sort);
+        }
+        catch (error) {
+            res.status(400).json({ message: error.message });
+            return;
+        }
     }
     const filters = {};
     Object.entries(req.query).forEach(([field, value]) => {
