@@ -82,6 +82,16 @@ function filter(collection, query, filters) {
         }
     });
 }
+function limitOffset(query, params) {
+    const { limit = '25', offset = '0' } = params;
+    if (limit === '-1') {
+        query.limit(undefined);
+    }
+    else {
+        query.limit(parseInt(limit, 10) || 25);
+    }
+    query.offset(parseInt(offset, 10) || 0);
+}
 exports.default = (collection) => 
 // eslint-disable-next-line implicit-arrow-linebreak
 async (req, res) => {
@@ -122,20 +132,15 @@ async (req, res) => {
         return;
     }
     try {
-        const { limit } = req.params;
-        if (typeof limit !== 'undefined') {
-            query.limit(25);
-        }
-        else if (limit !== '-1') {
-            query.limit(parseInt(limit, 10));
-        }
-        const items = await collection.repository.getByQuery(query.limit(25));
+        limitOffset(query, req.query);
+        const items = await collection.repository.getByQuery(query);
         res.json({
             data: items,
             meta: {
                 sort: query.getSort(),
                 limit: query.getLimit(),
                 filters: query.getWhere(),
+                offset: query.getOffset(),
             },
         });
     }

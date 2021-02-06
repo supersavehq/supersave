@@ -116,3 +116,62 @@ test('undefined sort fields are not accepted.', async () => {
     .expect(400)
     .expect('Content-Type', /json/);
 });
+
+test('offset is honored', async () => {
+  const app: express.Application = express();
+  const superSave = await SuperSave.create(':memory:');
+
+  const repository: Repository<Planet> = await superSave.addCollection<Planet>({
+    ...planetCollection,
+    entity: {
+      ...planetEntity,
+      filterSortFields: { name: 'string' }
+    }
+  });
+  app.use('/', superSave.getRouter());
+
+  await repository.create({ name: 'Mars' });
+  await repository.create({ name: 'Earth' });
+  await repository.create({ name: 'Venus' });
+
+  const response = await supertest(app)
+    .get('/planets')
+    .query({ offset: 1 })
+    .expect('Content-Type', /json/)
+    .expect(200);
+
+  expect(response.body.data).toBeDefined();
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.data).toHaveLength(2);
+  expect(response.body.data[0].name).toBe('Earth');
+  expect(response.body.meta.offset).toBe(1);
+});
+
+test('limit is honored', async () => {
+  const app: express.Application = express();
+  const superSave = await SuperSave.create(':memory:');
+
+  const repository: Repository<Planet> = await superSave.addCollection<Planet>({
+    ...planetCollection,
+    entity: {
+      ...planetEntity,
+      filterSortFields: { name: 'string' }
+    }
+  });
+  app.use('/', superSave.getRouter());
+
+  await repository.create({ name: 'Mars' });
+  await repository.create({ name: 'Earth' });
+
+  const response = await supertest(app)
+    .get('/planets')
+    .query({ limit: 1 })
+    .expect('Content-Type', /json/)
+    .expect(200);
+
+  expect(response.body.data).toBeDefined();
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.data).toHaveLength(1);
+  expect(response.body.data[0].name).toBe('Mars');
+  expect(response.body.meta.limit).toBe(1);
+});

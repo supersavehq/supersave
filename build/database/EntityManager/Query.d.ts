@@ -13,7 +13,7 @@ declare class Query {
     like(field: string, value: string): Query;
     in(field: string, value: string[]): Query;
     getWhere(): QueryFilter[];
-    limit(limit: number): Query;
+    limit(limit: number | undefined): Query;
     getLimit(): number | undefined;
     offset(offset: number): Query;
     getOffset(): number | undefined;

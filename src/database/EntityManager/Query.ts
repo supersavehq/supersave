@@ -48,7 +48,7 @@ class Query {
     return this.where;
   }
 
-  public limit(limit: number): Query {
+  public limit(limit: number|undefined): Query {
     this.limitValue = limit;
     return this;
   }

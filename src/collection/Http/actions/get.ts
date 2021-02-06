@@ -89,6 +89,17 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
   });
 }
 
+function limitOffset(query: Query, params: Record<string, string>): void {
+  const { limit = '25', offset = '0' } = params;
+  if (limit === '-1') {
+    query.limit(undefined);
+  } else {
+    query.limit(parseInt(limit, 10) || 25);
+  }
+
+  query.offset(parseInt(offset, 10) || 0);
+}
+
 export default (collection: ManagedCollection): (req: Request, res: Response) => Promise<void> =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (req: Request, res: Response): Promise<void> => {
@@ -129,19 +140,15 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
     }
 
     try {
-      const { limit } = req.params;
-      if (typeof limit !== 'undefined') {
-        query.limit(25);
-      } else if (limit !== '-1') {
-        query.limit(parseInt(limit, 10));
-      }
-      const items = await collection.repository.getByQuery(query.limit(25));
+      limitOffset(query, req.query as Record<string, any>);
+      const items = await collection.repository.getByQuery(query);
       res.json({
         data: items,
         meta: {
           sort: query.getSort(),
           limit: query.getLimit(),
           filters: query.getWhere(),
+          offset: query.getOffset(),
         },
       });
     } catch (error) {
