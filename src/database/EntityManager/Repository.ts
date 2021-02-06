@@ -285,7 +285,7 @@ class Repository<T extends BaseEntity> {
   }
 
   public createQuery(): Query {
-    return new Query();
+    return new Query(this.definition.filterSortFields || {});
   }
 }
 

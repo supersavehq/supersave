@@ -1,4 +1,5 @@
 import {
+  FilterSortField,
   QueryFilter, QueryFilterValue, QueryOperatorEnum, QuerySort,
 } from '../types';
 
@@ -11,7 +12,12 @@ class Query {
 
   private offsetValue?: number;
 
+  constructor(private readonly filterSortFields: Record<string, FilterSortField>) {}
+
   private addFilter(operator: QueryOperatorEnum, field: string, value: QueryFilterValue): Query {
+    if (typeof this.filterSortFields[field] === 'undefined') {
+      throw new Error(`Cannot filter on not defined field ${field}.`);
+    }
     this.where.push({ operator, field, value });
     return this;
   }
@@ -67,6 +73,9 @@ class Query {
   }
 
   public sort(field: string, direction: 'asc'|'desc' = 'asc'): Query {
+    if (typeof this.filterSortFields[field] === 'undefined') {
+      throw new Error(`Requested sort field ${field} is not defined.`);
+    }
     this.sortValues.push({ field, direction });
     return this;
   }

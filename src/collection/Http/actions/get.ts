@@ -6,7 +6,7 @@ import { ManagedCollection } from '../../types';
 
 const debug: Debugger = Debug('supersave:http:get');
 
-function sort(filterSortFields: Record<string, FilterSortField>, query: Query, sortRequest: string): void {
+function sort(query: Query, sortRequest: string): void {
   const sorts = sortRequest.split(',');
   sorts.forEach((sortField: string) => {
     let direction: 'asc'|'desc' = 'asc';
@@ -15,9 +15,6 @@ function sort(filterSortFields: Record<string, FilterSortField>, query: Query, s
     if (sortField.startsWith('-')) {
       parsedSortField = sortField.substring(1);
       direction = 'desc';
-    }
-    if (typeof filterSortFields[parsedSortField] === 'undefined') {
-      throw new Error(`Requested sort field ${parsedSortField} is not defined.`);
     }
     query.sort(parsedSortField, direction);
   });
@@ -36,9 +33,6 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
   Object.entries(filters).forEach(([field, value]: [string, string]) => {
     const matches: string[]|null = (field || '').match(/(.*)\[(.*)\]$/);
     if (matches === null || matches.length !== 3) {
-      if (!filterSortFields[field]) {
-        throw new Error(`Cannot filter on not defined field ${field}.`);
-      }
       if (collection.entity.filterSortFields && collection.entity.filterSortFields[field] === 'boolean') {
         query.eq(field, ['1', 1, 'true', true].includes(value));
       } else {
@@ -106,7 +100,7 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
     const query: Query = collection.repository.createQuery();
     if (req.query.sort) {
       try {
-        sort(collection.entity.filterSortFields || {}, query, (req.query.sort as string));
+        sort(query, (req.query.sort as string));
       } catch (error) {
         res.status(400).json({ message: error.message });
         return;

@@ -1,11 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class Query {
-    constructor() {
+    constructor(filterSortFields) {
+        this.filterSortFields = filterSortFields;
         this.where = [];
         this.sortValues = [];
     }
     addFilter(operator, field, value) {
+        if (typeof this.filterSortFields[field] === 'undefined') {
+            throw new Error(`Cannot filter on not defined field ${field}.`);
+        }
         this.where.push({ operator, field, value });
         return this;
     }
@@ -48,6 +52,9 @@ class Query {
         return this.offsetValue;
     }
     sort(field, direction = 'asc') {
+        if (typeof this.filterSortFields[field] === 'undefined') {
+            throw new Error(`Requested sort field ${field} is not defined.`);
+        }
         this.sortValues.push({ field, direction });
         return this;
     }

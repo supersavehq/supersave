@@ -248,7 +248,7 @@ class Repository {
         return clone;
     }
     createQuery() {
-        return new Query_1.default();
+        return new Query_1.default(this.definition.filterSortFields || {});
     }
 }
 exports.default = Repository;

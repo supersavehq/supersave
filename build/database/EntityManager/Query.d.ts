@@ -1,9 +1,11 @@
-import { QueryFilter, QueryFilterValue, QuerySort } from '../types';
+import { FilterSortField, QueryFilter, QueryFilterValue, QuerySort } from '../types';
 declare class Query {
+    private readonly filterSortFields;
     private where;
     private sortValues;
     private limitValue?;
     private offsetValue?;
+    constructor(filterSortFields: Record<string, FilterSortField>);
     private addFilter;
     eq(field: string, value: QueryFilterValue): Query;
     gt(field: string, value: QueryFilterValue): Query;
