@@ -16,6 +16,7 @@
     "type": "git",
     "url": "git+https://github.com/daangemist/supersave.git"
   },
+  "types": "./build/index.d.ts",
   "husky": {
     "hooks": {
       "pre-commit": "npm run lint",
