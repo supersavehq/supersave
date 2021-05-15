@@ -28,18 +28,21 @@ class SuperSave {
   }
 
   public async addCollection<T>(collection: Collection): Promise<Repository<T>> {
-    const { filterSortFields = {} } = collection.entity;
+    const { filterSortFields = {} } = collection;
     filterSortFields.id = 'string';
 
     const updatedCollection: Collection = {
       ...collection,
-      entity: {
-        ...collection.entity,
-        filterSortFields,
-      },
+      filterSortFields,
     };
 
-    const repository: Repository<T> = await this.addEntity(updatedCollection.entity);
+    const repository: Repository<T> = await this.addEntity({
+      name: updatedCollection.name,
+      namespace: updatedCollection.namespace,
+      template: updatedCollection.template,
+      relations: updatedCollection.relations,
+      filterSortFields: updatedCollection.filterSortFields,
+    });
     const managedCollection = { ...updatedCollection, repository };
     this.collectionManager.addCollection(managedCollection);
     if (typeof this.collectionHttp !== 'undefined') {
@@ -52,8 +55,9 @@ class SuperSave {
     return this.em.getRepository(entityName, namespace);
   }
 
-  public getRouter(): express.Router {
-    this.collectionHttp = new CollectionHttp(this.collectionManager);
+  public getRouter(prefix = '/'): express.Router {
+    const prefixWithoutSlash = prefix.charAt(prefix.length - 1) === '/' ? prefix.substr(0, prefix.length - 2) : prefix;
+    this.collectionHttp = new CollectionHttp(this.collectionManager, prefixWithoutSlash);
     return this.collectionHttp.getRouter();
   }
 }

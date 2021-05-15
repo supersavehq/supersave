@@ -1,10 +1,5 @@
-export {
-  Repository,
-  Query
-}
-
 export interface Relation {
-  entity: string,
+  name: string,
   namespace?: string,
   field: string,
   multiple: boolean,
@@ -49,6 +44,6 @@ export type QueryFilter = {
 export type QuerySort = {
   field: string,
   direction: 'asc'|'desc',
-}
+};
 
 export type QueryFilterValue = string|number|any;

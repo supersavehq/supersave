@@ -24,16 +24,16 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
   if (Object.keys(filters).length === 0) {
     return;
   }
-  if (!collection.entity.filterSortFields) {
+  if (!collection.filterSortFields) {
     throw new Error('There are no fields available to filter on, while filters were provided.');
   }
 
   // eslint-disable-next-line max-len
-  const filterSortFields: Record<string, FilterSortField> = (collection.entity.filterSortFields as Record<string, FilterSortField>);
+  const filterSortFields: Record<string, FilterSortField> = (collection.filterSortFields as Record<string, FilterSortField>);
   Object.entries(filters).forEach(([field, value]: [string, string]) => {
     const matches: string[]|null = (field || '').match(/(.*)\[(.*)\]$/);
     if (matches === null || matches.length !== 3) {
-      if (collection.entity.filterSortFields && collection.entity.filterSortFields[field] === 'boolean') {
+      if (collection.filterSortFields && collection.filterSortFields[field] === 'boolean') {
         query.eq(field, ['1', 1, 'true', true].includes(value));
       } else {
         query.eq(field, value);

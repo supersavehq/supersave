@@ -1,7 +1,7 @@
 import supertest from 'supertest';
 import express from 'express';
 import { Planet, Moon } from '../../../types';
-import { planetCollection, moonCollection, planetEntity } from '../../../entities';
+import { planetCollection, moonCollection } from '../../../entities';
 import { Repository, SuperSave } from '../../../../build';
 
 test('empty collection returns empty array', async() => {
@@ -47,10 +47,7 @@ test('collection items are sorted when requested: ascending', async () => {
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
-    entity: {
-      ...planetEntity,
-      filterSortFields: { name: 'string' }
-    }
+    filterSortFields: { name: 'string' },
   });
   app.use('/', superSave.getRouter());
 
@@ -75,10 +72,7 @@ test('collection items are sorted when requested: descending', async () => {
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
-    entity: {
-      ...planetEntity,
-      filterSortFields: { name: 'string' }
-    }
+    filterSortFields: { name: 'string' },
   });
   app.use('/', superSave.getRouter());
 
@@ -103,10 +97,7 @@ test('undefined sort fields are not accepted.', async () => {
 
   await superSave.addCollection<Planet>({
     ...planetCollection,
-    entity: {
-      ...planetEntity,
-      filterSortFields: { name: 'string' }
-    }
+    filterSortFields: { name: 'string' }
   });
   app.use('/', superSave.getRouter());
 
@@ -123,10 +114,7 @@ test('offset is honored', async () => {
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
-    entity: {
-      ...planetEntity,
-      filterSortFields: { name: 'string' }
-    }
+    filterSortFields: { name: 'string' }
   });
   app.use('/', superSave.getRouter());
 
@@ -153,10 +141,7 @@ test('limit is honored', async () => {
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
-    entity: {
-      ...planetEntity,
-      filterSortFields: { name: 'string' }
-    }
+    filterSortFields: { name: 'string' }
   });
   app.use('/', superSave.getRouter());
 

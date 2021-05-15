@@ -3,6 +3,7 @@ import { HttpCollection, ManagedCollection } from '../../types';
 import { generatePath } from '../utils';
 
 export default (
+  prefix: string, // without a trailing /
   getRegisteredCollections: () => ManagedCollection[],
 ): RequestHandler => (_req: Request, res: Response): void => {
   const output: { [key: string]: HttpCollection[] } = {};
@@ -18,7 +19,7 @@ export default (
     output[namespace].push({
       name: collection.name,
       description: collection.description,
-      endpoint: path,
+      endpoint: `${prefix}${path}`,
       ...collection.additionalProperties || {},
     });
   });

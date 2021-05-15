@@ -1,16 +1,17 @@
-import { EntityDefinition, Collection } from '../build';
+import { Collection, EntityDefinition } from '../build';
 
 export const planetEntity: EntityDefinition = {
   name: 'planet',
   template: {
     name: '',
   },
-  relations: [],
-};
+  relations: []
+}
 
 export const planetCollection: Collection = {
-  entity: planetEntity,
   name: 'planet',
+  template: planetEntity.template,
+  relations: planetEntity.relations
 }
 
 export const moonEntity: EntityDefinition = {
@@ -19,13 +20,14 @@ export const moonEntity: EntityDefinition = {
     name: '',
   },
   relations: [{
-    entity: 'planet',
+    name: 'planet',
     field: 'planet',
     multiple: false,
   }],
-};
+}
 
 export const moonCollection: Collection = {
-  entity: moonEntity,
   name: 'moon',
+  template: moonEntity.template,
+  relations: moonEntity.relations
 }

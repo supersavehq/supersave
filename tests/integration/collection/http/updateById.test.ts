@@ -11,7 +11,7 @@ test('only collections with no namespace returns array', async() => {
   const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
   app.use('/api', superSave.getRouter());
 
-  const planet: Planet = { name: 'Jupiter' };
+  const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
   const savedPlanet: Planet = await planetRepository.create(planet);
 
   const response = await supertest(app)
@@ -25,7 +25,8 @@ test('only collections with no namespace returns array', async() => {
   expect(response.body.data.name).toBe('Jupiter 2');
 
   const checkPlanet: Planet|null = await planetRepository.getById(savedPlanet.id);
-  expect(checkPlanet.name).toBe('Jupiter 2');
+  expect(checkPlanet).not.toBeNull();
+  expect((checkPlanet as Planet).name).toBe('Jupiter 2');
 });
 
 // TODO test updating with relation

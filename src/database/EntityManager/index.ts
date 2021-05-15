@@ -1,5 +1,6 @@
 import slug from 'slug';
 import { Database } from 'sqlite';
+import Debug, { Debugger } from 'debug';
 import Repository from './Repository';
 import Query from './Query';
 import { BaseEntity, EntityDefinition } from '../types';
@@ -9,6 +10,8 @@ export {
   Repository,
   Query,
 };
+
+const debug: Debugger = Debug('supersave:db:em');
 
 class EntityManager {
   private repositories = new Map<string, Repository<any>>();
@@ -25,7 +28,7 @@ class EntityManager {
     };
 
     const fullEntityName = this.getFullEntityName(entity.name, entity.namespace);
-    const tableName = slug(fullEntityName);
+    const tableName = slug(fullEntityName).replace(/-/g, '_'); // sqlite does not allow - (dash) in table names.
     await this.createTable(tableName);
 
     const repository: Repository<T> = new Repository(
@@ -63,6 +66,7 @@ class EntityManager {
   }
 
   private async createTable(tableName: string): Promise<void> {
+    debug(`Creating table ${tableName}.`);
     await this.connection.exec(`CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`);
   }
 }

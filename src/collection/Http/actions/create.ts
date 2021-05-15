@@ -12,7 +12,7 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
       if (typeof body !== 'object') {
         throw new Error('Request body is not an object.');
       }
-      collection.entity.relations.forEach((relation) => {
+      collection.relations.forEach((relation) => {
         if (body[relation.field]) {
           if (relation.multiple) {
             body[relation.field] = body[relation.field].map((id: string) => ({ id }));

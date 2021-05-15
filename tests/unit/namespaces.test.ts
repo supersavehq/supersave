@@ -51,7 +51,7 @@ test('relations from different namespace', async () => {
     ...moonEntity,
     namespace: 'space',
     relations: [{
-      entity: namespacedPlanetEntity.name,
+      name: namespacedPlanetEntity.name,
       namespace: 'one',
       field: 'planet',
       multiple: false,

@@ -19,7 +19,7 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
 
       const { body } = req;
       debug('Incoming update request', body);
-      collection.entity.relations.forEach((relation) => {
+      collection.relations.forEach((relation) => {
         if (body[relation.field]) {
           if (relation.multiple && Array.isArray(body[relation.field]) && body[relation.field].length > 0) {
             if (typeof body[relation.field][0] !== 'object') {

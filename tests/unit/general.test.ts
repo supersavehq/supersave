@@ -1,4 +1,4 @@
-import { SuperSave, Repository } from '../../build';
+import { SuperSave, Repository, EntityDefinition } from '../../build';
 import { moonEntity, planetEntity } from '../entities';
 import { Moon, Planet } from '../types';
 
@@ -34,10 +34,10 @@ test('entity with relations', async () => {
 });
 
 test('not existing relation entity throws an error', async () => {
-  const errorMoonEntity = {
+  const errorMoonEntity: EntityDefinition = {
     ...moonEntity,
     relations: [{
-      entity: 'not-existing',
+      name: 'not-existing',
       field: 'planet',
       multiple: false,
     }],

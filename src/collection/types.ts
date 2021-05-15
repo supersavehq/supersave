@@ -1,5 +1,5 @@
 import { Repository } from '../database/EntityManager';
-import { EntityDefinition } from '../database/types';
+import { FilterSortField, Relation } from '../database/types';
 
 export type HttpCollection = {
   name: string,
@@ -12,7 +12,9 @@ export type Collection = {
   name: string,
   description?: string,
   namespace?: string,
-  entity: EntityDefinition,
+  template: any,
+  relations: Relation[],
+  filterSortFields?: Record<string, FilterSortField>,
   additionalProperties?: Record<string, any>
 };
 

@@ -1,5 +1,4 @@
 import express from 'express';
-import bodyParser from 'body-parser';
 import Manager from '../Manager';
 import { ManagedCollection } from '../types';
 import * as actions from './actions';
@@ -10,13 +9,14 @@ class Http {
 
   constructor(
     private manager: Manager,
+    prefix: string, // excuding the /
   ) {
     this.router = express.Router();
-    this.router.use(bodyParser.json());
+    this.router.use(express.json());
     this.manager.getCollections().forEach((collection: ManagedCollection) => {
       this.register(collection);
     });
-    this.router.get('/', actions.overview(() => this.getRegisteredCollections()));
+    this.router.get('/', actions.overview(prefix, () => this.getRegisteredCollections()));
   }
 
   public register(collection: ManagedCollection<any>): Http {

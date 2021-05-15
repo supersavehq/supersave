@@ -1,7 +1,7 @@
 import supertest from 'supertest';
 import express from 'express';
 import { Planet } from '../../../types';
-import { planetCollection, planetEntity } from '../../../entities';
+import { planetCollection } from '../../../entities';
 import { Repository, SuperSave } from '../../../../build';
 
 const appForFilter: () => Promise<express.Application> = async (): Promise<express.Application> => {
@@ -10,10 +10,7 @@ const appForFilter: () => Promise<express.Application> = async (): Promise<expre
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
-    entity: {
-      ...planetEntity,
-      filterSortFields: { name: 'string', distance: 'number', }
-    }
+    filterSortFields: { name: 'string', distance: 'number', },
   });
   app.use('/', superSave.getRouter());
 

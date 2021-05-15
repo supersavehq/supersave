@@ -118,11 +118,11 @@ class Repository<T extends BaseEntity> {
     await this.connection.run(query, { ':id': id });
   }
 
-  public async create(obj: T): Promise<T> {
+  public async create(obj: Omit<T, 'id'>): Promise<T> {
     const columns: string[] = ['id', 'contents'];
     const uuid = typeof obj.id === 'string' ? (obj.id as string) : shortUuid.generate();
 
-    const values: Record<string, string|number> = {
+    const values: Record<string, string|number|null> = {
       ':id': uuid,
       ':contents': JSON.stringify({
         ...this.definition.template,
@@ -231,7 +231,7 @@ class Repository<T extends BaseEntity> {
 
     const promises: Promise<any>[] = [];
     this.definition.relations.forEach(async (relation: Relation) => {
-      const repository = this.getRepository(relation.entity, relation.namespace);
+      const repository = this.getRepository(relation.name, relation.namespace);
 
       if (relation.multiple !== true) {
         const id = clone[relation.field];
@@ -240,7 +240,7 @@ class Repository<T extends BaseEntity> {
           promises.push(promise);
           const relatedEntity = await promise;
           if (!relatedEntity) {
-            throw new Error(`Unable to find related entity ${relation.entity} with id ${entity[relation.field]}`);
+            throw new Error(`Unable to find related entity ${relation.name} with id ${entity[relation.field]}`);
           }
           clone[relation.field] = relatedEntity;
         }
@@ -259,7 +259,7 @@ class Repository<T extends BaseEntity> {
     if (!Array.isArray(arr)) {
       return [];
     }
-    const repository = this.getRepository(relation.entity, relation.namespace);
+    const repository = this.getRepository(relation.name, relation.namespace);
     return repository.getByIds(arr);
   }
 
