@@ -14,12 +14,18 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
       }
       collection.relations.forEach((relation) => {
         if (body[relation.field]) {
-          if (relation.multiple) {
-            body[relation.field] = body[relation.field].map((id: string) => ({ id }));
-          } else {
-            body[relation.field] = {
-              id: body[relation.field],
-            };
+          if (relation.multiple && !Array.isArray(body[relation.field])) {
+            throw new Error(`Attribute ${relation.field} is a relation for multiple entities, but no array is provided.`);
+          } else if (relation.multiple) {
+            if (body[relation.field][0] === 'string') {
+              body[relation.field] = body[relation.field].map((id: string) => ({ id }));
+            }
+          } else if (!relation.multiple) {
+            if (typeof body[relation.field] === 'string') {
+              body[relation.field] = {
+                id: body[relation.field],
+              };
+            }
           }
         }
       });

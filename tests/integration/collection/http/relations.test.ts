@@ -142,12 +142,12 @@ test('linking related collections via objects', async () => {
 
   const updatedMoonResponse = await supertest(app)
     .patch(`/moons/${createdMoon.id}`)
-    .send({ planet: [saturn] })
+    .send({ planet: [createdSaturn] })
     .expect('Content-Type', /json/)
     .expect(200);
 
   const { data: updatedMoon } = updatedMoonResponse.body;
-  expect(updatedMoon.planet.name).toBe('Saturn');
+  expect(updatedMoon.planet[0].name).toBe('Saturn');
 });
 
 test('linking related collections via object ids', async () => {

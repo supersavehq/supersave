@@ -9,7 +9,7 @@ test('only collections with no namespace returns array', async() => {
   const superSave = await SuperSave.create(':memory:');
 
   const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
-  app.use('/api', superSave.getRouter());
+  app.use('/api', await superSave.getRouter());
 
   const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
 
