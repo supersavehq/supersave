@@ -186,7 +186,7 @@ class Repository<T extends BaseEntity> {
       query,
       values,
     );
-    return obj;
+    return (this.getById(obj.id as string) as unknown as T);
   }
 
   private async queryById(id: string): Promise<T | null> {
@@ -233,7 +233,7 @@ class Repository<T extends BaseEntity> {
     this.definition.relations.forEach(async (relation: Relation) => {
       const repository = this.getRepository(relation.name, relation.namespace);
 
-      if (relation.multiple !== true) {
+      if (!relation.multiple) {
         const id = clone[relation.field];
         if (typeof id === 'string') {
           const promise = repository.getById(id);
@@ -260,9 +260,28 @@ class Repository<T extends BaseEntity> {
       return [];
     }
     const repository = this.getRepository(relation.name, relation.namespace);
-    return repository.getByIds(arr);
+    const repositoryResults = await repository.getByIds(arr);
+
+    // preserve the ordering
+    const resultsMap = new Map<string, BaseEntity>();
+    repositoryResults.forEach((result) => {
+      resultsMap.set(result.id, result);
+    });
+
+    const mappedResults: BaseEntity[] = [];
+    arr.forEach((id) => {
+      if (resultsMap.get(id)) {
+        mappedResults.push(resultsMap.get(id) as BaseEntity);
+      }
+    });
+    return mappedResults;
   }
 
+  /**
+   * Reads of the attributes marked as relations. Flattens it to a string id.
+   * @param entity any
+   * @returns any
+   */
   private simplifyRelations(entity: any): T {
     if (this.definition.relations.length === 0) {
       return entity;
@@ -275,10 +294,14 @@ class Repository<T extends BaseEntity> {
       }
       if (relation.multiple) {
         clone[relation.field] = entity[relation.field].map(
-          (relationEntity: BaseEntity) => relationEntity.id,
+          // if it is an object, use its id, else the entity is already represented by its as as string, use that immediately
+          (relationEntity: BaseEntity) => (typeof relationEntity === 'string' ? relationEntity : relationEntity.id),
         );
       } else {
-        clone[relation.field] = entity[relation.field].id;
+        // if it is an object, use its id, else the entity is already represented by its as as string, use that immediately
+        clone[relation.field] = typeof clone[relation.field] === 'string'
+          ? clone[relation.field]
+          : clone[relation.field].id;
       }
     });
     return clone;

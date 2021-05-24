@@ -22,11 +22,13 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
       collection.relations.forEach((relation) => {
         if (body[relation.field]) {
           if (relation.multiple && Array.isArray(body[relation.field]) && body[relation.field].length > 0) {
-            if (typeof body[relation.field][0] !== 'object') {
+            // check if an array of strings was provided, if so, we translate it to an array of empty objects with the id attribute set.
+            if (typeof body[relation.field][0] === 'string') {
               body[relation.field] = body[relation.field]
                 .map((relationId: string) => ({ id: relationId }));
             }
-          } else if (!relation.multiple && typeof body[relation.field] === 'object') {
+          } else if (!relation.multiple && typeof body[relation.field] === 'string') {
+            // the relation is provided as a string, map it to an empty object with an id attribute.
             body[relation.field] = {
               id: body[relation.field],
             };

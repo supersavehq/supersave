@@ -11,7 +11,7 @@ test('only collections with no namespace returns array', async() => {
   const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
   app.use('/api', superSave.getRouter());
 
-  const planet: Planet = { name: 'Jupiter' };
+  const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
 
   const response = await supertest(app)
     .post('/api/planets')
