@@ -20,6 +20,8 @@ export default (
       name: collection.name,
       description: collection.description,
       endpoint: `${prefix}${path}`,
+      filters: collection.filterSortFields,
+      sort: Object.keys(collection.filterSortFields || {}),
       ...collection.additionalProperties || {},
     });
   });
