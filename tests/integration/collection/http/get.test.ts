@@ -9,7 +9,7 @@ test('empty collection returns empty array', async() => {
   const superSave = await SuperSave.create(':memory:');
 
   await superSave.addCollection<Planet>(planetCollection);
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
   await superSave.addCollection<Moon>(moonCollection);
 
   const response = await supertest(app)
@@ -27,7 +27,7 @@ test('collection items are returned', async() => {
   const superSave = await SuperSave.create(':memory:');
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   await repository.create({ name: 'Earth' });
   const response = await supertest(app)
@@ -49,7 +49,7 @@ test('collection items are sorted when requested: ascending', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' },
   });
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   await repository.create({ name: 'Mars' });
   await repository.create({ name: 'Earth' });
@@ -74,7 +74,7 @@ test('collection items are sorted when requested: descending', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' },
   });
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   await repository.create({ name: 'Mars' });
   await repository.create({ name: 'Earth' });
@@ -99,7 +99,7 @@ test('undefined sort fields are not accepted.', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' }
   });
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   await supertest(app)
     .get('/planets')
@@ -116,7 +116,7 @@ test('offset is honored', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' }
   });
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   await repository.create({ name: 'Mars' });
   await repository.create({ name: 'Earth' });
@@ -143,7 +143,7 @@ test('limit is honored', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' }
   });
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   await repository.create({ name: 'Mars' });
   await repository.create({ name: 'Earth' });

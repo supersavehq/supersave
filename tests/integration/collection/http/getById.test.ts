@@ -11,7 +11,7 @@ test('Existing id returns object', async() => {
 
   const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
   const planet = await planetRepository.create({ name: 'Earth' });
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   const response = await supertest(app)
     .get(`/planets/${(planet.id as string)}`)

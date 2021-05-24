@@ -5,13 +5,20 @@ import * as actions from './actions';
 import { generatePath } from './utils';
 
 class Http {
-  private readonly router: express.Router;
+  public static async create(manager: Manager, prefix: string): Promise<Http> {
+    const requiredExpress = await import('express');
+    return new Http(
+      requiredExpress.Router(),
+      manager,
+      prefix,
+    );
+  }
 
-  constructor(
+  private constructor(
+    private readonly router: express.Router,
     private manager: Manager,
     prefix: string, // excuding the /
   ) {
-    this.router = express.Router();
     this.router.use(express.json());
     this.manager.getCollections().forEach((collection: ManagedCollection) => {
       this.register(collection);

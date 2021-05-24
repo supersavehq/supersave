@@ -42,7 +42,7 @@ const main = async () => {
   const app = express();
   const port = process.env.PORT || 4567;
 
-  app.use('/api', superSave.getRouter());
+  app.use('/api', await superSave.getRouter());
 
   app.listen(port, () => {
     console.log(`Test server listening at http://0.0.0.0:${port}`)

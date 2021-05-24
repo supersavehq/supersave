@@ -9,7 +9,7 @@ test('only collections with no namespace returns array', async() => {
   const superSave = await SuperSave.create(':memory:');
 
   await superSave.addCollection<Planet>(planetCollection);
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
   await superSave.addCollection<Moon>(moonCollection);
 
   const response = await supertest(app)
@@ -27,7 +27,7 @@ test('collections with namespace', async() => {
   const superSave = await SuperSave.create(':memory:');
 
   await superSave.addCollection<Planet>({...planetCollection, namespace: 'space'});
-  app.use('/',superSave.getRouter());
+  app.use('/',await superSave.getRouter());
   await superSave.addCollection<Moon>({...moonCollection, namespace: 'space'});
 
   const response = await supertest(app)
@@ -46,7 +46,7 @@ test('additional collection properties are returned', async() => {
   const superSave = await SuperSave.create(':memory:');
 
   await superSave.addCollection<Planet>({ ...planetCollection, additionalProperties: { foo: 'bar' }});
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
   await superSave.addCollection<Moon>(moonCollection);
 
   const response = await supertest(app)

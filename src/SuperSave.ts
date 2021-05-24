@@ -55,9 +55,9 @@ class SuperSave {
     return this.em.getRepository(entityName, namespace);
   }
 
-  public getRouter(prefix = '/'): express.Router {
+  public async getRouter(prefix = '/'): Promise<express.Router> {
     const prefixWithoutSlash = prefix.charAt(prefix.length - 1) === '/' ? prefix.substr(0, prefix.length - 2) : prefix;
-    this.collectionHttp = new CollectionHttp(this.collectionManager, prefixWithoutSlash);
+    this.collectionHttp = await CollectionHttp.create(this.collectionManager, prefixWithoutSlash);
     return this.collectionHttp.getRouter();
   }
 }

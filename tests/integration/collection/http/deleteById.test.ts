@@ -11,7 +11,7 @@ test('delete using id', async() => {
 
   const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
   const planet = await planetRepository.create({ name: 'Earth' });
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   await supertest(app)
     .delete(`/planets/${(planet.id as string)}`)
@@ -26,7 +26,7 @@ test('delete not existing item', async() => {
   const superSave = await SuperSave.create(':memory:');
 
   await superSave.addCollection<Planet>(planetCollection);
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   await supertest(app)
     .delete('/planets/foo')

@@ -12,7 +12,7 @@ const appForFilter: () => Promise<express.Application> = async (): Promise<expre
     ...planetCollection,
     filterSortFields: { name: 'string', distance: 'number', },
   });
-  app.use('/', superSave.getRouter());
+  app.use('/', await superSave.getRouter());
 
   await repository.create({ name: 'Mars', distance: 0, });
   await repository.create({ name: 'Earth', distance: 1000, });
