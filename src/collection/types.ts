@@ -1,4 +1,4 @@
-import { Repository } from '../database/EntityManager';
+import { Repository } from '../database/entity-manager';
 import { FilterSortField, Relation } from '../database/types';
 
 export type HttpCollection = {

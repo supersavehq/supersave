@@ -1,11 +1,16 @@
 import Debug, { Debugger } from 'debug';
-import connection from './connection';
-import EntityManager from './EntityManager';
+import dbInitializer, { EntityManager } from './entity-manager';
 
 const debug: Debugger = Debug('supersave:db');
 
-export default async (file: string): Promise<EntityManager> => {
-  debug('Setting up connection for', file);
-  const conn = await connection(file);
-  return new EntityManager(conn);
+export default async (connection: string): Promise<EntityManager> => {
+  debug('Got connection string', connection);
+
+  if (connection.substring(0, 9) === 'sqlite://') {
+    const file: string = connection.substring(9);
+    debug('Found sqlite connection string, using file', file);
+    return dbInitializer('sqlite', { file });
+  }
+
+  throw new Error('Unrecognized connection string.');
 };

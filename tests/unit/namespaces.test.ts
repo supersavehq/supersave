@@ -3,7 +3,7 @@ import { moonEntity, planetEntity } from '../entities';
 import { Moon, Planet } from '../types';
 
 test('there is a difference between with and without namespace', async () => {
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const otherPlanetEntity: EntityDefinition = {
     ...planetEntity,
@@ -19,7 +19,7 @@ test('there is a difference between with and without namespace', async () => {
 });
 
 test('there is a difference between different namespaces with same entity', async () => {
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const namespacedPlanetEntity: EntityDefinition = {
     ...planetEntity,
@@ -40,7 +40,7 @@ test('there is a difference between different namespaces with same entity', asyn
 });
 
 test('relations from different namespace', async () => {
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const namespacedPlanetEntity: EntityDefinition = {
     ...planetEntity,

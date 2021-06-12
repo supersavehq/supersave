@@ -1,9 +1,9 @@
 import overview from './overview';
 import get from './get';
 import create from './create';
-import updateById from './updateById';
-import getById from './getById';
-import deleteById from './deleteById';
+import updateById from './update-by-id';
+import getById from './get-by-id';
+import deleteById from './delete-by-id';
 
 export {
   overview,

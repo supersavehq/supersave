@@ -3,7 +3,7 @@ import {
   EntityDefinition,
   BaseEntity,
 } from './database/types';
-import { Query, Repository } from './database/EntityManager';
+import { Query, Repository } from './database/entity-manager';
 import { Collection } from './collection/types';
 
 export {

@@ -1,5 +1,5 @@
 import express from 'express';
-import Manager from '../Manager';
+import Manager from '../manager';
 import { ManagedCollection } from '../types';
 import * as actions from './actions';
 import { generatePath } from './utils';

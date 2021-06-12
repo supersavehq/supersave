@@ -1,11 +1,11 @@
 import express from 'express';
 import { Collection } from './collection/types';
 import database from './database';
-import EntityManager from './database/EntityManager';
-import Repository from './database/EntityManager/Repository';
+import { EntityManager } from './database/entity-manager';
+import Repository from './database/entity-manager/repository';
 import { EntityDefinition } from './database/types';
-import CollectionManager from './collection/Manager';
-import CollectionHttp from './collection/Http';
+import CollectionManager from './collection/manager';
+import CollectionHttp from './collection/http';
 
 class SuperSave {
   private collectionManager: CollectionManager;
@@ -17,8 +17,8 @@ class SuperSave {
     );
   }
 
-  public static async create(file: string): Promise<SuperSave> {
-    const em = await database(file);
+  public static async create(connectionString: string): Promise<SuperSave> {
+    const em = await database(connectionString);
 
     return new SuperSave(em);
   }

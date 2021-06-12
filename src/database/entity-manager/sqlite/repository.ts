@@ -2,26 +2,21 @@ import Debug, { Debugger } from 'debug';
 import { Database } from 'sqlite';
 import shortUuid from 'short-uuid';
 import {
-  BaseEntity, EntityDefinition, EntityRow, FilterSortField, QueryFilter, QueryOperatorEnum, QuerySort, Relation,
-} from '../types';
-import Query from './Query';
+  BaseEntity, EntityDefinition, FilterSortField, QueryFilter, QueryOperatorEnum, QuerySort,
+} from '../../types';
+import Query from '../query';
+import BaseRepository from '../repository';
 
 const debug: Debugger = Debug('supersave:db:repo');
 
-class Repository<T extends BaseEntity> {
-  private relationFields: string[];
-
+class Repository<T extends BaseEntity> extends BaseRepository<T> {
   constructor(
     readonly definition: EntityDefinition,
     readonly tableName: string,
-    readonly getRepository: (name: string, namespace?: string) => Repository<any>,
+    readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
     readonly connection: Database,
   ) {
-    this.relationFields = definition.relations?.map((relation: Relation) => relation.field);
-  }
-
-  public async getById(id: string): Promise<T | null> {
-    return this.queryById(id);
+    super(definition, tableName, getRepository);
   }
 
   public async getByIds(ids: string[]): Promise<T[]> {
@@ -58,14 +53,6 @@ class Repository<T extends BaseEntity> {
       return newResults;
     }
     return [];
-  }
-
-  public async getOneByQuery(query: Query): Promise<T|null> {
-    const result: T[] = await this.getByQuery(query);
-    if (result.length === 0) {
-      return null;
-    }
-    return result[0];
   }
 
   public async getByQuery(query: Query): Promise<T[]> {
@@ -189,7 +176,7 @@ class Repository<T extends BaseEntity> {
     return (this.getById(obj.id as string) as unknown as T);
   }
 
-  private async queryById(id: string): Promise<T | null> {
+  protected async queryById(id: string): Promise<T | null> {
     const query = `SELECT id,contents FROM ${this.tableName} WHERE id = :id LIMIT 1`;
     debug('Query for getById', query, id);
     const result = await this.connection.get(query, { ':id': id });
@@ -198,117 +185,6 @@ class Repository<T extends BaseEntity> {
     }
     debug('No result for queryById().');
     return null;
-  }
-
-  private async transformQueryResultRows(rows: EntityRow[]): Promise<T[]> {
-    const result: T[] = [];
-
-    const promises = [];
-    for (let iter = 0; iter < rows.length; iter += 1) {
-      const promise = this.transformQueryResultRow(rows[iter]);
-      promises.push(promise);
-      result[iter] = await promise;
-    }
-    await Promise.all(promises);
-    return result;
-  }
-
-  private async transformQueryResultRow(row: EntityRow): Promise<T> {
-    const parsedContents = JSON.parse(row.contents);
-    return ({
-      ...this.definition.template,
-      ...await this.fillInRelations(parsedContents),
-      id: row.id, // always make the row the leading ID field
-    } as unknown as T);
-  }
-
-  private async fillInRelations(entity: T): Promise<T> {
-    if (!this.definition.relations?.length) {
-      return entity;
-    }
-
-    const clone = JSON.parse(JSON.stringify(entity)); // TODO replace with clone function
-
-    const promises: Promise<any>[] = [];
-    this.definition.relations.forEach(async (relation: Relation) => {
-      const repository = this.getRepository(relation.name, relation.namespace);
-
-      if (!relation.multiple) {
-        const id = clone[relation.field];
-        if (typeof id === 'string') {
-          const promise = repository.getById(id);
-          promises.push(promise);
-          const relatedEntity = await promise;
-          if (!relatedEntity) {
-            throw new Error(`Unable to find related entity ${relation.name} with id ${entity[relation.field]}`);
-          }
-          clone[relation.field] = relatedEntity;
-        }
-      } else {
-        const promise = this.mapRelationToMultiple(relation, clone[relation.field]);
-        promises.push(promise);
-        const mappedEntities = await promise;
-        clone[relation.field] = mappedEntities;
-      }
-    });
-    await Promise.all(promises);
-    return clone;
-  }
-
-  private async mapRelationToMultiple(relation: Relation, arr: string[]): Promise<BaseEntity[]> {
-    if (!Array.isArray(arr)) {
-      return [];
-    }
-    const repository = this.getRepository(relation.name, relation.namespace);
-    const repositoryResults = await repository.getByIds(arr);
-
-    // preserve the ordering
-    const resultsMap = new Map<string, BaseEntity>();
-    repositoryResults.forEach((result) => {
-      resultsMap.set(result.id, result);
-    });
-
-    const mappedResults: BaseEntity[] = [];
-    arr.forEach((id) => {
-      if (resultsMap.get(id)) {
-        mappedResults.push(resultsMap.get(id) as BaseEntity);
-      }
-    });
-    return mappedResults;
-  }
-
-  /**
-   * Reads of the attributes marked as relations. Flattens it to a string id.
-   * @param entity any
-   * @returns any
-   */
-  private simplifyRelations(entity: any): T {
-    if (this.definition.relations.length === 0) {
-      return entity;
-    }
-
-    const clone = { ...entity };
-    this.definition.relations.forEach((relation: Relation) => {
-      if (!clone[relation.field]) {
-        return;
-      }
-      if (relation.multiple) {
-        clone[relation.field] = entity[relation.field].map(
-          // if it is an object, use its id, else the entity is already represented by its as as string, use that immediately
-          (relationEntity: BaseEntity) => (typeof relationEntity === 'string' ? relationEntity : relationEntity.id),
-        );
-      } else {
-        // if it is an object, use its id, else the entity is already represented by its as as string, use that immediately
-        clone[relation.field] = typeof clone[relation.field] === 'string'
-          ? clone[relation.field]
-          : clone[relation.field].id;
-      }
-    });
-    return clone;
-  }
-
-  public createQuery(): Query {
-    return new Query(this.definition.filterSortFields || {});
   }
 }
 

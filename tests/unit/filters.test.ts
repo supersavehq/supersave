@@ -12,7 +12,7 @@ test('additional filter/sort fields can be defined', async() => {
     }
   }
 
-  const superSave: SuperSave = await SuperSave.create(':memory:');
+  const superSave: SuperSave = await SuperSave.create('sqlite://:memory:');
   const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
 
   await planetRepository.create({ name: 'Earth' });
@@ -26,7 +26,7 @@ test('data can be queried using a filter', async() => {
     }
   }
 
-  const superSave: SuperSave = await SuperSave.create(':memory:');
+  const superSave: SuperSave = await SuperSave.create('sqlite://:memory:');
   const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
 
   await planetRepository.create({ name: 'Earth' });
@@ -46,7 +46,7 @@ test('results are filtered and sorted', async () => {
     }
   }
 
-  const superSave: SuperSave = await SuperSave.create(':memory:');
+  const superSave: SuperSave = await SuperSave.create('sqlite://:memory:');
   const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
 
   await planetRepository.create({ name: 'Mars' });
@@ -77,7 +77,7 @@ test('results are filtered and sorted', async () => {
     }
   }
 
-  const superSave: SuperSave = await SuperSave.create(':memory:');
+  const superSave: SuperSave = await SuperSave.create('sqlite://:memory:');
   const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
 
   await planetRepository.create({ name: 'Mars' });
@@ -106,7 +106,7 @@ test('results are properly limited', async () => {
     }
   }
 
-  const superSave: SuperSave = await SuperSave.create(':memory:');
+  const superSave: SuperSave = await SuperSave.create('sqlite://:memory:');
   const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
 
   await planetRepository.create({ name: 'Mars' });

@@ -1,24 +1,20 @@
 import slug from 'slug';
 import { Database } from 'sqlite';
 import Debug, { Debugger } from 'debug';
-import Repository from './Repository';
-import Query from './Query';
-import { BaseEntity, EntityDefinition } from '../types';
+import Repository from './repository';
+import { EntityDefinition } from '../../types';
+import EntityManager from '../entity-manager';
 import sync from './sync';
+import BaseRepository from '../repository';
 
-export {
-  Repository,
-  Query,
-};
+const debug: Debugger = Debug('supersave:db:em:sqlite');
 
-const debug: Debugger = Debug('supersave:db:em');
+class SqliteEntityManager extends EntityManager {
+  constructor(readonly connection: Database) {
+    super();
+  }
 
-class EntityManager {
-  private repositories = new Map<string, Repository<any>>();
-
-  constructor(readonly connection: Database) { }
-
-  public async addEntity<T>(entity: EntityDefinition): Promise<Repository<T>> {
+  public async addEntity<T>(entity: EntityDefinition): Promise<BaseRepository<T>> {
     const { filterSortFields = {} } = entity;
     filterSortFields.id = 'string';
 
@@ -52,23 +48,10 @@ class EntityManager {
     return this.getRepository(entity.name, entity.namespace);
   }
 
-  private getFullEntityName(name: string, namespace?: string): string {
-    return typeof namespace !== 'undefined' ? `${namespace}_${name}` : name;
-  }
-
-  public getRepository<T extends BaseEntity>(name: string, namespace?: string): Repository<T> {
-    const fullEntityName = this.getFullEntityName(name, namespace);
-    const repository = this.repositories.get(fullEntityName);
-    if (typeof repository === 'undefined') {
-      throw new Error(`Entity ${fullEntityName} not defined. Existing are: (${Array.from(this.repositories.keys()).join(', ')})`);
-    }
-    return repository;
-  }
-
-  private async createTable(tableName: string): Promise<void> {
+  protected async createTable(tableName: string): Promise<void> {
     debug(`Creating table ${tableName}.`);
     await this.connection.exec(`CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`);
   }
 }
 
-export default EntityManager;
+export default SqliteEntityManager;

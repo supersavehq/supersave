@@ -6,14 +6,14 @@ import { Repository, SuperSave } from '../../../../build';
 
 const appForFilter: () => Promise<express.Application> = async (): Promise<express.Application> => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
     filterSortFields: { name: 'string', distance: 'number', },
   });
-  app.use('/', await superSave.getRouter());
 
+  app.use('/', await superSave.getRouter());
   await repository.create({ name: 'Mars', distance: 0, });
   await repository.create({ name: 'Earth', distance: 1000, });
   await repository.create({ name: 'Jupiter', distance: 2500, });

@@ -7,7 +7,7 @@ import { Repository, SuperSave } from '../../../../build';
 
 test('delete using id', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
   const planet = await planetRepository.create({ name: 'Earth' });
@@ -23,7 +23,7 @@ test('delete using id', async() => {
 
 test('delete not existing item', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   await superSave.addCollection<Planet>(planetCollection);
   app.use('/', await superSave.getRouter());

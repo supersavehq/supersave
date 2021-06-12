@@ -6,7 +6,7 @@ import { Repository, SuperSave } from '../../../../build';
 
 test('empty collection returns empty array', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   await superSave.addCollection<Planet>(planetCollection);
   app.use('/', await superSave.getRouter());
@@ -24,7 +24,7 @@ test('empty collection returns empty array', async() => {
 
 test('collection items are returned', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
   app.use('/', await superSave.getRouter());
@@ -43,7 +43,7 @@ test('collection items are returned', async() => {
 
 test('collection items are sorted when requested: ascending', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
@@ -68,7 +68,7 @@ test('collection items are sorted when requested: ascending', async () => {
 
 test('collection items are sorted when requested: descending', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
@@ -93,7 +93,7 @@ test('collection items are sorted when requested: descending', async () => {
 
 test('undefined sort fields are not accepted.', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   await superSave.addCollection<Planet>({
     ...planetCollection,
@@ -110,7 +110,7 @@ test('undefined sort fields are not accepted.', async () => {
 
 test('offset is honored', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
@@ -137,7 +137,7 @@ test('offset is honored', async () => {
 
 test('limit is honored', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,

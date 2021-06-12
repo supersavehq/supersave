@@ -6,7 +6,7 @@ import { Repository, SuperSave } from '../../../../build';
 
 test('only collections with no namespace returns array', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
   app.use('/api', await superSave.getRouter());

@@ -1,8 +1,9 @@
 import Debug, { Debugger } from 'debug';
 import { Database } from 'sqlite';
-import { EntityDefinition, FilterSortField } from '../types';
-import Repository from './Repository';
-import { isEqual } from './utils';
+import { EntityDefinition, FilterSortField } from '../../types';
+import Repository from './repository';
+import BaseRepository from '../repository';
+import { isEqual } from '../utils';
 
 const debug: Debugger = Debug('supersave:db:sync');
 
@@ -84,7 +85,7 @@ export default async (
   tableName: string,
   connection: Database,
   repository: Repository<any>,
-  getRepository: (name: string, namespace?: string) => Repository<any>,
+  getRepository: (name: string, namespace?: string) => BaseRepository<any>,
 ): Promise<void> => {
   if (typeof entity.filterSortFields === 'undefined') {
     return;

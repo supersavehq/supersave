@@ -34,7 +34,7 @@ const moonCollection = {
 }
 
 const main = async () => {
-  const superSave = await SuperSave.create(':memory:');
+  const superSave = await SuperSave.create('sqlite://:memory:');
 
   await superSave.addCollection(planetCollection);
   await superSave.addCollection(moonCollection);

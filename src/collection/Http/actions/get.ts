@@ -1,6 +1,6 @@
 import { Response, Request } from 'express';
 import Debug, { Debugger } from 'debug';
-import { Query } from '../../../database/EntityManager';
+import { Query } from '../../../database/entity-manager';
 import { FilterSortField, QueryOperatorEnum } from '../../../database/types';
 import { ManagedCollection } from '../../types';
 
