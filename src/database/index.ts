@@ -12,5 +12,9 @@ export default async (connection: string): Promise<EntityManager> => {
     return dbInitializer('sqlite', { file });
   }
 
+  if (connection.substring(0, 8) === 'mysql://') {
+    return dbInitializer('mysql', { connection });
+  }
+
   throw new Error('Unrecognized connection string.');
 };

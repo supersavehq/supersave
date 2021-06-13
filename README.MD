@@ -1,10 +1,19 @@
 SuperSave
-=========
+===========
 
-Readme: 404 Not Found
+# Installation
 
-Roadmap to 1.0
+## Sqlite
 
-- No breaking changes in API
-- Validation
-- README
+    npm i --save supersave sqlite3 sqlite
+
+Example connection string: sqlite://:memory:
+
+## Mysql
+
+    npm i --save supersave mysql
+
+Example connection string: mysql://examplename:somepassword@examplehost:3306/dbname
+
+# Usage
+
