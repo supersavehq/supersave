@@ -8,7 +8,7 @@ import sync from './sync';
 import BaseRepository from '../repository';
 import { executeQuery } from './utils';
 
-const debug: Debugger = Debug('supersave:db:em:sqlite');
+const debug: Debugger = Debug('supersave:db:em:mysql');
 
 class MysqlEntityManager extends EntityManager {
   constructor(readonly connection: Connection) {

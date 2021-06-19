@@ -1,14 +1,16 @@
 version: "3.0"
 
 services:
-  supersave:
-    image: node:14-slim
-    command: npm start
+  node:
+    image: node:14
+    command: npm run test-watch-mysql
+    #command: npm start
     volumes:
         - .:/app
     working_dir: /app
     environment:
       CONN: mysql://supersave:savesuper@mysql/supersave
+      DEBUG: supersave:*
     links:
       - mysql
     ports:

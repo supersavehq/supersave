@@ -69,9 +69,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
           values.push(value);
         });
 
-        where.push(`"${this.connection.escapeId(queryFilter.field)}" IN(${placeholders.join(',')})`);
+        where.push(`${this.connection.escapeId(queryFilter.field)} IN(${placeholders.join(',')})`);
       } else {
-        where.push(`"${this.connection.escapeId(queryFilter.field)}" ${queryFilter.operator} ?`);
+        where.push(`${this.connection.escapeId(queryFilter.field)} ${queryFilter.operator} ?`);
         if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
           values.push(['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0);
         } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
@@ -86,7 +86,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
     `;
     if (query.getSort().length > 0) {
-      sqlQuery = `${sqlQuery} ORDER BY ${query.getSort().map((sort: QuerySort) => `"${this.connection.escapeId(sort.field)}" ${sort.direction}`).join(',')}`;
+      sqlQuery = `${sqlQuery} ORDER BY ${query.getSort().map((sort: QuerySort) => `${this.connection.escapeId(sort.field)} ${sort.direction}`).join(',')}`;
     }
     if (query.getLimit()) {
       sqlQuery = `${sqlQuery} LIMIT ${typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()}`;
@@ -120,6 +120,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     if (typeof this.definition.filterSortFields !== 'undefined') {
       // eslint-disable-next-line max-len
       Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: FilterSortField]) => {
+        if (field === 'id') {
+          return;
+        }
         columns.push(field);
         if (type === 'boolean') {
           values.push(obj[field] === true ? 1 : 0);
@@ -131,7 +134,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       });
     }
 
-    const query = `INSERT INTO ${this.connection.escapeId(this.tableName)} (${columns.map((column: string) => `"${this.connection.escapeId(column)}"`).join(',')}) VALUES(
+    const query = `INSERT INTO ${this.connection.escapeId(this.tableName)} (${columns.map((column: string) => this.connection.escapeId(column)).join(',')}) VALUES(
       ${columns.map(() => '?')}
     )`;
     debug('Generated create query.', query);
@@ -151,7 +154,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     if (typeof this.definition.filterSortFields !== 'undefined') {
       Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: FilterSortField]) => {
         if (typeof obj[field] !== 'undefined') {
-          columns.push('?');
+          columns.push(field);
           if (type === 'boolean') {
             values.push(obj[field] === true ? 1 : 0);
           } else {
@@ -162,7 +165,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     }
 
     const query = `UPDATE ${this.connection.escapeId(this.tableName)} SET
-      ${columns.map((column: string) => `"${column}" = ?`)}
+      ${columns.map((column: string) => `${this.connection.escapeId(column)} = ?`)}
       WHERE id = ?
     `;
     values.push(obj.id || '');

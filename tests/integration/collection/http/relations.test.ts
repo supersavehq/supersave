@@ -3,10 +3,14 @@ import supertest from 'supertest';
 import { Planet, Moon } from '../../../types';
 import { planetCollection, moonCollection } from '../../../entities';
 import { SuperSave } from '../../../../build';
+import getConnection from '../../../connection';
+import { clear } from '../../../mysql';
+
+beforeEach(clear);
 
 test('linking related collections via object', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>(planetCollection);
   await superSave.addCollection<Planet>(moonCollection);
@@ -53,7 +57,7 @@ test('linking related collections via object', async () => {
 
 test('linking related collections via object id', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>(planetCollection);
   await superSave.addCollection<Moon>(moonCollection);
@@ -100,7 +104,7 @@ test('linking related collections via object id', async () => {
 
 test('linking related collections via objects', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>(planetCollection);
   await superSave.addCollection<Moon>({
@@ -152,7 +156,7 @@ test('linking related collections via objects', async () => {
 
 test('linking related collections via object ids', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>(planetCollection);
   await superSave.addCollection<Moon>({

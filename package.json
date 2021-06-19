@@ -9,10 +9,11 @@
     "lint": "eslint ./src",
     "lint-fix": "eslint --fix ./src",
     "test": "jest",
-    "test-debug": "jest --runInBand",
+    "test-mysql": "jest --runInBand",
     "test-watch": "cross-env DEBUG=supersave:* jest --watch",
+    "test-watch-mysql": "cross-env DEBUG=supersave:* jest --runInBand --watch",
     "clean": "rimraf build",
-    "start": "cross-env DEBUG=supersave:* nodemon tests/run.js"
+    "start": "nodemon tests/run.js"
   },
   "repository": {
     "type": "git",

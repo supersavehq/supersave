@@ -4,10 +4,14 @@ import express from 'express';
 import { Planet } from '../../../types';
 import { planetCollection } from '../../../entities';
 import { Repository, SuperSave } from '../../../../build';
+import getConnection from '../../../connection';
+import { clear } from '../../../mysql';
+
+beforeEach(clear);
 
 test('Existing id returns object', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
   const planet = await planetRepository.create({ name: 'Earth' });

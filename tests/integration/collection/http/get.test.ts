@@ -3,10 +3,15 @@ import express from 'express';
 import { Planet, Moon } from '../../../types';
 import { planetCollection, moonCollection } from '../../../entities';
 import { Repository, SuperSave } from '../../../../build';
+import getConnection from '../../../connection';
+
+import { clear } from '../../../mysql';
+
+beforeEach(clear);
 
 test('empty collection returns empty array', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>(planetCollection);
   app.use('/', await superSave.getRouter());
@@ -24,7 +29,7 @@ test('empty collection returns empty array', async() => {
 
 test('collection items are returned', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
   app.use('/', await superSave.getRouter());
@@ -43,7 +48,7 @@ test('collection items are returned', async() => {
 
 test('collection items are sorted when requested: ascending', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
@@ -68,7 +73,7 @@ test('collection items are sorted when requested: ascending', async () => {
 
 test('collection items are sorted when requested: descending', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
@@ -93,7 +98,7 @@ test('collection items are sorted when requested: descending', async () => {
 
 test('undefined sort fields are not accepted.', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>({
     ...planetCollection,
@@ -110,7 +115,7 @@ test('undefined sort fields are not accepted.', async () => {
 
 test('offset is honored', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
@@ -124,20 +129,20 @@ test('offset is honored', async () => {
 
   const response = await supertest(app)
     .get('/planets')
-    .query({ offset: 1 })
+    .query({ offset: 1, sort: 'name' })
     .expect('Content-Type', /json/)
     .expect(200);
 
   expect(response.body.data).toBeDefined();
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(2);
-  expect(response.body.data[0].name).toBe('Earth');
+  expect(response.body.data[0].name).toBe('Mars');
   expect(response.body.meta.offset).toBe(1);
 });
 
 test('limit is honored', async () => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
@@ -150,13 +155,13 @@ test('limit is honored', async () => {
 
   const response = await supertest(app)
     .get('/planets')
-    .query({ limit: 1 })
+    .query({ limit: 1, sort: 'name' })
     .expect('Content-Type', /json/)
     .expect(200);
 
   expect(response.body.data).toBeDefined();
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(1);
-  expect(response.body.data[0].name).toBe('Mars');
+  expect(response.body.data[0].name).toBe('Earth');
   expect(response.body.meta.limit).toBe(1);
 });

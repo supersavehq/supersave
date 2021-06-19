@@ -35,7 +35,7 @@ async function getTableColumns(
 ): Promise<Record<string, MysqlType>> {
   const query = `DESC \`${tableName}\`;`;
   const columns = await getQuery<MysqlDescRow>(connection, query);
-  debug('Found columns', columns);
+
   if (columns === undefined) {
     throw new Error(`Unable to query table structure for ${tableName}.`);
   }
@@ -119,22 +119,27 @@ export default async (
     }
 
     if (fieldName !== 'id') {
-      columns.push(`"${connection.escapeId(fieldName)}" ${filterSortFieldTypeMap[filterSortFieldType]} NULL`);
-      indexes.push(`CREATE INDEX IF NOT EXISTS idx_${fieldName} ON ${connection.escapeId(newTableName)}("${connection.escapeId(fieldName)}")`);
+      columns.push(`${connection.escapeId(fieldName)} ${filterSortFieldTypeMap[filterSortFieldType]} NULL`);
+      indexes.push(fieldName);
     }
   }
 
   await executeQuery(connection, `DROP TABLE IF EXISTS ${connection.escapeId(newTableName)};`);
-  const createQuery = `CREATE TABLE ${connection.escapeId(newTableName)} (${columns.join(',')})`;
+  let createQuery = `CREATE TABLE ${connection.escapeId(newTableName)} (${columns.join(',')}`;
+  if (indexes.length > 0) {
+    createQuery = `${createQuery}, ${indexes.map((index) => `INDEX(${connection.escapeId(index)}${(entity.filterSortFields as Record<string, FilterSortField>)[index] === 'string' ? '(999)' : ''})`).join(',')})`;
+  } else {
+    createQuery = `${createQuery})`;
+  }
 
   // TODO start a transaction
   debug('Creating temporary table.', createQuery);
   await executeQuery(connection, createQuery);
 
-  debug('Setting indexes.');
-  for (let iter = indexes.length - 1; iter >= 0; iter -= 1) {
-    await executeQuery(connection, indexes[iter]);
-  }
+  // debug('Setting indexes.');
+  // for (let iter = indexes.length - 1; iter >= 0; iter -= 1) {
+  //   await executeQuery(connection, indexes[iter]);
+  // }
 
   // copy the fields
   debug('Copying contents to new table.');
