@@ -23,7 +23,7 @@ type SqlitePragmaColumn = {
 const filterSortFieldSqliteTypeMap = {
   string: SqliteType.TEXT,
   number: SqliteType.INTEGER,
-  boolean: SqliteType.INTEGER,
+  boolean: SqliteType.BOOLEAN,
 };
 
 async function getTableColumns(

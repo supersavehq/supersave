@@ -34,7 +34,8 @@ const moonCollection = {
 }
 
 const main = async () => {
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const connectionString = process.env.CONN || 'sqlite://memory:';
+  const superSave = await SuperSave.create(connectionString);
 
   await superSave.addCollection(planetCollection);
   await superSave.addCollection(moonCollection);

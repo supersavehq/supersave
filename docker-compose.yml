@@ -1,0 +1,25 @@
+version: "3.0"
+
+services:
+  node:
+    image: node:14
+    command: npm run test-watch-mysql
+    #command: npm start
+    volumes:
+        - .:/app
+    working_dir: /app
+    environment:
+      CONN: mysql://supersave:savesuper@mysql/supersave
+      DEBUG: supersave:*
+    links:
+      - mysql
+    ports:
+      - 4567:4567
+
+  mysql:
+    image: mysql:5.7    
+    environment:
+      - MYSQL_DATABASE=supersave
+      - MYSQL_USER=supersave
+      - MYSQL_PASSWORD=savesuper
+      - MYSQL_RANDOM_ROOT_PASSWORD=1

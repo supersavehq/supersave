@@ -3,10 +3,14 @@ import express from 'express';
 import { Planet, Moon } from '../../../types';
 import { planetCollection, moonCollection } from '../../../entities';
 import { SuperSave } from '../../../../build';
+import getConnection from '../../../connection';
+import { clear } from '../../../mysql';
+
+beforeEach(clear);
 
 test('only collections with no namespace returns array', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>(planetCollection);
   app.use('/', await superSave.getRouter());
@@ -24,7 +28,7 @@ test('only collections with no namespace returns array', async() => {
 
 test('collections with namespace', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>({...planetCollection, namespace: 'space'});
   app.use('/',await superSave.getRouter());
@@ -43,7 +47,7 @@ test('collections with namespace', async() => {
 
 test('additional collection properties are returned', async() => {
   const app: express.Application = express();
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>({ ...planetCollection, additionalProperties: { foo: 'bar' }});
   app.use('/', await superSave.getRouter());

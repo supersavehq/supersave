@@ -113,7 +113,7 @@ export default abstract class Repository<T> {
    * @param entity any
    * @returns any
    */
-  protected simplifyRelations(entity: any): T {
+  protected simplifyRelations(entity: any): T { // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
     if (this.definition.relations.length === 0) {
       return entity;
     }

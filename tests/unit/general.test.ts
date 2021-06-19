@@ -1,9 +1,13 @@
 import { SuperSave, Repository, EntityDefinition } from '../../build';
 import { moonEntity, planetEntity } from '../entities';
 import { Moon, Planet } from '../types';
+import getConnection from '../connection';
+import { clear } from '../mysql';
+
+beforeEach(clear);
 
 test('simple entity creation', async () => {
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
@@ -14,7 +18,7 @@ test('simple entity creation', async () => {
 });
 
 test('entity with relations', async () => {
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
   const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(moonEntity);
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
 
@@ -24,7 +28,10 @@ test('entity with relations', async () => {
   const planets = await planetRepository.getAll();
   expect(planets).toHaveLength(2);
 
-  const earthMoon: Moon = await moonRepository.create({ name: 'Moon', planet: planets[0] });
+
+  const earth = planets[0].name === 'Earth' ? planets[0] : planets[1]; // Sorting is undetermined
+
+  const earthMoon: Moon = await moonRepository.create({ name: 'Moon', planet: earth });
   expect(earthMoon.id).toBeDefined();
   expect(earthMoon.name).toEqual('Moon');
   expect(earthMoon.planet.name).toEqual('Earth');
@@ -43,7 +50,7 @@ test('not existing relation entity throws an error', async () => {
     }],
   }
 
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
   const moonRepository = await superSave.addEntity<Moon>(errorMoonEntity);
   await expect(async () => {
     try {
@@ -56,7 +63,7 @@ test('not existing relation entity throws an error', async () => {
 });
 
 test('entity update', async () => {
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
@@ -69,7 +76,7 @@ test('entity update', async () => {
 });
 
 test('entity delete', async () => {
-  const superSave = await SuperSave.create('sqlite://:memory:');
+  const superSave = await SuperSave.create(getConnection());
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
