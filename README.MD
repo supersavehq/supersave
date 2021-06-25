@@ -75,8 +75,8 @@ Use `await superSave.getRouter()` to register the API at your express applicatio
 
 # Development
 
-This module currently supports both sqlite and mysql. Development for sqlite is pretty straight-forward, you can use `:memory:` as the filename to set
-up a memory-only database.
+This module currently supports both sqlite and mysql. Development for sqlite is pretty straight-forward, 
+you can use `:memory:` as the filename to set up a memory-only database.
 
 Mysql is a bit more cumbersome, as it requires a running mysql server. For this purpose a `docker-compose.yml` file is present in the repository. Run
 the following command to start a jest watch command for the unit tests.

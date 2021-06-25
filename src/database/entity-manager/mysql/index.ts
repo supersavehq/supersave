@@ -25,7 +25,7 @@ class MysqlEntityManager extends EntityManager {
     };
 
     const fullEntityName = this.getFullEntityName(entity.name, entity.namespace);
-    const tableName = slug(fullEntityName);
+    const tableName = slug(fullEntityName).replace(/-/g, '_'); // mysql does not allow - (dash) in table names.;
     await this.createTable(tableName);
 
     const repository: Repository<T> = new Repository(
