@@ -130,3 +130,46 @@ test('results are properly limited', async () => {
   expect(offsetResult).toHaveLength(1);
   expect((offsetResult[0] as Planet).name).toBe('Earth');
 });
+
+test('Updates to filters', async () => {
+  interface FilteredPlanet extends Planet {
+    visible: boolean,
+    distance: number,
+    age: number,
+  }
+
+  const filteredPlanetEntity: EntityDefinition = {
+    ...planetEntity,
+    filterSortFields: {
+      name: 'string',
+      visible: 'boolean',
+      distance: 'number',
+    }
+  };
+
+  const superSave: SuperSave = await SuperSave.create(getConnection());
+  const planetRepository = await superSave.addEntity<FilteredPlanet>(planetEntity);
+
+  await planetRepository.create({ name: 'Earth', distance: 200, visible: false });
+
+  // initialize it again, with filters
+  const superSaveReinitialized: SuperSave = await SuperSave.create(getConnection());
+  const reinitializedPlanetRepository = await superSaveReinitialized.addEntity<FilteredPlanet>(filteredPlanetEntity);
+
+  await reinitializedPlanetRepository.create({ name: 'Earth', distance: 200, visible: false });
+
+  // initialize it again, with additional filters
+  const ageFilteredPlanetEntity: EntityDefinition = {
+    ...filteredPlanetEntity,
+    filterSortFields: {
+      name: 'string',
+      visible: 'boolean',
+      distance: 'number',
+    }
+  };
+
+  const superSaveReinitializedAge: SuperSave = await SuperSave.create(getConnection());
+  const reinitializedAgePlanetRepository = await superSaveReinitializedAge.addEntity<FilteredPlanet>(ageFilteredPlanetEntity);
+
+  await reinitializedAgePlanetRepository.create({ name: 'Earth', distance: 200, visible: false });
+});

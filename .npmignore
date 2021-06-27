@@ -5,3 +5,6 @@ tests
 jest.config.js
 tsconfig.json
 src
+docker-compose.yml
+db.sqlite
+.vscode

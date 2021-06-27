@@ -10,8 +10,8 @@ const debug: Debugger = Debug('supersave:db:sync');
 
 const enum MysqlType {
   TEXT = 'text',
-  INTEGER = 'int',
-  BOOLEAN = 'tinyint',
+  INTEGER = 'int(11)',
+  BOOLEAN = 'tinyint(4)',
 }
 
 type MysqlDescRow = {
