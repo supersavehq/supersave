@@ -60,6 +60,10 @@ class SuperSave {
     this.collectionHttp = await CollectionHttp.create(this.collectionManager, prefixWithoutSlash);
     return this.collectionHttp.getRouter();
   }
+
+  public close(): Promise<void> {
+    return this.em.close();
+  }
 }
 
 export default SuperSave;

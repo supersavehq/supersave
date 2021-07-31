@@ -1,17 +1,17 @@
 {
   "name": "supersave",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "A package to create a simple datastore with generic API for side projects.",
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc -w",
     "build": "tsc",
     "lint": "eslint ./src",
-    "lint-fix": "eslint --fix ./src",
+    "lint:fix": "eslint --fix ./src",
     "test": "jest",
-    "test-mysql": "jest --runInBand",
-    "test-watch": "cross-env DEBUG=supersave:* jest --watch",
-    "test-watch-mysql": "cross-env DEBUG=supersave:* jest --runInBand --watch",
+    "test:mysql": "jest --runInBand --forceExit",
+    "test:watch": "cross-env DEBUG=supersave:* jest --watch",
+    "test:watch:mysql": "cross-env DEBUG=supersave:* jest --runInBand --forceExit --watch",
     "clean": "rimraf build",
     "start": "nodemon tests/run.js"
   },

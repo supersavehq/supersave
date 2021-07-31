@@ -30,6 +30,7 @@ test('only collections with no namespace returns array', async() => {
   const planets = await planetRepository.getAll();
   expect(planets).toHaveLength(1);
   expect(planets[0].name).toBe(planet.name);
+  await superSave.close();
 });
 
 // TODO test creating with relations

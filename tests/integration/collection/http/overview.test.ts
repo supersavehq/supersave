@@ -24,6 +24,7 @@ test('only collections with no namespace returns array', async() => {
   expect(Array.isArray(response.body)).toBe(true);
   expect(response.body[0].name).toBe(planetCollection.name);
   expect(response.body[1].name).toBe(moonCollection.name);
+  await superSave.close();
 });
 
 test('collections with namespace', async() => {
@@ -43,6 +44,7 @@ test('collections with namespace', async() => {
   expect(Array.isArray(response.body['/space'])).toBe(true);
   expect(response.body['/space'][0].name).toBe(planetCollection.name);
   expect(response.body['/space'][1].name).toBe(moonCollection.name);
+  await superSave.close();
 });
 
 test('additional collection properties are returned', async() => {
@@ -62,4 +64,5 @@ test('additional collection properties are returned', async() => {
   expect(response.body[0].name).toBe(planetCollection.name);
   expect(response.body[0].foo).toBeDefined();
   expect(response.body[0].foo).toBe('bar');
+  await superSave.close();
 });

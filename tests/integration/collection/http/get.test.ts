@@ -138,6 +138,7 @@ test('offset is honored', async () => {
   expect(response.body.data).toHaveLength(2);
   expect(response.body.data[0].name).toBe('Mars');
   expect(response.body.meta.offset).toBe(1);
+  await superSave.close();
 });
 
 test('limit is honored', async () => {
@@ -164,4 +165,5 @@ test('limit is honored', async () => {
   expect(response.body.data).toHaveLength(1);
   expect(response.body.data[0].name).toBe('Earth');
   expect(response.body.meta.limit).toBe(1);
+  await superSave.close();
 });

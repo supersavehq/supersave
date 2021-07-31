@@ -53,6 +53,7 @@ test('linking related collections via object', async () => {
 
   const { data: updatedMoon } = updatedMoonResponse.body;
   expect(updatedMoon.planet.name).toBe('Saturn');
+  await superSave.close();
 });
 
 test('linking related collections via object id', async () => {
@@ -100,6 +101,7 @@ test('linking related collections via object id', async () => {
 
   const { data: updatedMoon } = updatedMoonResponse.body;
   expect(updatedMoon.planet.name).toBe('Saturn');
+  await superSave.close();
 });
 
 test('linking related collections via objects', async () => {
@@ -152,6 +154,7 @@ test('linking related collections via objects', async () => {
 
   const { data: updatedMoon } = updatedMoonResponse.body;
   expect(updatedMoon.planet[0].name).toBe('Saturn');
+  await superSave.close();
 });
 
 test('linking related collections via object ids', async () => {
@@ -203,4 +206,5 @@ test('linking related collections via object ids', async () => {
     .expect(200);
   const { data: updatedMoon } = updatedMoonResponse.body;
   expect(updatedMoon.planet[0].name).toBe('Saturn');
+  await superSave.close();
 });

@@ -23,6 +23,7 @@ test('delete using id', async() => {
 
   const allPlanets = await planetRepository.getAll();
   expect(allPlanets).toHaveLength(0);
+  await superSave.close();
 });
 
 test('delete not existing item', async() => {
@@ -35,4 +36,5 @@ test('delete not existing item', async() => {
   await supertest(app)
     .delete('/planets/foo')
     .expect(204);
+  await superSave.close();
 });

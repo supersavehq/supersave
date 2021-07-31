@@ -9,7 +9,7 @@ import { clear } from '../../../mysql';
 
 beforeEach(clear);
 
-const appForFilter: () => Promise<express.Application> = async (): Promise<express.Application> => {
+const appForFilter: () => Promise<[express.Application, SuperSave]> = async (): Promise<[express.Application, SuperSave]> => {
   const app: express.Application = express();
   const superSave = await SuperSave.create(getConnection());
 
@@ -23,11 +23,11 @@ const appForFilter: () => Promise<express.Application> = async (): Promise<expre
   await repository.create({ name: 'Earth', distance: 1000, });
   await repository.create({ name: 'Jupiter', distance: 2500, });
 
-  return app;
+  return [app, superSave];
 }
 
 test('filter on equals', async () => {
-  const app: express.Application = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -39,10 +39,11 @@ test('filter on equals', async () => {
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(1);
   expect(response.body.data[0].name).toBe('Earth');
+  await superSave.close();
 });
 
 test('filter using gt()', async () => {
-  const app: express.Application = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -53,10 +54,11 @@ test('filter using gt()', async () => {
   expect(response.body.data).toBeDefined();
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(2);
+  await superSave.close();
 });
 
 test('filter using gte()', async () => {
-  const app: express.Application = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -67,10 +69,11 @@ test('filter using gte()', async () => {
   expect(response.body.data).toBeDefined();
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(3);
+  await superSave.close();
 });
 
 test('filter using gte() with express simple query', async () => {
-  const app: express.Application = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
   app.set('query parser', 'simple');
 
   const response = await supertest(app)
@@ -82,10 +85,11 @@ test('filter using gte() with express simple query', async () => {
   expect(response.body.data).toBeDefined();
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(3);
+  await superSave.close();
 });
 
 test('filter using lt()', async () => {
-  const app: express.Application = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -96,10 +100,11 @@ test('filter using lt()', async () => {
   expect(response.body.data).toBeDefined();
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(0);
+  await superSave.close();
 });
 
 test('filter using lte()', async () => {
-  const app: express.Application = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -110,10 +115,11 @@ test('filter using lte()', async () => {
   expect(response.body.data).toBeDefined();
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(1);
+  await superSave.close();
 });
 
 test('filter using like()', async () => {
-  const app: express.Application = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -125,10 +131,11 @@ test('filter using like()', async () => {
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(1);
   expect(response.body.data[0].name).toBe('Earth');
+  await superSave.close();
 });
 
 test('filter using in()', async () => {
-  const app: express.Application = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -139,11 +146,12 @@ test('filter using in()', async () => {
   expect(response.body.data).toBeDefined();
   expect(Array.isArray(response.body.data)).toBe(true);
   expect(response.body.data).toHaveLength(2);
+  await superSave.close();
 });
 
 
 test('not existing filters', async () => {
-  const app: express.Application = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -153,4 +161,5 @@ test('not existing filters', async () => {
 
   expect(response.body.message).toBeDefined();
   expect(response.body.message).toBe('Cannot filter on not defined field foo.');
+  await superSave.close();
 });

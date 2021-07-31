@@ -24,11 +24,12 @@ test('linking entities via object', async () => {
   const mars = await planetRepository.create({ name: 'Mars' });
   const moon: Moon = moons[0];
   moon.planet = mars;
-  moonRepository.update(moon);
+  await moonRepository.update(moon);
   const updatedMoons = await moonRepository.getAll();
   expect(updatedMoons).toHaveLength(1);
   expect(updatedMoons[0]).toBeDefined();
   expect(updatedMoons[0].planet.name).toBe('Mars');
+  await superSave.close();
 });
 
 test('linking entities via id', async () => {
@@ -50,11 +51,12 @@ test('linking entities via id', async () => {
   const moon: Moon = moons[0];
   // @ts-expect-error
   moon.planet = mars.id;
-  moonRepository.update(moon);
+  await moonRepository.update(moon);
   const updatedMoons = await moonRepository.getAll();
   expect(updatedMoons).toHaveLength(1);
   expect(updatedMoons[0]).toBeDefined();
   expect(updatedMoons[0].planet.name).toBe('Mars');
+  await superSave.close();
 });
 
 test('linking multiple entities via objects', async () => {
@@ -94,6 +96,7 @@ test('linking multiple entities via objects', async () => {
   expect(updatedMoons[0]).toBeDefined();
   expect(updatedMoons[0].planet).toHaveLength(1);
   expect(updatedMoons[0].planet[0].name).toBe('Mars');
+  await superSave.close();
 });
 
 test('linking multiple entities via ids', async () => {
@@ -125,10 +128,11 @@ test('linking multiple entities via ids', async () => {
   const moon: Moon = moons[0];
   // @ts-expect-error
   moon.planet = [mars.id];
-  moonRepository.update(moon);
+  await moonRepository.update(moon);
   const updatedMoons = await moonRepository.getAll();
 
   expect(updatedMoons).toHaveLength(1);
   expect(updatedMoons[0].planet).toHaveLength(1);
   expect(updatedMoons[0].planet[0].name).toBe('Mars');
+  await superSave.close();
 });

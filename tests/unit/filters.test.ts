@@ -20,6 +20,7 @@ test('additional filter/sort fields can be defined', async() => {
   const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
 
   await planetRepository.create({ name: 'Earth' });
+  await superSave.close();
 });
 
 test('data can be queried using a filter', async() => {
@@ -38,6 +39,8 @@ test('data can be queried using a filter', async() => {
   query.eq('name', 'Earth');
 
   const filteredResult = await planetRepository.getOneByQuery(query);
+  await superSave.close();
+
   expect(filteredResult).toBeDefined();
   expect((filteredResult as Planet).name).toBe('Earth');
 });
@@ -71,6 +74,7 @@ test('results are filtered and sorted', async () => {
   const marsResult = await planetRepository.getOneByQuery(marsQuery);
   expect(marsResult).toBeDefined();
   expect((marsResult as Planet).name).toBe('Mars');
+  await superSave.close();
 });
 
 test('results are filtered and sorted', async () => {
@@ -100,6 +104,7 @@ test('results are filtered and sorted', async () => {
   const descResult = await planetRepository.getByQuery(descQuery);
   expect(descResult).toHaveLength(2);
   expect((descResult[0] as Planet).name).toBe('Mars');
+  await superSave.close();
 });
 
 test('results are properly limited', async () => {
@@ -129,6 +134,7 @@ test('results are properly limited', async () => {
   const offsetResult = await planetRepository.getByQuery(offsetQuery);
   expect(offsetResult).toHaveLength(1);
   expect((offsetResult[0] as Planet).name).toBe('Earth');
+  await superSave.close();
 });
 
 test('Updates to filters', async () => {
@@ -172,4 +178,5 @@ test('Updates to filters', async () => {
   const reinitializedAgePlanetRepository = await superSaveReinitializedAge.addEntity<FilteredPlanet>(ageFilteredPlanetEntity);
 
   await reinitializedAgePlanetRepository.create({ name: 'Earth', distance: 200, visible: false });
+  await superSave.close();
 });

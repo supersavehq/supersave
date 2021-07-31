@@ -52,6 +52,10 @@ class SqliteEntityManager extends EntityManager {
     debug(`Creating table ${tableName}.`);
     await this.connection.exec(`CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`);
   }
+
+  public async close(): Promise<void> {
+    return this.connection.close();
+  }
 }
 
 export default SqliteEntityManager;

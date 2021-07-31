@@ -26,6 +26,8 @@ abstract class EntityManager {
   }
 
   protected abstract createTable(tableName: string): Promise<void>;
+
+  public abstract close(): Promise<void>;
 }
 
 export default EntityManager;

@@ -18,6 +18,7 @@ export const clear = async (): Promise<void> => {
     );
   });
   await Promise.all(promises);
+  connection.end();
 };
 
 

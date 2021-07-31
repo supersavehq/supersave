@@ -28,7 +28,6 @@ test('entity with relations', async () => {
   const planets = await planetRepository.getAll();
   expect(planets).toHaveLength(2);
 
-
   const earth = planets[0].name === 'Earth' ? planets[0] : planets[1]; // Sorting is undetermined
 
   const earthMoon: Moon = await moonRepository.create({ name: 'Moon', planet: earth });
@@ -38,6 +37,7 @@ test('entity with relations', async () => {
 
   const retrievedMoon = await moonRepository.getById((earthMoon.id as string));
   expect(retrievedMoon).toBeDefined();
+  await superSave.close();
 });
 
 test('not existing relation entity throws an error', async () => {
@@ -58,6 +58,8 @@ test('not existing relation entity throws an error', async () => {
     } catch (error) {
       // TODO rewrite this to work with jest and toThrow(), but was not able to get it to work.
       expect(error.message).toContain('not-existing')
+    } finally {
+      await superSave.close();
     }
   });
 });
@@ -73,6 +75,7 @@ test('entity update', async () => {
   const checkEarth = await planetRepository.getById((earth.id as string));
   expect(checkEarth).toBeDefined();
   expect((checkEarth as Planet).name).toBe('Updated Earth');
+  await superSave.close();
 });
 
 test('entity delete', async () => {
@@ -87,4 +90,5 @@ test('entity delete', async () => {
   const remainingEarths = await planetRepository.getAll();
   expect(remainingEarths).toHaveLength(1);
   expect(remainingEarths[0].name).toBe('Mars');
+  await superSave.close();
 });

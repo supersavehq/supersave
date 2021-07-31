@@ -1,5 +1,5 @@
 import slug from 'slug';
-import { Connection } from 'mysql';
+import { Pool } from 'mysql';
 import Debug, { Debugger } from 'debug';
 import Repository from './repository';
 import { EntityDefinition } from '../../types';
@@ -11,7 +11,7 @@ import { executeQuery } from './utils';
 const debug: Debugger = Debug('supersave:db:em:mysql');
 
 class MysqlEntityManager extends EntityManager {
-  constructor(readonly connection: Connection) {
+  constructor(readonly pool: Pool) {
     super();
   }
 
@@ -32,12 +32,12 @@ class MysqlEntityManager extends EntityManager {
       updatedEntity,
       tableName,
       (name: string, namespace?: string) => this.getRepository(name, namespace),
-      this.connection,
+      this.pool,
     );
     await sync(
       updatedEntity,
       tableName,
-      this.connection,
+      this.pool,
       repository,
       (name: string, namespace?: string) => this.getRepository(name, namespace),
     );
@@ -52,7 +52,19 @@ class MysqlEntityManager extends EntityManager {
   protected async createTable(tableName: string): Promise<void> {
     debug(`Creating table ${tableName}.`);
 
-    return executeQuery(this.connection, `CREATE TABLE IF NOT EXISTS ${tableName} (id VARCHAR(32) PRIMARY KEY, contents TEXT NOT NULL)`);
+    return executeQuery(this.pool, `CREATE TABLE IF NOT EXISTS ${tableName} (id VARCHAR(32) PRIMARY KEY, contents TEXT NOT NULL)`);
+  }
+
+  public close(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.pool.end((err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    });
   }
 }
 

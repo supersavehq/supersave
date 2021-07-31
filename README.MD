@@ -73,6 +73,11 @@ Use `await superSave.getRouter()` to register the API at your express applicatio
     await superSave.addCollection(planetCollection);
     await superSave.addCollection(moonCollection);
 
+## Close connection
+
+You can use `await superSave.close()` to close the connection with the underlying storage. For _sqlite_ this means that the connection is closed
+and the superSave instance can no longer be used. When using _mysql_ this will close all active connections in the pool.
+
 # Development
 
 This module currently supports both sqlite and mysql. Development for sqlite is pretty straight-forward, 

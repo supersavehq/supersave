@@ -1,5 +1,5 @@
 import Debug, { Debugger } from 'debug';
-import { Connection } from 'mysql';
+import { Pool } from 'mysql';
 import shortUuid from 'short-uuid';
 import {
   BaseEntity, EntityDefinition, EntityRow, FilterSortField, QueryFilter, QueryOperatorEnum, QuerySort,
@@ -15,7 +15,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     readonly definition: EntityDefinition,
     readonly tableName: string,
     readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
-    readonly connection: Connection,
+    readonly pool: Pool,
   ) {
     super(definition, tableName, getRepository);
   }
@@ -29,8 +29,8 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       whereValues.push(value);
     });
 
-    const query = `SELECT id,contents FROM ${this.connection.escapeId(this.tableName)} WHERE id IN(${wherePlaceholders.join(',')})`;
-    const result = await getQuery<EntityRow>(this.connection, query, whereValues);
+    const query = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)} WHERE id IN(${wherePlaceholders.join(',')})`;
+    const result = await getQuery<EntityRow>(this.pool, query, whereValues);
     const transformResult: T[] = [];
     if (result) {
       const promises = [];
@@ -46,8 +46,8 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   }
 
   public async getAll(): Promise<T[]> {
-    const query = `SELECT id,contents FROM ${this.connection.escapeId(this.tableName)}`;
-    const result = await getQuery<EntityRow>(this.connection, query);
+    const query = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)}`;
+    const result = await getQuery<EntityRow>(this.pool, query);
 
     if (result) {
       const newResults = await this.transformQueryResultRows(result);
@@ -69,9 +69,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
           values.push(value);
         });
 
-        where.push(`${this.connection.escapeId(queryFilter.field)} IN(${placeholders.join(',')})`);
+        where.push(`${this.pool.escapeId(queryFilter.field)} IN(${placeholders.join(',')})`);
       } else {
-        where.push(`${this.connection.escapeId(queryFilter.field)} ${queryFilter.operator} ?`);
+        where.push(`${this.pool.escapeId(queryFilter.field)} ${queryFilter.operator} ?`);
         if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
           values.push(['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0);
         } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
@@ -82,18 +82,18 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       }
     });
 
-    let sqlQuery = `SELECT id,contents FROM ${this.connection.escapeId(this.tableName)}
+    let sqlQuery = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)}
       ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
     `;
     if (query.getSort().length > 0) {
-      sqlQuery = `${sqlQuery} ORDER BY ${query.getSort().map((sort: QuerySort) => `${this.connection.escapeId(sort.field)} ${sort.direction}`).join(',')}`;
+      sqlQuery = `${sqlQuery} ORDER BY ${query.getSort().map((sort: QuerySort) => `${this.pool.escapeId(sort.field)} ${sort.direction}`).join(',')}`;
     }
     if (query.getLimit()) {
       sqlQuery = `${sqlQuery} LIMIT ${typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()}`;
     }
 
     debug('Querying data using query.', sqlQuery);
-    const result = await getQuery<EntityRow>(this.connection, sqlQuery, values);
+    const result = await getQuery<EntityRow>(this.pool, sqlQuery, values);
     debug('Found result count', result.length);
     if (result) {
       return this.transformQueryResultRows(result);
@@ -102,8 +102,8 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   }
 
   public async deleteUsingId(id: string): Promise<void> {
-    const query = `DELETE FROM ${this.connection.escapeId(this.tableName)} WHERE id = ?`;
-    await executeQuery(this.connection, query, [id]);
+    const query = `DELETE FROM ${this.pool.escapeId(this.tableName)} WHERE id = ?`;
+    await executeQuery(this.pool, query, [id]);
   }
 
   public async create(obj: Omit<T, 'id'>): Promise<T> {
@@ -134,12 +134,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       });
     }
 
-    const query = `INSERT INTO ${this.connection.escapeId(this.tableName)} (${columns.map((column: string) => this.connection.escapeId(column)).join(',')}) VALUES(
+    const query = `INSERT INTO ${this.pool.escapeId(this.tableName)} (${columns.map((column: string) => this.pool.escapeId(column)).join(',')}) VALUES(
       ${columns.map(() => '?')}
     )`;
     debug('Generated create query.', query);
 
-    await executeQuery(this.connection, query, values);
+    await executeQuery(this.pool, query, values);
 
     return (this.getById(uuid) as unknown as T);
   }
@@ -164,20 +164,20 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       });
     }
 
-    const query = `UPDATE ${this.connection.escapeId(this.tableName)} SET
-      ${columns.map((column: string) => `${this.connection.escapeId(column)} = ?`)}
+    const query = `UPDATE ${this.pool.escapeId(this.tableName)} SET
+      ${columns.map((column: string) => `${this.pool.escapeId(column)} = ?`)}
       WHERE id = ?
     `;
     values.push(obj.id || '');
     debug('Generated update query.', query);
-    await executeQuery(this.connection, query, values);
-    return (this.getById(obj.id as string) as unknown as T);
+    await executeQuery(this.pool, query, values);
+    return (this.queryById(obj.id as string) as unknown as Promise<T>);
   }
 
   protected async queryById(id: string): Promise<T | null> {
-    const query = `SELECT id,contents FROM ${this.connection.escapeId(this.tableName)} WHERE id = ? LIMIT 1`;
+    const query = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)} WHERE id = ? LIMIT 1`;
     debug('Query for getById', query, id);
-    const result = await getQuery<EntityRow>(this.connection, query, [id]);
+    const result = await getQuery<EntityRow>(this.pool, query, [id]);
     if (result.length > 0) {
       return this.transformQueryResultRow(result[0]);
     }

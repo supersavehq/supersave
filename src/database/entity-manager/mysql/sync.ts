@@ -1,10 +1,10 @@
 import Debug, { Debugger } from 'debug';
-import { Connection } from 'mysql';
+import { PoolConnection, Pool } from 'mysql';
 import { EntityDefinition, FilterSortField } from '../../types';
 import Repository from './repository';
 import BaseRepository from '../repository';
 import { isEqual } from '../utils';
-import { getQuery, executeQuery } from './utils';
+import { getQuery, executeQuery, getConnectionFromPool } from './utils';
 
 const debug: Debugger = Debug('supersave:db:sync');
 
@@ -29,7 +29,7 @@ const filterSortFieldTypeMap = {
 };
 
 async function getTableColumns(
-  connection: Connection,
+  connection: PoolConnection,
   tableName: string,
   entity: EntityDefinition,
 ): Promise<Record<string, MysqlType>> {
@@ -88,7 +88,7 @@ function mapFilterSortFieldsToColumns(filterSortFields: Record<string, FilterSor
 export default async (
   entity: EntityDefinition,
   tableName: string,
-  connection: Connection,
+  pool: Pool,
   repository: Repository<any>,
   getRepository: (name: string, namespace?: string) => BaseRepository<any>,
 ): Promise<void> => {
@@ -96,10 +96,12 @@ export default async (
     return;
   }
 
+  const connection: PoolConnection = await getConnectionFromPool(pool);
   const mysqlColumns = await getTableColumns(connection, tableName, entity);
   const newMysqlColumns: Record<string, MysqlType> = mapFilterSortFieldsToColumns(entity.filterSortFields);
   if (!hasTableChanged(mysqlColumns, newMysqlColumns)) {
     debug('Table has not changed, not making changes.');
+    connection.release();
     return;
   }
 
@@ -119,15 +121,15 @@ export default async (
     }
 
     if (fieldName !== 'id') {
-      columns.push(`${connection.escapeId(fieldName)} ${filterSortFieldTypeMap[filterSortFieldType]} NULL`);
+      columns.push(`${pool.escapeId(fieldName)} ${filterSortFieldTypeMap[filterSortFieldType]} NULL`);
       indexes.push(fieldName);
     }
   }
 
-  await executeQuery(connection, `DROP TABLE IF EXISTS ${connection.escapeId(newTableName)};`);
-  let createQuery = `CREATE TABLE ${connection.escapeId(newTableName)} (${columns.join(',')}`;
+  await executeQuery(connection, `DROP TABLE IF EXISTS ${pool.escapeId(newTableName)};`);
+  let createQuery = `CREATE TABLE ${pool.escapeId(newTableName)} (${columns.join(',')}`;
   if (indexes.length > 0) {
-    createQuery = `${createQuery}, ${indexes.map((index) => `INDEX(${connection.escapeId(index)}${(entity.filterSortFields as Record<string, FilterSortField>)[index] === 'string' ? '(999)' : ''})`).join(',')})`;
+    createQuery = `${createQuery}, ${indexes.map((index) => `INDEX(${pool.escapeId(index)}${(entity.filterSortFields as Record<string, FilterSortField>)[index] === 'string' ? '(999)' : ''})`).join(',')})`;
   } else {
     createQuery = `${createQuery})`;
   }
@@ -143,7 +145,7 @@ export default async (
 
   // copy the fields
   debug('Copying contents to new table.');
-  const newRepository = new Repository(entity, newTableName, getRepository, connection);
+  const newRepository = new Repository(entity, newTableName, getRepository, pool);
 
   const oldAll = await repository.getAll();
   for (let iter = 0; iter < oldAll.length; iter += 1) {
@@ -151,6 +153,8 @@ export default async (
   }
 
   debug(`Completed copy. Dropping table ${tableName} and renaming temporary table ${newTableName}.`);
-  await executeQuery(connection, `DROP TABLE ${connection.escapeId(tableName)}`);
-  await executeQuery(connection, `ALTER TABLE ${connection.escapeId(newTableName)} RENAME ${connection.escapeId(tableName)}`);
+  await executeQuery(connection, `DROP TABLE ${pool.escapeId(tableName)}`);
+  await executeQuery(connection, `ALTER TABLE ${pool.escapeId(newTableName)} RENAME ${pool.escapeId(tableName)}`);
+
+  connection.release();
 };

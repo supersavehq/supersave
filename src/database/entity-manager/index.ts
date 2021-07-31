@@ -29,9 +29,9 @@ export default async (type: typeof MYSQL|typeof SQLITE, options: SqliteOptions|M
   }
   if (type === 'mysql') {
     const { default: Mysql } = await import('./mysql');
-    const { default: connection } = await import('./mysql/connection');
+    const { default: pool } = await import('./mysql/connection');
     debug('Setting up connection for mysql.');
-    const conn = await connection((options as MysqlOptions).connection);
+    const conn = await pool((options as MysqlOptions).connection);
     return new Mysql(conn);
   }
 

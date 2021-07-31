@@ -20,6 +20,7 @@ test('there is a difference between with and without namespace', async () => {
   await planetRepository.create({ name: 'Earth' });
   const otherResults = await otherPlanetRepository.getAll();
   expect(otherResults).toHaveLength(0);
+  await superSave.close();
 });
 
 test('there is a difference between different namespaces with same entity', async () => {
@@ -41,6 +42,7 @@ test('there is a difference between different namespaces with same entity', asyn
   await planetRepository.create({ name: 'Earth' });
   const otherResults = await otherPlanetRepository.getAll();
   expect(otherResults).toHaveLength(0);
+  await superSave.close();
 });
 
 test('relations from different namespace', async () => {
@@ -74,4 +76,5 @@ test('relations from different namespace', async () => {
   const retrievedMoon = await moonRepository.getById((earthMoon.id as string));
   expect(retrievedMoon).toBeDefined();
   expect((retrievedMoon as Moon).planet).toBeDefined();
+  await superSave.close();
 });

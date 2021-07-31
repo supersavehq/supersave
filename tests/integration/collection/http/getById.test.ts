@@ -23,4 +23,5 @@ test('Existing id returns object', async() => {
     .expect(200);
 
   expect(response.body.data).toEqual(planet);
+  await superSave.close();
 });
