@@ -69,10 +69,10 @@ test('entity update', async () => {
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
-  // @ts-ignore
   await planetRepository.update({ id: (earth.id as string), name: 'Updated Earth' });
-  // @ts-ignore
+
   const checkEarth = await planetRepository.getById((earth.id as string));
+
   expect(checkEarth).toBeDefined();
   expect((checkEarth as Planet).name).toBe('Updated Earth');
   await superSave.close();

@@ -146,6 +146,8 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   public async update(obj: T): Promise<T> {
     const columns = ['contents'];
     const simplifiedObject: any = this.simplifyRelations(obj);
+    delete simplifiedObject.id; // the id is already stored as a column
+
     const values: Record<string, string|number|boolean|null> = {
       ':contents': JSON.stringify(simplifiedObject),
       ':id': obj.id || '',
@@ -153,6 +155,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
       Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: FilterSortField]) => {
+        if (field === 'id') {
+          return;
+        }
         if (typeof obj[field] !== 'undefined') {
           columns.push(field);
           if (type === 'boolean') {
@@ -169,11 +174,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       WHERE id = :id
     `;
     debug('Generated update query.', query);
+
     await this.connection.run(
       query,
       values,
     );
-    return (this.getById(obj.id as string) as unknown as T);
+    return (this.queryById(obj.id as string) as unknown as T);
   }
 
   protected async queryById(id: string): Promise<T | null> {

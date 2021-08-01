@@ -147,12 +147,16 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   public async update(obj: T): Promise<T> {
     const columns = ['contents'];
     const simplifiedObject: any = this.simplifyRelations(obj);
+    delete simplifiedObject.id; // the id is already stored as a column
     const values: (string|number|boolean|null)[] = [
       JSON.stringify(simplifiedObject),
     ];
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
       Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: FilterSortField]) => {
+        if (field === 'id') {
+          return;
+        }
         if (typeof obj[field] !== 'undefined') {
           columns.push(field);
           if (type === 'boolean') {
