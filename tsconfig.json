@@ -16,7 +16,8 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    "esModuleInterop": true
   },
   "exclude": [
     "tests",

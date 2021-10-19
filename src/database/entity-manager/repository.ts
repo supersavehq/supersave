@@ -18,7 +18,7 @@ export default abstract class Repository<T> {
     return this.queryById(id);
   }
 
-  public async getOneByQuery(query: Query): Promise<T|null> {
+  public async getOneByQuery(query: Query): Promise<T | null> {
     const result: T[] = await this.getByQuery(query);
     if (result.length === 0) {
       return null;

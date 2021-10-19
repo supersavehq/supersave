@@ -33,7 +33,7 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
       debug('Created collection item at', req.path);
       res.json({ data: item });
     } catch (error) {
-      debug('Error while storing item.', error);
-      res.status(500).json({ message: error.message });
+      debug('Error while storing item. %o', error);
+      res.status(500).json({ message: (error as Error).message });
     }
   };

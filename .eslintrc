@@ -2,7 +2,8 @@
   "root": true,
   "parser": "@typescript-eslint/parser",
   "plugins": [
-    "@typescript-eslint"
+    "@typescript-eslint",
+    "unicorn"
   ],
   "extends": [
     "eslint:recommended",
@@ -22,6 +23,7 @@
     "import/no-extraneous-dependencies": 1,
     "import/prefer-default-export": 0,
     "@typescript-eslint/ban-ts-comment": 1,
-    "max-len": 0
+    "max-len": 0,
+    "unicorn/filename-case": "error"
   }
 }

@@ -19,7 +19,7 @@ type SqliteOptions = {
   file: string,
 };
 
-export default async (type: typeof MYSQL|typeof SQLITE, options: SqliteOptions|MysqlOptions): Promise<EntityManager> => {
+export default async (type: typeof MYSQL | typeof SQLITE, options: SqliteOptions | MysqlOptions): Promise<EntityManager> => {
   if (type === 'sqlite') {
     const { default: Sqlite } = await import('./sqlite');
     const { default: connection } = await import('./sqlite/connection');

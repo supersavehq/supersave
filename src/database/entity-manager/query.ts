@@ -54,12 +54,12 @@ class Query {
     return this.where;
   }
 
-  public limit(limit: number|undefined): Query {
+  public limit(limit: number | undefined): Query {
     this.limitValue = limit;
     return this;
   }
 
-  public getLimit(): number|undefined {
+  public getLimit(): number | undefined {
     return this.limitValue;
   }
 
@@ -68,11 +68,11 @@ class Query {
     return this;
   }
 
-  public getOffset(): number|undefined {
+  public getOffset(): number | undefined {
     return this.offsetValue;
   }
 
-  public sort(field: string, direction: 'asc'|'desc' = 'asc'): Query {
+  public sort(field: string, direction: 'asc' | 'desc' = 'asc'): Query {
     if (typeof this.filterSortFields[field] === 'undefined') {
       throw new Error(`Requested sort field ${field} is not defined.`);
     }

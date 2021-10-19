@@ -17,7 +17,7 @@ const enum MysqlType {
 type MysqlDescRow = {
   Field: string,
   Type: MysqlType,
-  Null: 'YES'|'NO',
+  Null: 'YES' | 'NO',
   Key: string,
   Extra: string,
 };
@@ -45,7 +45,7 @@ async function getTableColumns(
     return {};
   }
 
-  const mysqlTypeMap: Record<MysqlType|string, FilterSortField> = {
+  const mysqlTypeMap: Record<MysqlType | string, FilterSortField> = {
     'varchar(32)': 'string', // the id
     [MysqlType.TEXT]: 'string',
     [MysqlType.INTEGER]: 'number',

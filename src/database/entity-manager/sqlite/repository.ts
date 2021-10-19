@@ -56,7 +56,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   }
 
   public async getByQuery(query: Query): Promise<T[]> {
-    const values: Record<string, string|number> = {};
+    const values: Record<string, string | number> = {};
     const where: string[] = [];
 
     query.getWhere().forEach((queryFilter: QueryFilter) => {
@@ -109,7 +109,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     const columns: string[] = ['id', 'contents'];
     const uuid = typeof obj.id === 'string' ? (obj.id as string) : shortUuid.generate();
 
-    const values: Record<string, string|number|null> = {
+    const values: Record<string, string | number | null> = {
       ':id': uuid,
       ':contents': JSON.stringify({
         ...this.definition.template,
@@ -148,7 +148,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     const simplifiedObject: any = this.simplifyRelations(obj);
     delete simplifiedObject.id; // the id is already stored as a column
 
-    const values: Record<string, string|number|boolean|null> = {
+    const values: Record<string, string | number | boolean | null> = {
       ':contents': JSON.stringify(simplifiedObject),
       ':id': obj.id || '',
     };

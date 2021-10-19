@@ -19,6 +19,6 @@ export default (collection: ManagedCollection): (req: Request, rsp: Response) =>
       res.json({ data: item });
     } catch (error) {
       debug('Error while storing item.', error);
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ message: (error as Error).message });
     }
   };

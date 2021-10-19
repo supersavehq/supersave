@@ -22,7 +22,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
   public async getByIds(ids: string[]): Promise<T[]> {
     const wherePlaceholders: string[] = [];
-    const whereValues: (string|number|boolean)[] = [];
+    const whereValues: (string | number | boolean)[] = [];
 
     ids.forEach((value) => {
       wherePlaceholders.push('?');
@@ -57,7 +57,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   }
 
   public async getByQuery(query: Query): Promise<T[]> {
-    const values: (string|number|boolean)[] = [];
+    const values: (string | number | boolean)[] = [];
     const where: string[] = [];
 
     query.getWhere().forEach((queryFilter: QueryFilter) => {
@@ -110,7 +110,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     const columns: string[] = ['id', 'contents'];
     const uuid = typeof obj.id === 'string' ? (obj.id as string) : shortUuid.generate();
 
-    const values: (string|number|null)[] = [
+    const values: (string | number | null)[] = [
       uuid,
       JSON.stringify({
         ...this.definition.template,
@@ -148,7 +148,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     const columns = ['contents'];
     const simplifiedObject: any = this.simplifyRelations(obj);
     delete simplifiedObject.id; // the id is already stored as a column
-    const values: (string|number|boolean|null)[] = [
+    const values: (string | number | boolean | null)[] = [
       JSON.stringify(simplifiedObject),
     ];
 

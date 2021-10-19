@@ -4,9 +4,9 @@ import Debug, { Debugger } from 'debug';
 const debug: Debugger = Debug('supersave:db:em:mysql');
 
 export const getQuery = async <T>(
-  connection: PoolConnection|Pool,
+  connection: PoolConnection | Pool,
   query: string,
-  values: (string|number|boolean|null)[] = [],
+  values: (string | number | boolean | null)[] = [],
 ): Promise<T[]> => new Promise((resolve, reject) => {
   debug('Fetching results for query.', query, values);
 
@@ -20,9 +20,9 @@ export const getQuery = async <T>(
 });
 
 export const executeQuery = async (
-  connection: PoolConnection|Pool,
+  connection: PoolConnection | Pool,
   query: string,
-  values: (string|number|boolean|null)[] = [],
+  values: (string | number | boolean | null)[] = [],
 ): Promise<void> => new Promise((resolve, reject) => {
   debug('Executing query', query);
   connection.query(query, values, (err) => {

@@ -5,7 +5,7 @@ export interface Relation {
   multiple: boolean,
 }
 
-export type FilterSortField = 'string'|'number'|'boolean';
+export type FilterSortField = 'string' | 'number' | 'boolean';
 
 export interface EntityDefinition {
   name: string,
@@ -43,7 +43,7 @@ export type QueryFilter = {
 
 export type QuerySort = {
   field: string,
-  direction: 'asc'|'desc',
+  direction: 'asc' | 'desc',
 };
 
-export type QueryFilterValue = string|number|any;
+export type QueryFilterValue = string | number | any;

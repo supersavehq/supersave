@@ -9,7 +9,7 @@ const debug: Debugger = Debug('supersave:http:get');
 function sort(query: Query, sortRequest: string): void {
   const sorts = sortRequest.split(',');
   sorts.forEach((sortField: string) => {
-    let direction: 'asc'|'desc' = 'asc';
+    let direction: 'asc' | 'desc' = 'asc';
     let parsedSortField = sortField;
 
     if (sortField.startsWith('-')) {
@@ -31,7 +31,7 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
   // eslint-disable-next-line max-len
   const filterSortFields: Record<string, FilterSortField> = (collection.filterSortFields as Record<string, FilterSortField>);
   Object.entries(filters).forEach(([field, value]: [string, string]) => {
-    const matches: string[]|null = (field || '').match(/(.*)\[(.*)\]$/);
+    const matches: string[] | null = (field || '').match(/(.*)\[(.*)\]$/);
     if (matches === null || matches.length !== 3) {
       if (collection.filterSortFields && collection.filterSortFields[field] === 'boolean') {
         query.eq(field, ['1', 1, 'true', true].includes(value));
@@ -102,7 +102,7 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
       try {
         sort(query, (req.query.sort as string));
       } catch (error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ message: (error as Error).message });
         return;
       }
     }
@@ -129,7 +129,7 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
     try {
       filter(collection, query, filters);
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      res.status(400).json({ message: (error as Error).message });
       return;
     }
 

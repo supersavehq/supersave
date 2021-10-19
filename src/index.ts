@@ -1,4 +1,4 @@
-import SuperSave from './SuperSave';
+import SuperSave from './super-save';
 import {
   EntityDefinition,
   BaseEntity,

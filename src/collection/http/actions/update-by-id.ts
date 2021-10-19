@@ -45,7 +45,7 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
       const updatedResult = await repository.update(updatedEntity);
       res.json({ data: updatedResult });
     } catch (error) {
-      debug('Error while storing item.', error);
-      res.status(500).json({ message: error.message });
+      debug('Error while storing item. %o', error);
+      res.status(500).json({ message: (error as Error).message });
     }
   };
