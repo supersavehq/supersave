@@ -1,6 +1,6 @@
 {
   "name": "supersave",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "description": "A package to create a simple datastore with generic API for side projects.",
   "main": "build/index.js",
   "scripts": {
@@ -80,7 +80,7 @@
     "express": "~4.17",
     "mysql": "~2.18",
     "sqlite": "~4.0",
-    "sqlite3": "~4.2"
+    "sqlite3": "~5.0"
   },
   "dependencies": {
     "debug": "^4.3.2",

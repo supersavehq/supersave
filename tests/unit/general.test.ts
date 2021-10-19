@@ -57,7 +57,7 @@ test('not existing relation entity throws an error', async () => {
       await moonRepository.getAll();
     } catch (error) {
       // TODO rewrite this to work with jest and toThrow(), but was not able to get it to work.
-      expect(error.message).toContain('not-existing')
+      expect((error as Error).message).toContain('not-existing')
     } finally {
       await superSave.close();
     }
