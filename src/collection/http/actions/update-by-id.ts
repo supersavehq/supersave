@@ -1,6 +1,8 @@
 import { Response, Request } from 'express';
 import Debug, { Debugger } from 'debug';
 import { ManagedCollection } from '../../types';
+import { HookError } from '../../error';
+import transform from './utils';
 
 const debug: Debugger = Debug('supersave:http:updateById');
 
@@ -36,13 +38,49 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
         }
       });
 
-      const updatedEntity = {
+      let updatedEntity = {
         ...item,
         ...body,
       };
       debug('Updating entity.', updatedEntity);
 
-      const updatedResult = await repository.update(updatedEntity);
+      let updatedResult: any;
+      if (collection.hooks?.updateBefore) {
+        // hook
+        try {
+          updatedEntity = await collection.hooks?.updateBefore(
+            collection,
+            req,
+            res,
+            updatedEntity,
+          );
+          updatedResult = await collection.repository.update(updatedEntity);
+        } catch (error: unknown | HookError) {
+          debug('Error thrown in updateBeforeHook %o', error);
+          // @ts-expect-error Error has type unknown.
+          const code = error?.statusCode ?? 500;
+          // @ts-expect-error Error has type unknown.
+          res.status(code).json({ message: error.message });
+          return;
+        }
+      } else {
+        updatedResult = await collection.repository.update(updatedEntity);
+      }
+
+      // transform hook
+      if (collection.hooks?.entityTransform) {
+        try {
+          updatedResult = await transform(collection, req, res, updatedResult);
+        } catch (error: unknown | HookError) {
+          debug('Error thrown in updateById transform %o', error);
+          // @ts-expect-error Error has type unknown.
+          const code = error?.statusCode ?? 500;
+          // @ts-expect-error Error has type unknown.
+          res.status(code).json({ message: error.message });
+          return;
+        }
+      }
+
       res.json({ data: updatedResult });
     } catch (error) {
       debug('Error while storing item. %o', error);

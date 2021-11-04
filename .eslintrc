@@ -24,6 +24,11 @@
     "import/prefer-default-export": 0,
     "@typescript-eslint/ban-ts-comment": 1,
     "max-len": 0,
-    "unicorn/filename-case": "error"
+    "unicorn/filename-case": [
+      "error",
+      {
+        "case": "kebabCase"
+      }
+    ]
   }
 }

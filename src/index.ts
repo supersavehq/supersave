@@ -1,16 +1,13 @@
 import SuperSave from './super-save';
-import {
-  EntityDefinition,
-  BaseEntity,
-} from './database/types';
-import { Query, Repository } from './database/entity-manager';
-import { Collection } from './collection/types';
 
 export {
   EntityDefinition,
-  Repository,
-  Query,
   BaseEntity,
-  Collection,
+} from './database/types';
+export { Query, Repository } from './database/entity-manager';
+export { Collection, Hooks } from './collection/types';
+export { HookError } from './collection/error';
+
+export {
   SuperSave,
 };

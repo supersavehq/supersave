@@ -27,9 +27,9 @@ export default (
   });
 
   if (Object.keys(output).length === 1 && typeof output['/'] !== 'undefined') {
-    res.json(output['/']);
+    res.json({ data: output['/'] });
     return;
   }
 
-  res.json(output);
+  res.json({ data: output });
 };

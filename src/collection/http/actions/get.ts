@@ -3,6 +3,8 @@ import Debug, { Debugger } from 'debug';
 import { Query } from '../../../database/entity-manager';
 import { FilterSortField, QueryOperatorEnum } from '../../../database/types';
 import { ManagedCollection } from '../../types';
+import { HookError } from '../../error';
+import transform from './utils';
 
 const debug: Debugger = Debug('supersave:http:get');
 
@@ -97,56 +99,90 @@ function limitOffset(query: Query, params: Record<string, string>): void {
 export default (collection: ManagedCollection): (req: Request, res: Response) => Promise<void> =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (req: Request, res: Response): Promise<void> => {
-    const query: Query = collection.repository.createQuery();
-    if (req.query.sort) {
+    try {
+      // hook
+      if (collection.hooks?.get) {
+        try {
+          await collection.hooks.get(collection, req, res);
+        } catch (error: unknown | HookError) {
+          debug('Error thrown in getHook %o', error);
+          // @ts-expect-error Error has type unknown.
+          const code = error?.statusCode ?? 500;
+          // @ts-expect-error Error has type unknown.
+          res.status(code).json({ message: error.message });
+          return;
+        }
+      }
+
+      const query: Query = collection.repository.createQuery();
+      if (req.query.sort) {
+        try {
+          sort(query, (req.query.sort as string));
+        } catch (error) {
+          res.status(400).json({ message: (error as Error).message });
+          return;
+        }
+      }
+
+      const filters: Record<string, string> = {};
+      Object.entries((req.query as Record<string, any>)).forEach(([field, value]: [string, any]) => {
+        if (field === 'sort' || field === 'limit' || field === 'offset') {
+          return;
+        }
+
+        // Express by default parses values as ?distance[>]=0 into { distance: { '>': 0 }}. Unless 'the query parser'
+        // setting is set the 'simple' on app., then its always a string.
+        if (typeof value === 'string') {
+          filters[field] = value;
+        } else if (typeof value === 'object') {
+          Object.entries(value).forEach(([operator, filterValue]: [string, any]) => {
+            filters[`${field}[${operator}]`] = `${filterValue}`;
+          });
+        } else {
+          debug('Ignoring query parameter', field, value);
+        }
+      });
+
       try {
-        sort(query, (req.query.sort as string));
+        filter(collection, query, filters);
       } catch (error) {
         res.status(400).json({ message: (error as Error).message });
         return;
       }
-    }
 
-    const filters: Record<string, string> = {};
-    Object.entries((req.query as Record<string, any>)).forEach(([field, value]: [string, any]) => {
-      if (field === 'sort' || field === 'limit' || field === 'offset') {
-        return;
-      }
+      try {
+        limitOffset(query, req.query as Record<string, any>);
+        let items = await collection.repository.getByQuery(query);
 
-      // Express by default parses values as ?distance[>]=0 into { distance: { '>': 0 }}. Unless 'the query parser'
-      // setting is set the 'simple' on app., then its always a string.
-      if (typeof value === 'string') {
-        filters[field] = value;
-      } else if (typeof value === 'object') {
-        Object.entries(value).forEach(([operator, filterValue]: [string, any]) => {
-          filters[`${field}[${operator}]`] = `${filterValue}`;
+        // transform hook
+        if (collection.hooks?.entityTransform) {
+          try {
+            items = await Promise.all(items.map(async (item) => transform(collection, req, res, item)));
+          } catch (error: unknown | HookError) {
+            debug('Error thrown in get transform %o', error);
+            // @ts-expect-error Error has type unknown.
+            const code = error?.statusCode ?? 500;
+            // @ts-expect-error Error has type unknown.
+            res.status(code).json({ message: error.message });
+            return;
+          }
+        }
+
+        res.json({
+          data: items,
+          meta: {
+            sort: query.getSort(),
+            limit: query.getLimit(),
+            filters: query.getWhere(),
+            offset: query.getOffset(),
+          },
         });
-      } else {
-        debug('Ignoring query parameter', field, value);
+      } catch (error) {
+        debug('Unexpected error while querying collection.', error);
+        res.status(500).json({ mesage: 'An unexpected error occurred, try again later.' });
       }
-    });
-
-    try {
-      filter(collection, query, filters);
     } catch (error) {
-      res.status(400).json({ message: (error as Error).message });
-      return;
-    }
-
-    try {
-      limitOffset(query, req.query as Record<string, any>);
-      const items = await collection.repository.getByQuery(query);
-      res.json({
-        data: items,
-        meta: {
-          sort: query.getSort(),
-          limit: query.getLimit(),
-          filters: query.getWhere(),
-          offset: query.getOffset(),
-        },
-      });
-    } catch (error) {
-      debug('Unexpected error while querying collection.', error);
-      res.status(500).json({ mesage: 'An unexpected error occurred, try again later.' });
+      debug('Error while fetching items. Query: %o, %o', req.query, error);
+      res.status(500).json({ message: (error as Error).message });
     }
   };

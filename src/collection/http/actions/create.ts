@@ -1,10 +1,14 @@
 import { Response, Request } from 'express';
 import Debug, { Debugger } from 'debug';
 import { ManagedCollection } from '../../types';
+import { HookError } from '../../error';
+import transform from './utils';
 
 const debug: Debugger = Debug('supersave:http:create');
 
-export default (collection: ManagedCollection): (req: Request, res: Response) => Promise<void> =>
+export default (
+    collection: ManagedCollection
+  ): ((req: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -15,10 +19,14 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
       collection.relations.forEach((relation) => {
         if (body[relation.field]) {
           if (relation.multiple && !Array.isArray(body[relation.field])) {
-            throw new Error(`Attribute ${relation.field} is a relation for multiple entities, but no array is provided.`);
+            throw new Error(
+              `Attribute ${relation.field} is a relation for multiple entities, but no array is provided.`
+            );
           } else if (relation.multiple) {
             if (body[relation.field][0] === 'string') {
-              body[relation.field] = body[relation.field].map((id: string) => ({ id }));
+              body[relation.field] = body[relation.field].map((id: string) => ({
+                id,
+              }));
             }
           } else if (!relation.multiple) {
             if (typeof body[relation.field] === 'string') {
@@ -29,8 +37,43 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
           }
         }
       });
-      const item: any = await collection.repository.create(body);
+
+      let item: any;
+      if (collection.hooks?.createBefore) {
+        // hook
+        try {
+          const updatedBody: any = await collection.hooks.createBefore(
+            collection,
+            req,
+            res,
+            body,
+          );
+          item = await collection.repository.create(updatedBody);
+        } catch (error: unknown | HookError) {
+          debug('Error thrown in createBeforeHook %o', error);
+          // @ts-expect-error Error has type unknown.
+          const code = error?.statusCode ?? 500;
+          // @ts-expect-error Error has type unknown.
+          res.status(code).json({ message: error.message });
+          return;
+        }
+      } else {
+        item = await collection.repository.create(body);
+      }
       debug('Created collection item at', req.path);
+
+      // transform hook
+      try {
+        item = await transform(collection, req, res, item);
+      } catch (error: unknown | HookError) {
+        debug('Error thrown in create transformHook %o', error);
+        // @ts-expect-error Error has type unknown.
+        const code = error?.statusCode ?? 500;
+        // @ts-expect-error Error has type unknown.
+        res.status(code).json({ message: error.message });
+        return;
+      }
+
       res.json({ data: item });
     } catch (error) {
       debug('Error while storing item. %o', error);

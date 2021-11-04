@@ -21,9 +21,9 @@ test('only collections with no namespace returns array', async() => {
     .expect('Content-Type', /json/)
     .expect(200);
 
-  expect(Array.isArray(response.body)).toBe(true);
-  expect(response.body[0].name).toBe(planetCollection.name);
-  expect(response.body[1].name).toBe(moonCollection.name);
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.data[0].name).toBe(planetCollection.name);
+  expect(response.body.data[1].name).toBe(moonCollection.name);
   await superSave.close();
 });
 
@@ -40,10 +40,10 @@ test('collections with namespace', async() => {
     .expect('Content-Type', /json/)
     .expect(200);
 
-  expect(response.body['/space']).toBeDefined();
-  expect(Array.isArray(response.body['/space'])).toBe(true);
-  expect(response.body['/space'][0].name).toBe(planetCollection.name);
-  expect(response.body['/space'][1].name).toBe(moonCollection.name);
+  expect(response.body.data['/space']).toBeDefined();
+  expect(Array.isArray(response.body.data['/space'])).toBe(true);
+  expect(response.body.data['/space'][0].name).toBe(planetCollection.name);
+  expect(response.body.data['/space'][1].name).toBe(moonCollection.name);
   await superSave.close();
 });
 
@@ -60,9 +60,9 @@ test('additional collection properties are returned', async() => {
     .expect('Content-Type', /json/)
     .expect(200);
 
-  expect(Array.isArray(response.body)).toBe(true);
-  expect(response.body[0].name).toBe(planetCollection.name);
-  expect(response.body[0].foo).toBeDefined();
-  expect(response.body[0].foo).toBe('bar');
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.data[0].name).toBe(planetCollection.name);
+  expect(response.body.data[0].foo).toBeDefined();
+  expect(response.body.data[0].foo).toBe('bar');
   await superSave.close();
 });
