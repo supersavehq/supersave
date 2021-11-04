@@ -93,7 +93,7 @@ export type Hooks = {
 };
 ``` 
 
-A hook can be set when registering a collection, by provided at least one of the functions described above.
+A hook can be set when registering a collection, by providing at least one of the functions described above.
 
 ```
 const planetCollection = {
