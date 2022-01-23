@@ -73,8 +73,8 @@ test('linking multiple entities via objects', async () => {
         name: 'planet',
         field: 'planet',
         multiple: true,
-      }
-    ]
+      },
+    ],
   });
   await moonRepository.create({ name: 'Moon', planet: [earth, mars] });
 
@@ -113,8 +113,8 @@ test('linking multiple entities via ids', async () => {
         name: 'planet',
         field: 'planet',
         multiple: true,
-      }
-    ]
+      },
+    ],
   });
   await moonRepository.create({ name: 'Moon', planet: [earth.id, mars.id] });
 
@@ -134,5 +134,29 @@ test('linking multiple entities via ids', async () => {
   expect(updatedMoons).toHaveLength(1);
   expect(updatedMoons[0].planet).toHaveLength(1);
   expect(updatedMoons[0].planet[0].name).toBe('Mars');
+  await superSave.close();
+});
+
+test('having an empty relation with multiple entities should not throw an error', async () => {
+  const superSave = await SuperSave.create(getConnection());
+
+  await superSave.addEntity<Planet>(planetEntity);
+  const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>({
+    ...moonEntity,
+    relations: [
+      {
+        name: 'planet',
+        field: 'planet',
+        multiple: true,
+      },
+    ],
+  });
+  await moonRepository.create({ name: 'Moon' });
+
+  const moons = await moonRepository.getAll();
+  expect(moons).toHaveLength(1);
+  expect(moons[0]).toBeDefined();
+  expect(moons[0].planet).toHaveLength(0);
+
   await superSave.close();
 });

@@ -1,6 +1,4 @@
-import {
-  BaseEntity, EntityDefinition, EntityRow, Relation,
-} from '../types';
+import { BaseEntity, EntityDefinition, EntityRow, Relation } from '../types';
 import Query from './query';
 
 export default abstract class Repository<T> {
@@ -9,7 +7,7 @@ export default abstract class Repository<T> {
   constructor(
     readonly definition: EntityDefinition,
     readonly tableName: string,
-    readonly getRepository: (name: string, namespace?: string) => Repository<any>,
+    readonly getRepository: (name: string, namespace?: string) => Repository<any>
   ) {
     this.relationFields = definition.relations?.map((relation: Relation) => relation.field);
   }
@@ -41,11 +39,11 @@ export default abstract class Repository<T> {
 
   protected async transformQueryResultRow(row: EntityRow): Promise<T> {
     const parsedContents = JSON.parse(row.contents);
-    return ({
+    return {
       ...this.definition.template,
-      ...await this.fillInRelations(parsedContents),
+      ...(await this.fillInRelations(parsedContents)),
       id: row.id, // always make the row the leading ID field
-    } as unknown as T);
+    } as unknown as T;
   }
 
   protected async fillInRelations(entity: T): Promise<T> {
@@ -74,8 +72,11 @@ export default abstract class Repository<T> {
           clone[relation.field] = relatedEntity;
         }
       } else {
-        // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
-        const promise = this.mapRelationToMultiple(relation, clone[relation.field]);
+        const promise = this.mapRelationToMultiple(
+          relation,
+          // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
+          clone[relation.field]
+        );
         promises.push(promise);
         const mappedEntities = await promise;
         // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
@@ -87,7 +88,7 @@ export default abstract class Repository<T> {
   }
 
   protected async mapRelationToMultiple(relation: Relation, arr: string[]): Promise<BaseEntity[]> {
-    if (!Array.isArray(arr)) {
+    if (!Array.isArray(arr) || arr.length === 0) {
       return [];
     }
     const repository = this.getRepository(relation.name, relation.namespace);
@@ -113,7 +114,8 @@ export default abstract class Repository<T> {
    * @param entity any
    * @returns any
    */
-  protected simplifyRelations(entity: any): T { // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
+  protected simplifyRelations(entity: any): T {
+    // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
     if (this.definition.relations.length === 0) {
       return { ...entity };
     }
@@ -126,13 +128,12 @@ export default abstract class Repository<T> {
       if (relation.multiple) {
         clone[relation.field] = entity[relation.field].map(
           // if it is an object, use its id, else the entity is already represented by its as as string, use that immediately
-          (relationEntity: BaseEntity) => (typeof relationEntity === 'string' ? relationEntity : relationEntity.id),
+          (relationEntity: BaseEntity) => (typeof relationEntity === 'string' ? relationEntity : relationEntity.id)
         );
       } else {
         // if it is an object, use its id, else the entity is already represented by its as as string, use that immediately
-        clone[relation.field] = typeof clone[relation.field] === 'string'
-          ? clone[relation.field]
-          : clone[relation.field].id;
+        clone[relation.field] =
+          typeof clone[relation.field] === 'string' ? clone[relation.field] : clone[relation.field].id;
       }
     });
     return clone;
