@@ -8,3 +8,4 @@ src
 docker-compose.yml
 db.sqlite
 .vscode
+.prettierignore
