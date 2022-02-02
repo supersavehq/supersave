@@ -4,12 +4,18 @@ import Query from './query';
 export default abstract class Repository<T> {
   protected relationFields: string[];
 
+  protected relationsMap: Map<string, Relation>;
+
   constructor(
     readonly definition: EntityDefinition,
     readonly tableName: string,
     readonly getRepository: (name: string, namespace?: string) => Repository<any>
   ) {
-    this.relationFields = definition.relations?.map((relation: Relation) => relation.field);
+    this.relationFields = definition.relations.map((relation: Relation) => relation.field);
+    this.relationsMap = new Map<string, Relation>();
+    definition.relations.forEach((relation) => {
+      this.relationsMap.set(relation.field, relation);
+    });
   }
 
   public async getById(id: string): Promise<T | null> {

@@ -2,7 +2,14 @@ import Debug, { Debugger } from 'debug';
 import { Pool } from 'mysql';
 import shortUuid from 'short-uuid';
 import {
-  BaseEntity, EntityDefinition, EntityRow, FilterSortField, QueryFilter, QueryOperatorEnum, QuerySort,
+  BaseEntity,
+  EntityDefinition,
+  EntityRow,
+  FilterSortField,
+  QueryFilter,
+  QueryOperatorEnum,
+  QuerySort,
+  Relation,
 } from '../../types';
 import Query from '../query';
 import BaseRepository from '../repository';
@@ -15,7 +22,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     readonly definition: EntityDefinition,
     readonly tableName: string,
     readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
-    readonly pool: Pool,
+    readonly pool: Pool
   ) {
     super(definition, tableName, getRepository);
   }
@@ -29,7 +36,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       whereValues.push(value);
     });
 
-    const query = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)} WHERE id IN(${wherePlaceholders.join(',')})`;
+    const query = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)} WHERE id IN(${wherePlaceholders.join(
+      ','
+    )})`;
     const result = await getQuery<EntityRow>(this.pool, query, whereValues);
     const transformResult: T[] = [];
     if (result) {
@@ -86,10 +95,15 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
     `;
     if (query.getSort().length > 0) {
-      sqlQuery = `${sqlQuery} ORDER BY ${query.getSort().map((sort: QuerySort) => `${this.pool.escapeId(sort.field)} ${sort.direction}`).join(',')}`;
+      sqlQuery = `${sqlQuery} ORDER BY ${query
+        .getSort()
+        .map((sort: QuerySort) => `${this.pool.escapeId(sort.field)} ${sort.direction}`)
+        .join(',')}`;
     }
     if (query.getLimit()) {
-      sqlQuery = `${sqlQuery} LIMIT ${typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()}`;
+      sqlQuery = `${sqlQuery} LIMIT ${
+        typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()
+      }`;
     }
 
     debug('Querying data using query.', sqlQuery);
@@ -119,53 +133,67 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     ];
     if (typeof this.definition.filterSortFields !== 'undefined') {
       // eslint-disable-next-line max-len
-      Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: FilterSortField]) => {
-        if (field === 'id') {
-          return;
+      Object.entries(this.definition.filterSortFields).forEach(
+        ([field, type]: [field: string, type: FilterSortField]) => {
+          if (field === 'id') {
+            return;
+          }
+          columns.push(field);
+          if (type === 'boolean') {
+            values.push(obj[field] === true ? 1 : 0);
+          } else if (this.relationsMap.has(field)) {
+            const relation = this.relationsMap.get(field) as Relation;
+            if (Array.isArray(obj[field]) && relation.multiple) {
+              // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
+              values.push(obj[field].map((entity: BaseEntity) => entity.id).join(','));
+            } else if (relation.multiple) {
+              // Its a list, but no array is set.
+              values.push(null);
+            } else {
+              // Store the individual value.
+              values.push(obj[field]?.id);
+            }
+          } else if (field !== 'id') {
+            values.push(typeof obj[field] !== 'undefined' && obj[field] !== null ? obj[field] : null);
+          }
         }
-        columns.push(field);
-        if (type === 'boolean') {
-          values.push(obj[field] === true ? 1 : 0);
-        } else if (this.relationFields.includes(field)) {
-          values.push(obj[field]?.id);
-        } else if (field !== 'id') {
-          values.push((typeof obj[field] !== 'undefined' && obj[field] !== null) ? obj[field] : null);
-        }
-      });
+      );
     }
 
-    const query = `INSERT INTO ${this.pool.escapeId(this.tableName)} (${columns.map((column: string) => this.pool.escapeId(column)).join(',')}) VALUES(
+    const query = `INSERT INTO ${this.pool.escapeId(this.tableName)} (${columns
+      .map((column: string) => this.pool.escapeId(column))
+      .join(',')}) VALUES(
       ${columns.map(() => '?')}
     )`;
-    debug('Generated create query.', query);
+    debug('Generated create query.', query, values);
 
     await executeQuery(this.pool, query, values);
 
-    return (this.getById(uuid) as unknown as T);
+    return this.getById(uuid) as unknown as T;
   }
 
   public async update(obj: T): Promise<T> {
     const columns = ['contents'];
     const simplifiedObject: any = this.simplifyRelations(obj);
     delete simplifiedObject.id; // the id is already stored as a column
-    const values: (string | number | boolean | null)[] = [
-      JSON.stringify(simplifiedObject),
-    ];
+    const values: (string | number | boolean | null)[] = [JSON.stringify(simplifiedObject)];
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
-      Object.entries(this.definition.filterSortFields).forEach(([field, type]: [field: string, type: FilterSortField]) => {
-        if (field === 'id') {
-          return;
-        }
-        if (typeof obj[field] !== 'undefined') {
-          columns.push(field);
-          if (type === 'boolean') {
-            values.push(obj[field] === true ? 1 : 0);
-          } else {
-            values.push(simplifiedObject[field] || null);
+      Object.entries(this.definition.filterSortFields).forEach(
+        ([field, type]: [field: string, type: FilterSortField]) => {
+          if (field === 'id') {
+            return;
+          }
+          if (typeof obj[field] !== 'undefined') {
+            columns.push(field);
+            if (type === 'boolean') {
+              values.push(obj[field] === true ? 1 : 0);
+            } else {
+              values.push(simplifiedObject[field] || null);
+            }
           }
         }
-      });
+      );
     }
 
     const query = `UPDATE ${this.pool.escapeId(this.tableName)} SET
@@ -175,7 +203,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     values.push(obj.id || '');
     debug('Generated update query.', query);
     await executeQuery(this.pool, query, values);
-    return (this.queryById(obj.id as string) as unknown as Promise<T>);
+    return this.queryById(obj.id as string) as unknown as Promise<T>;
   }
 
   protected async queryById(id: string): Promise<T | null> {
