@@ -35,7 +35,7 @@ test('entity with relations', async () => {
   expect(earthMoon.name).toEqual('Moon');
   expect(earthMoon.planet.name).toEqual('Earth');
 
-  const retrievedMoon = await moonRepository.getById((earthMoon.id as string));
+  const retrievedMoon = await moonRepository.getById(earthMoon.id as string);
   expect(retrievedMoon).toBeDefined();
   await superSave.close();
 });
@@ -43,12 +43,14 @@ test('entity with relations', async () => {
 test('not existing relation entity throws an error', async () => {
   const errorMoonEntity: EntityDefinition = {
     ...moonEntity,
-    relations: [{
-      name: 'not-existing',
-      field: 'planet',
-      multiple: false,
-    }],
-  }
+    relations: [
+      {
+        name: 'not-existing',
+        field: 'planet',
+        multiple: false,
+      },
+    ],
+  };
 
   const superSave = await SuperSave.create(getConnection());
   const moonRepository = await superSave.addEntity<Moon>(errorMoonEntity);
@@ -57,25 +59,11 @@ test('not existing relation entity throws an error', async () => {
       await moonRepository.getAll();
     } catch (error) {
       // TODO rewrite this to work with jest and toThrow(), but was not able to get it to work.
-      expect((error as Error).message).toContain('not-existing')
+      expect((error as Error).message).toContain('not-existing');
     } finally {
       await superSave.close();
     }
   });
-});
-
-test('entity update', async () => {
-  const superSave = await SuperSave.create(getConnection());
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
-
-  const earth: Planet = await planetRepository.create({ name: 'Earth' });
-  await planetRepository.update({ id: (earth.id as string), name: 'Updated Earth' });
-
-  const checkEarth = await planetRepository.getById((earth.id as string));
-
-  expect(checkEarth).toBeDefined();
-  expect((checkEarth as Planet).name).toBe('Updated Earth');
-  await superSave.close();
 });
 
 test('entity delete', async () => {
@@ -85,7 +73,7 @@ test('entity delete', async () => {
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
   await planetRepository.create({ name: 'Mars' });
   // @ts-ignore
-  await planetRepository.deleteUsingId((earth.id as string));
+  await planetRepository.deleteUsingId(earth.id as string);
 
   const remainingEarths = await planetRepository.getAll();
   expect(remainingEarths).toHaveLength(1);

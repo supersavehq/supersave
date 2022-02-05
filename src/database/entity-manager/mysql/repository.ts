@@ -188,6 +188,18 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
             columns.push(field);
             if (type === 'boolean') {
               values.push(obj[field] === true ? 1 : 0);
+            } else if (this.relationsMap.has(field)) {
+              const relation = this.relationsMap.get(field) as Relation;
+              if (Array.isArray(obj[field]) && relation.multiple) {
+                // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
+                values.push(obj[field].map((entity: BaseEntity) => entity.id).join(','));
+              } else if (relation.multiple) {
+                // Its a list, but no array is set.
+                values.push(null);
+              } else {
+                // Store the individual value.
+                values.push(obj[field]?.id);
+              }
             } else {
               values.push(simplifiedObject[field] || null);
             }
