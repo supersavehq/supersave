@@ -43,7 +43,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
         if (hooks.createBefore) {
           // hook
           try {
-            itemBody = await hooks.createBefore(collection, req, res, body);
+            itemBody = await hooks.createBefore(collection, req, res, itemBody);
           } catch (error: unknown | HookError) {
             debug('Error thrown in createBeforeHook %o', error);
             // @ts-expect-error Error has type unknown.

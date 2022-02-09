@@ -160,19 +160,15 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
         let items = await collection.repository.getByQuery(query);
 
         // transform hook
-        for (const hooks of collection.hooks || []) {
-          if (hooks.entityTransform) {
-            try {
-              items = await Promise.all(items.map(async (item) => transform(collection, req, res, item)));
-            } catch (error: unknown | HookError) {
-              debug('Error thrown in get transform %o', error);
-              // @ts-expect-error Error has type unknown.
-              const code = error?.statusCode ?? 500;
-              // @ts-expect-error Error has type unknown.
-              res.status(code).json({ message: error.message });
-              return;
-            }
-          }
+        try {
+          items = await Promise.all(items.map(async (item) => transform(collection, req, res, item)));
+        } catch (error: unknown | HookError) {
+          debug('Error thrown in get transform %o', error);
+          // @ts-expect-error Error has type unknown.
+          const code = error?.statusCode ?? 500;
+          // @ts-expect-error Error has type unknown.
+          res.status(code).json({ message: error.message });
+          return;
         }
 
         res.json({

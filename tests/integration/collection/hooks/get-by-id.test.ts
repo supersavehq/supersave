@@ -30,6 +30,14 @@ describe('getById Hook', () => {
             };
           },
         },
+        {
+          entityTransform: (_collection: Collection, _req: Request, _res: Response, entity: any): any => {
+            return {
+              ...entity,
+              name: `2ND - ${entity.name}`,
+            };
+          },
+        },
       ],
     });
     const planet = await planetRepository.create({ name: 'Earth' });
@@ -40,7 +48,7 @@ describe('getById Hook', () => {
       .expect('Content-Type', /json/)
       .expect(200);
 
-    expect(response.body.data.name).toEqual(`HOOK-${planet.name}`);
+    expect(response.body.data.name).toEqual(`2ND - HOOK-${planet.name}`);
     expect(response.body.data.extra).toBe(true);
     await superSave.close();
   });
