@@ -1,14 +1,12 @@
 import { Response, Request } from 'express';
 import Debug, { Debugger } from 'debug';
 import { ManagedCollection } from '../../types';
-import { HookError } from '../../error';
 import transform from './utils';
+import { HookError } from '../../error';
 
 const debug: Debugger = Debug('supersave:http:create');
 
-export default (
-    collection: ManagedCollection
-  ): ((req: Request, res: Response) => Promise<void>) =>
+export default (collection: ManagedCollection): ((req: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -39,27 +37,24 @@ export default (
       });
 
       let item: any;
-      if (collection.hooks?.createBefore) {
-        // hook
-        try {
-          const updatedBody: any = await collection.hooks.createBefore(
-            collection,
-            req,
-            res,
-            body,
-          );
-          item = await collection.repository.create(updatedBody);
-        } catch (error: unknown | HookError) {
-          debug('Error thrown in createBeforeHook %o', error);
-          // @ts-expect-error Error has type unknown.
-          const code = error?.statusCode ?? 500;
-          // @ts-expect-error Error has type unknown.
-          res.status(code).json({ message: error.message });
-          return;
+      let itemBody = body;
+
+      for (const hooks of collection.hooks || []) {
+        if (hooks.createBefore) {
+          // hook
+          try {
+            itemBody = await hooks.createBefore(collection, req, res, body);
+          } catch (error: unknown | HookError) {
+            debug('Error thrown in createBeforeHook %o', error);
+            // @ts-expect-error Error has type unknown.
+            const code = error?.statusCode ?? 500;
+            // @ts-expect-error Error has type unknown.
+            res.status(code).json({ message: error.message });
+            return;
+          }
         }
-      } else {
-        item = await collection.repository.create(body);
       }
+      item = await collection.repository.create(itemBody);
       debug('Created collection item at', req.path);
 
       // transform hook

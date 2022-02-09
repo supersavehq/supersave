@@ -6,7 +6,7 @@ import transform from './utils';
 
 const debug: Debugger = Debug('supersave:http:getById');
 
-export default (collection: ManagedCollection): (req: Request, res: Response) => Promise<void> =>
+export default (collection: ManagedCollection): ((req: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -16,16 +16,18 @@ export default (collection: ManagedCollection): (req: Request, res: Response) =>
       let item = await repository.getById(id);
 
       // hook
-      if (collection.hooks?.getById) {
-        try {
-          item = await collection.hooks.getById(collection, req, res, item);
-        } catch (error: unknown | HookError) {
-          debug('Error thrown in getById hook %o', error);
-          // @ts-expect-error Error has type unknown.
-          const code = error?.statusCode ?? 500;
-          // @ts-expect-error Error has type unknown.
-          res.status(code).json({ message: error.message });
-          return;
+      for (const hooks of collection.hooks || []) {
+        if (hooks.getById) {
+          try {
+            item = await hooks.getById(collection, req, res, item);
+          } catch (error: unknown | HookError) {
+            debug('Error thrown in getById hook %o', error);
+            // @ts-expect-error Error has type unknown.
+            const code = error?.statusCode ?? 500;
+            // @ts-expect-error Error has type unknown.
+            res.status(code).json({ message: error.message });
+            return;
+          }
         }
       }
       if (item === null) {

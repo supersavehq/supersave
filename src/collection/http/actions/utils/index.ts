@@ -6,11 +6,13 @@ export default async function transform(
   req: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  item: any,
+  item: any
 ): Promise<any> {
-  if (!collection.hooks?.entityTransform) {
-    return item;
+  let transformedItem = item;
+  for (const hooks of collection.hooks || []) {
+    if (hooks.entityTransform) {
+      transformedItem = hooks.entityTransform(collection, req, res, item);
+    }
   }
-
-  return collection.hooks.entityTransform(collection, req, res, item);
+  return transformedItem;
 }

@@ -9,26 +9,28 @@ import { clear } from '../../../mysql';
 beforeEach(clear);
 
 describe('updateBefore hook', () => {
-  test('the hook can manipulate a value.', async() => {
+  test('the hook can manipulate a value.', async () => {
     const app: express.Application = express();
     const superSave = await SuperSave.create(getConnection());
 
     await superSave.addCollection<Planet>({
       ...planetCollection,
-      hooks: {
-        updateBefore: (_collection: Collection, _req: Request, _res: Response, entity: any): any => {
-          return {
-            ...entity,
-            name: `HOOK-${entity.name ?? ''}`,
-          }
+      hooks: [
+        {
+          updateBefore: (_collection: Collection, _req: Request, _res: Response, entity: any): any => {
+            return {
+              ...entity,
+              name: `HOOK-${entity.name ?? ''}`,
+            };
+          },
+          entityTransform: (_collection: Collection, _req: Request, _res: Response, entity: any): any => {
+            return {
+              ...entity,
+              name: `${entity.name}-TRANSFORM`,
+            };
+          },
         },
-        entityTransform: (_collection: Collection, _req: Request, _res: Response, entity: any): any => {
-          return {
-            ...entity,
-            name: `${entity.name}-TRANSFORM`,
-          };
-        },
-      },
+      ],
     });
     app.use('/api', await superSave.getRouter());
 
@@ -58,11 +60,13 @@ describe('updateBefore hook', () => {
 
     await superSave.addCollection<Planet>({
       ...planetCollection,
-      hooks: {
-        updateBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
-          throw new HookError('Test message', 401);
+      hooks: [
+        {
+          updateBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
+            throw new HookError('Test message', 401);
+          },
         },
-      },
+      ],
     });
     app.use('/api', await superSave.getRouter());
 
@@ -78,7 +82,7 @@ describe('updateBefore hook', () => {
     // update
     const response = await supertest(app)
       .patch(`/api/planets/${createResponse.body.data.id}`)
-      .send({ name: 'Updated planet'})
+      .send({ name: 'Updated planet' })
       .expect('Content-Type', /json/)
       .expect(401);
 
@@ -91,11 +95,13 @@ describe('updateBefore hook', () => {
 
     await superSave.addCollection<Planet>({
       ...planetCollection,
-      hooks: {
-        updateBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
-          throw new HookError('Test message');
+      hooks: [
+        {
+          updateBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
+            throw new HookError('Test message');
+          },
         },
-      },
+      ],
     });
     app.use('/api', await superSave.getRouter());
 
@@ -112,7 +118,6 @@ describe('updateBefore hook', () => {
       .send(planet)
       .expect('Content-Type', /json/)
       .expect(500);
-
 
     expect(updateResponse.body).toEqual({ message: 'Test message' });
   });

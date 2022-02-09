@@ -9,36 +9,34 @@ import { clear } from '../../../mysql';
 beforeEach(clear);
 
 describe('createBefore hook', () => {
-  test('the hook can manipulate a value.', async() => {
+  test('the hook can manipulate a value.', async () => {
     const app: express.Application = express();
     const superSave = await SuperSave.create(getConnection());
 
     await superSave.addCollection<Planet>({
       ...planetCollection,
-      hooks: {
-        createBefore: (_collection: Collection, _req: Request, _res: Response, entity: any) => {
-          return {
-            ...entity,
-            name: `HOOK-${entity.name}`,
-          }
+      hooks: [
+        {
+          createBefore: (_collection: Collection, _req: Request, _res: Response, entity: any) => {
+            return {
+              ...entity,
+              name: `HOOK-${entity.name}`,
+            };
+          },
+          entityTransform: (_collection: Collection, _req: Request, _res: Response, entity: any) => {
+            return {
+              ...entity,
+              extra: true,
+            };
+          },
         },
-        entityTransform: (_collection: Collection, _req: Request, _res: Response, entity: any) => {
-          return {
-            ...entity,
-            extra: true
-          };
-        }
-      },
+      ],
     });
     app.use('/api', await superSave.getRouter());
 
     const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
 
-    const response = await supertest(app)
-      .post('/api/planets')
-      .send(planet)
-      .expect('Content-Type', /json/)
-      .expect(200);
+    const response = await supertest(app).post('/api/planets').send(planet).expect('Content-Type', /json/).expect(200);
 
     expect(response.body.data).toBeDefined();
     expect(typeof response.body.data).toBe('object');
@@ -52,23 +50,21 @@ describe('createBefore hook', () => {
 
     await superSave.addCollection<Planet>({
       ...planetCollection,
-      hooks: {
-        createBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
-          throw new HookError('Test message', 401);
+      hooks: [
+        {
+          createBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
+            throw new HookError('Test message', 401);
+          },
         },
-      },
+      ],
     });
     app.use('/api', await superSave.getRouter());
 
     const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
 
-    const response = await supertest(app)
-      .post('/api/planets')
-      .send(planet)
-      .expect('Content-Type', /json/)
-      .expect(401);
+    const response = await supertest(app).post('/api/planets').send(planet).expect('Content-Type', /json/).expect(401);
 
-      expect(response.body).toEqual({ message: 'Test message' });
+    expect(response.body).toEqual({ message: 'Test message' });
   });
 
   test('the message is copied from the exception', async () => {
@@ -77,22 +73,20 @@ describe('createBefore hook', () => {
 
     await superSave.addCollection<Planet>({
       ...planetCollection,
-      hooks: {
-        createBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
-          throw new HookError('Test message');
+      hooks: [
+        {
+          createBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
+            throw new HookError('Test message');
+          },
         },
-      },
+      ],
     });
     app.use('/api', await superSave.getRouter());
 
     const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
 
-    const response = await supertest(app)
-      .post('/api/planets')
-      .send(planet)
-      .expect('Content-Type', /json/)
-      .expect(500);
+    const response = await supertest(app).post('/api/planets').send(planet).expect('Content-Type', /json/).expect(500);
 
-      expect(response.body).toEqual({ message: 'Test message' });
+    expect(response.body).toEqual({ message: 'Test message' });
   });
 });
