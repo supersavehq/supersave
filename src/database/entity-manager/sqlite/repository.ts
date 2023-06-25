@@ -1,6 +1,6 @@
 import Debug, { Debugger } from 'debug';
-import { Database } from 'sqlite';
 import shortUuid from 'short-uuid';
+import { Database } from 'sqlite';
 import {
   BaseEntity,
   EntityDefinition,
@@ -116,15 +116,15 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     await this.connection.run(query, { ':id': id });
   }
 
-  public async create(obj: Omit<T, 'id'>): Promise<T> {
+  public async create(object: T): Promise<T> {
     const columns: string[] = ['id', 'contents'];
-    const uuid = typeof obj.id === 'string' ? (obj.id as string) : shortUuid.generate();
+    const uuid = typeof object.id === 'string' ? (object.id as string) : shortUuid.generate();
 
     const values: Record<string, string | number | null> = {
       ':id': uuid,
       ':contents': JSON.stringify({
         ...this.definition.template,
-        ...this.simplifyRelations(obj),
+        ...this.simplifyRelations(object),
       }),
     };
     if (typeof this.definition.filterSortFields !== 'undefined') {
@@ -133,21 +133,21 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
         ([field, type]: [field: string, type: FilterSortField]) => {
           columns.push(field);
           if (type === 'boolean') {
-            values[`:${field}`] = obj[field] === true ? 1 : 0;
+            values[`:${field}`] = object[field] === true ? 1 : 0;
           } else if (this.relationsMap.has(field)) {
             const relation = this.relationsMap.get(field) as Relation;
-            if (Array.isArray(obj[field]) && relation.multiple) {
+            if (Array.isArray(object[field]) && relation.multiple) {
               // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
-              values[`:${field}`] = obj[field].map((entity: BaseEntity) => entity.id).join(',');
+              values[`:${field}`] = object[field].map((entity: BaseEntity) => entity.id).join(',');
             } else if (relation.multiple) {
               // Its a list, but no array is set.
               values[`:${field}`] = null;
             } else {
               // Store the individual value.
-              values[`:${field}`] = obj[field]?.id;
+              values[`:${field}`] = object[field]?.id;
             }
           } else if (field !== 'id') {
-            values[`:${field}`] = typeof obj[field] !== 'undefined' && obj[field] !== null ? obj[field] : null;
+            values[`:${field}`] = typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null;
           }
         }
       );
@@ -163,14 +163,14 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     return this.getById(uuid) as unknown as T;
   }
 
-  public async update(obj: T): Promise<T> {
+  public async update(object: T): Promise<T> {
     const columns = ['contents'];
-    const simplifiedObject: any = this.simplifyRelations(obj);
+    const simplifiedObject: any = this.simplifyRelations(object);
     delete simplifiedObject.id; // the id is already stored as a column
 
     const values: Record<string, string | number | boolean | null> = {
       ':contents': JSON.stringify(simplifiedObject),
-      ':id': obj.id || '',
+      ':id': object.id || '',
     };
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
@@ -179,10 +179,10 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
           if (field === 'id') {
             return;
           }
-          if (typeof obj[field] !== 'undefined') {
+          if (typeof object[field] !== 'undefined') {
             columns.push(field);
             if (type === 'boolean') {
-              values[`:${field}`] = obj[field] === true ? 1 : 0;
+              values[`:${field}`] = object[field] === true ? 1 : 0;
             } else if (this.relationsMap.has(field)) {
               const relation = this.relationsMap.get(field) as Relation;
               if (Array.isArray(simplifiedObject[field]) && relation.multiple) {
@@ -210,7 +210,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     debug('Generated update query.', query);
 
     await this.connection.run(query, values);
-    return this.queryById(obj.id as string) as unknown as T;
+    return this.queryById(object.id as string) as unknown as T;
   }
 
   protected async queryById(id: string): Promise<T | null> {

@@ -1,10 +1,10 @@
-import { Response, Request } from 'express';
 import Debug, { Debugger } from 'debug';
+import { Request, Response } from 'express';
+import transform from './utils';
 import { Query } from '../../../database/entity-manager';
 import { FilterSortField, QueryOperatorEnum } from '../../../database/types';
-import { ManagedCollection } from '../../types';
 import { HookError } from '../../error';
-import transform from './utils';
+import { ManagedCollection } from '../../types';
 
 const debug: Debugger = Debug('supersave:http:get');
 
@@ -31,10 +31,7 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
   }
 
   // eslint-disable-next-line max-len
-  const filterSortFields: Record<string, FilterSortField> = collection.filterSortFields as Record<
-    string,
-    FilterSortField
-  >;
+  const filterSortFields: Record<string, FilterSortField> = collection.filterSortFields;
   Object.entries(filters).forEach(([field, value]: [string, string]) => {
     const matches: string[] | null = (field || '').match(/(.*)\[(.*)\]$/);
     if (matches === null || matches.length !== 3) {
@@ -99,15 +96,15 @@ function limitOffset(query: Query, params: Record<string, string>): void {
   query.offset(parseInt(offset, 10) || 0);
 }
 
-export default (collection: ManagedCollection): ((req: Request, res: Response) => Promise<void>) =>
+export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
-  async (req: Request, res: Response): Promise<void> => {
+  async (request, res: Response): Promise<void> => {
     try {
       // hook
       for (const hooks of collection.hooks || []) {
         if (hooks.get) {
           try {
-            await hooks.get(collection, req, res);
+            await hooks.get(collection, request, res);
           } catch (error: unknown | HookError) {
             debug('Error thrown in getHook %o', error);
             // @ts-expect-error Error has type unknown.
@@ -120,9 +117,9 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
       }
 
       const query: Query = collection.repository.createQuery();
-      if (req.query.sort) {
+      if (request.query.sort) {
         try {
-          sort(query, req.query.sort as string);
+          sort(query, request.query.sort as string);
         } catch (error) {
           res.status(400).json({ message: (error as Error).message });
           return;
@@ -130,7 +127,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
       }
 
       const filters: Record<string, string> = {};
-      Object.entries(req.query as Record<string, any>).forEach(([field, value]: [string, any]) => {
+      Object.entries(request.query as Record<string, any>).forEach(([field, value]: [string, any]) => {
         if (field === 'sort' || field === 'limit' || field === 'offset') {
           return;
         }
@@ -156,12 +153,12 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
       }
 
       try {
-        limitOffset(query, req.query as Record<string, any>);
+        limitOffset(query, request.query as Record<string, any>);
         let items = await collection.repository.getByQuery(query);
 
         // transform hook
         try {
-          items = await Promise.all(items.map(async (item) => transform(collection, req, res, item)));
+          items = await Promise.all(items.map(async (item) => transform(collection, request, res, item)));
         } catch (error: unknown | HookError) {
           debug('Error thrown in get transform %o', error);
           // @ts-expect-error Error has type unknown.
@@ -185,7 +182,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
         res.status(500).json({ mesage: 'An unexpected error occurred, try again later.' });
       }
     } catch (error) {
-      debug('Error while fetching items. Query: %o, %o', req.query, error);
+      debug('Error while fetching items. Query: %o, %o', request.query, error);
       res.status(500).json({ message: (error as Error).message });
     }
   };

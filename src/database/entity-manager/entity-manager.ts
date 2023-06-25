@@ -1,11 +1,8 @@
-import Repository from './repository';
 import Query from './query';
+import Repository from './repository';
 import { BaseEntity, EntityDefinition } from '../types';
 
-export {
-  Repository,
-  Query,
-};
+export { Repository, Query };
 
 abstract class EntityManager {
   protected repositories = new Map<string, Repository<any>>();
@@ -20,7 +17,9 @@ abstract class EntityManager {
     const fullEntityName = this.getFullEntityName(name, namespace);
     const repository = this.repositories.get(fullEntityName);
     if (typeof repository === 'undefined') {
-      throw new Error(`Entity ${fullEntityName} not defined. Existing are: (${Array.from(this.repositories.keys()).join(', ')})`);
+      throw new TypeError(
+        `Entity ${fullEntityName} not defined. Existing are: (${[...this.repositories.keys()].join(', ')})`
+      );
     }
     return repository;
   }

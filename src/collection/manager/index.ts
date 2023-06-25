@@ -13,15 +13,12 @@ class Manager {
   }
 
   public addCollection<T>(collection: ManagedCollection<T>): Manager {
-    this.collections.set(
-      this.getCollectionIdentifier(collection.name, collection.namespace),
-      collection,
-    );
+    this.collections.set(this.getCollectionIdentifier(collection.name, collection.namespace), collection);
     return this;
   }
 
   public getCollections(): ManagedCollection<any>[] {
-    return Array.from(this.collections.values());
+    return [...this.collections.values()];
   }
 }
 

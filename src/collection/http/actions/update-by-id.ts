@@ -1,16 +1,16 @@
-import { Response, Request } from 'express';
 import Debug, { Debugger } from 'debug';
-import { ManagedCollection } from '../../types';
-import { HookError } from '../../error';
+import { Request, Response } from 'express';
 import transform from './utils';
+import { HookError } from '../../error';
+import { ManagedCollection } from '../../types';
 
 const debug: Debugger = Debug('supersave:http:updateById');
 
-export default (collection: ManagedCollection): ((req: Request, res: Response) => Promise<void>) =>
+export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
-  async (req: Request, res: Response): Promise<void> => {
+  async (request, res: Response): Promise<void> => {
     try {
-      const { id } = req.params;
+      const { id } = request.params;
       const { repository } = collection;
 
       const item = await repository.getById(id);
@@ -19,7 +19,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
         return;
       }
 
-      const { body } = req;
+      const { body } = request;
       debug('Incoming update request', body);
       collection.relations.forEach((relation) => {
         if (body[relation.field]) {
@@ -49,7 +49,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
         if (hooks.updateBefore) {
           // hook
           try {
-            updatedEntity = await hooks.updateBefore(collection, req, res, updatedEntity);
+            updatedEntity = await hooks.updateBefore(collection, request, res, updatedEntity);
           } catch (error: unknown | HookError) {
             debug('Error thrown in updateBeforeHook %o', error);
             // @ts-expect-error Error has type unknown.
@@ -64,7 +64,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
 
       // transform hook
       try {
-        updatedResult = await transform(collection, req, res, updatedResult);
+        updatedResult = await transform(collection, request, res, updatedResult);
       } catch (error: unknown | HookError) {
         debug('Error thrown in updateById transform %o', error);
         // @ts-expect-error Error has type unknown.

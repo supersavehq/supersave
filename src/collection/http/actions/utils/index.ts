@@ -3,7 +3,7 @@ import { Collection } from '../../../types';
 
 export default async function transform(
   collection: Collection,
-  req: Request,
+  request: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   item: any
@@ -11,7 +11,7 @@ export default async function transform(
   let transformedItem = item;
   for (const hooks of collection.hooks || []) {
     if (hooks.entityTransform) {
-      transformedItem = hooks.entityTransform(collection, req, res, transformedItem);
+      transformedItem = hooks.entityTransform(collection, request, res, transformedItem);
     }
   }
   return transformedItem;

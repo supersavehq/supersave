@@ -1,16 +1,16 @@
-import { Response, Request } from 'express';
 import Debug, { Debugger } from 'debug';
-import { ManagedCollection } from '../../types';
-import { HookError } from '../../error';
+import { Request, Response } from 'express';
 import transform from './utils';
+import { HookError } from '../../error';
+import { ManagedCollection } from '../../types';
 
 const debug: Debugger = Debug('supersave:http:getById');
 
-export default (collection: ManagedCollection): ((req: Request, res: Response) => Promise<void>) =>
+export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
-  async (req: Request, res: Response): Promise<void> => {
+  async (request, res: Response): Promise<void> => {
     try {
-      const { id } = req.params;
+      const { id } = request.params;
       const { repository } = collection;
 
       let item = await repository.getById(id);
@@ -19,7 +19,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
       for (const hooks of collection.hooks || []) {
         if (hooks.getById) {
           try {
-            item = await hooks.getById(collection, req, res, item);
+            item = await hooks.getById(collection, request, res, item);
           } catch (error: unknown | HookError) {
             debug('Error thrown in getById hook %o', error);
             // @ts-expect-error Error has type unknown.
@@ -37,7 +37,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
 
       // transform hook
       try {
-        item = await transform(collection, req, res, item);
+        item = await transform(collection, request, res, item);
       } catch (error: unknown | HookError) {
         debug('Error thrown in getById transformHook %o', error);
         // @ts-expect-error Error has type unknown.
@@ -49,7 +49,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
 
       res.json({ data: item });
     } catch (error) {
-      debug('Error while fetching item with id %s, %o', req.params.id, error);
+      debug('Error while fetching item with id %s, %o', request.params.id, error);
       res.status(500).json({ message: (error as Error).message });
     }
   };

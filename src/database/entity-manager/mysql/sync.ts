@@ -1,10 +1,10 @@
 import Debug, { Debugger } from 'debug';
-import { PoolConnection, Pool } from 'mysql';
-import { EntityDefinition, FilterSortField } from '../../types';
+import { Pool, PoolConnection } from 'mysql';
 import Repository from './repository';
+import { executeQuery, getConnectionFromPool, getQuery } from './utils';
+import { EntityDefinition, FilterSortField } from '../../types';
 import BaseRepository from '../repository';
 import { isEqual } from '../utils';
-import { getQuery, executeQuery, getConnectionFromPool } from './utils';
 
 const debug: Debugger = Debug('supersave:db:sync');
 
@@ -15,11 +15,11 @@ const enum MysqlType {
 }
 
 type MysqlDescRow = {
-  Field: string,
-  Type: MysqlType,
-  Null: 'YES' | 'NO',
-  Key: string,
-  Extra: string,
+  Field: string;
+  Type: MysqlType;
+  Null: 'YES' | 'NO';
+  Key: string;
+  Extra: string;
 };
 
 const filterSortFieldTypeMap = {
@@ -31,7 +31,7 @@ const filterSortFieldTypeMap = {
 async function getTableColumns(
   connection: PoolConnection,
   tableName: string,
-  entity: EntityDefinition,
+  entity: EntityDefinition
 ): Promise<Record<string, MysqlType>> {
   const query = `DESC \`${tableName}\`;`;
   const columns = await getQuery<MysqlDescRow>(connection, query);
@@ -67,7 +67,7 @@ async function getTableColumns(
 
 function hasTableChanged(
   mysqlColumns: Record<string, MysqlType>,
-  mappedFilterSortTypeFields: Record<string, MysqlType>,
+  mappedFilterSortTypeFields: Record<string, MysqlType>
 ): boolean {
   const tablesAreEqual: boolean = isEqual(mysqlColumns, mappedFilterSortTypeFields);
   if (!tablesAreEqual) {
@@ -90,7 +90,7 @@ export default async (
   tableName: string,
   pool: Pool,
   repository: Repository<any>,
-  getRepository: (name: string, namespace?: string) => BaseRepository<any>,
+  getRepository: (name: string, namespace?: string) => BaseRepository<any>
 ): Promise<void> => {
   if (typeof entity.filterSortFields === 'undefined') {
     return;
@@ -106,18 +106,14 @@ export default async (
   }
 
   const newTableName = `${tableName}_2`;
-  const columns = [
-    'id VARCHAR(32) PRIMARY KEY',
-    'contents TEXT NOT NULL',
-  ];
+  const columns = ['id VARCHAR(32) PRIMARY KEY', 'contents TEXT NOT NULL'];
   const indexes = [];
 
   const filterSortFieldNames: string[] = Object.keys(entity.filterSortFields);
-  for (let iter = 0; iter < filterSortFieldNames.length; iter += 1) {
-    const fieldName = filterSortFieldNames[iter];
+  for (const fieldName of filterSortFieldNames) {
     const filterSortFieldType = entity.filterSortFields[fieldName];
     if (typeof filterSortFieldTypeMap[filterSortFieldType] === 'undefined') {
-      throw new Error(`Unrecognized field type ${filterSortFieldType}.`);
+      throw new TypeError(`Unrecognized field type ${filterSortFieldType}.`);
     }
 
     if (fieldName !== 'id') {
@@ -129,7 +125,14 @@ export default async (
   await executeQuery(connection, `DROP TABLE IF EXISTS ${pool.escapeId(newTableName)};`);
   let createQuery = `CREATE TABLE ${pool.escapeId(newTableName)} (${columns.join(',')}`;
   if (indexes.length > 0) {
-    createQuery = `${createQuery}, ${indexes.map((index) => `INDEX(${pool.escapeId(index)}${(entity.filterSortFields as Record<string, FilterSortField>)[index] === 'string' ? '(999)' : ''})`).join(',')})`;
+    createQuery = `${createQuery}, ${indexes
+      .map(
+        (index) =>
+          `INDEX(${pool.escapeId(index)}${
+            (entity.filterSortFields as Record<string, FilterSortField>)[index] === 'string' ? '(999)' : ''
+          })`
+      )
+      .join(',')})`;
   } else {
     createQuery = `${createQuery})`;
   }
@@ -148,8 +151,8 @@ export default async (
   const newRepository = new Repository(entity, newTableName, getRepository, pool);
 
   const oldAll = await repository.getAll();
-  for (let iter = 0; iter < oldAll.length; iter += 1) {
-    await newRepository.create(oldAll[iter]);
+  for (const element of oldAll) {
+    await newRepository.create(element);
   }
 
   debug(`Completed copy. Dropping table ${tableName} and renaming temporary table ${newTableName}.`);

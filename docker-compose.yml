@@ -1,37 +1,39 @@
 version: "3.0"
 
 services:
-  node:
-    image: node:14
-    command: npm run watch
-    volumes:
-        - .:/app
-    working_dir: /app    
+  # node:
+  #   image: node:14
+  #   command: npm run watch
+  #   volumes:
+  #       - .:/app
+  #   working_dir: /app    
 
-  test-mysql:
-    image: node:14
-    command: 'npm run test:watch:mysql'
-    volumes:
-        - .:/app
-    working_dir: /app
-    environment:
-      CONN: mysql://supersave:savesuper@mysql/supersave
-      #DEBUG: supersave:*
-    links:
-      - mysql
+  # test-mysql:
+  #   image: node:14
+  #   command: 'npm run test:watch:mysql'
+  #   volumes:
+  #       - .:/app
+  #   working_dir: /app
+  #   environment:
+  #     CONN: mysql://supersave:savesuper@mysql/supersave
+  #     #DEBUG: supersave:*
+  #   links:
+  #     - mysql
 
-  test-sqlite:
-    image: node:14
-    command: npm run test:watch
-    volumes:
-        - .:/app
-    working_dir: /app
-    environment:
-      CONN: 'sqlite://:memory:'
-      #DEBUG: supersave:*
+  # test-sqlite:
+  #   image: node:14
+  #   command: npm run test:watch
+  #   volumes:
+  #       - .:/app
+  #   working_dir: /app
+  #   environment:
+  #     CONN: 'sqlite://:memory:'
+  #     #DEBUG: supersave:*
 
   mysql:
     image: mysql:5.7    
+    ports:
+      - 3306:3006
     environment:
       - MYSQL_DATABASE=supersave
       - MYSQL_USER=supersave

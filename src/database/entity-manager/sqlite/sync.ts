@@ -1,7 +1,7 @@
 import Debug, { Debugger } from 'debug';
 import { Database } from 'sqlite';
-import { EntityDefinition, FilterSortField } from '../../types';
 import Repository from './repository';
+import { EntityDefinition, FilterSortField } from '../../types';
 import BaseRepository from '../repository';
 import { isEqual } from '../utils';
 
@@ -14,10 +14,10 @@ const enum SqliteType {
 }
 
 type SqlitePragmaColumn = {
-  name: string,
-  notnull: number,
-  type: SqliteType,
-  pk: number,
+  name: string;
+  notnull: number;
+  type: SqliteType;
+  pk: number;
 };
 
 const filterSortFieldSqliteTypeMap = {
@@ -29,7 +29,7 @@ const filterSortFieldSqliteTypeMap = {
 async function getTableColumns(
   connection: Database,
   tableName: string,
-  entity: EntityDefinition,
+  entity: EntityDefinition
 ): Promise<Record<string, SqliteType>> {
   const query = `pragma table_info('${tableName}');`;
   const columns = await connection.all<SqlitePragmaColumn[]>(query);
@@ -63,7 +63,7 @@ async function getTableColumns(
 
 function hasTableChanged(
   sqliteColumns: Record<string, SqliteType>,
-  mappedFilterSortTypeFields: Record<string, SqliteType>,
+  mappedFilterSortTypeFields: Record<string, SqliteType>
 ): boolean {
   const tablesAreEqual: boolean = isEqual(sqliteColumns, mappedFilterSortTypeFields);
   if (!tablesAreEqual) {
@@ -85,7 +85,7 @@ export default async (
   tableName: string,
   connection: Database,
   repository: Repository<any>,
-  getRepository: (name: string, namespace?: string) => BaseRepository<any>,
+  getRepository: (name: string, namespace?: string) => BaseRepository<any>
 ): Promise<void> => {
   if (typeof entity.filterSortFields === 'undefined') {
     return;
@@ -99,18 +99,14 @@ export default async (
   }
 
   const newTableName = `${tableName}_2`;
-  const columns = [
-    'id TEXT PRIMARY KEY',
-    'contents TEXT NOT NULL',
-  ];
+  const columns = ['id TEXT PRIMARY KEY', 'contents TEXT NOT NULL'];
   const indexes = [];
 
   const filterSortFieldNames: string[] = Object.keys(entity.filterSortFields);
-  for (let iter = 0; iter < filterSortFieldNames.length; iter += 1) {
-    const fieldName = filterSortFieldNames[iter];
+  for (const fieldName of filterSortFieldNames) {
     const filterSortFieldType = entity.filterSortFields[fieldName];
     if (typeof filterSortFieldSqliteTypeMap[filterSortFieldType] === 'undefined') {
-      throw new Error(`Unrecognized field type ${filterSortFieldType}.`);
+      throw new TypeError(`Unrecognized field type ${filterSortFieldType}.`);
     }
 
     if (fieldName !== 'id') {
@@ -136,8 +132,8 @@ export default async (
   const newRepository = new Repository(entity, newTableName, getRepository, connection);
 
   const oldAll = await repository.getAll();
-  for (let iter = 0; iter < oldAll.length; iter += 1) {
-    await newRepository.create(oldAll[iter]);
+  for (const element of oldAll) {
+    await newRepository.create(element);
   }
 
   debug(`Completed copy. Dropping table ${tableName} and renaming temporary table ${newTableName}.`);

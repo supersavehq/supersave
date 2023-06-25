@@ -1,10 +1,10 @@
+import Debug, { Debugger } from 'debug';
 import slug from 'slug';
 import { Database } from 'sqlite';
-import Debug, { Debugger } from 'debug';
 import Repository from './repository';
+import sync from './sync';
 import { EntityDefinition } from '../../types';
 import EntityManager from '../entity-manager';
-import sync from './sync';
 import BaseRepository from '../repository';
 
 const debug: Debugger = Debug('supersave:db:em:sqlite');
@@ -31,26 +31,21 @@ class SqliteEntityManager extends EntityManager {
       updatedEntity,
       tableName,
       (name: string, namespace?: string) => this.getRepository(name, namespace),
-      this.connection,
+      this.connection
     );
-    await sync(
-      updatedEntity,
-      tableName,
-      this.connection,
-      repository,
-      (name: string, namespace?: string) => this.getRepository(name, namespace),
+    await sync(updatedEntity, tableName, this.connection, repository, (name: string, namespace?: string) =>
+      this.getRepository(name, namespace)
     );
 
-    this.repositories.set(
-      fullEntityName,
-      repository,
-    );
+    this.repositories.set(fullEntityName, repository);
     return this.getRepository(entity.name, entity.namespace);
   }
 
   protected async createTable(tableName: string): Promise<void> {
     debug(`Creating table ${tableName}.`);
-    await this.connection.exec(`CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`);
+    await this.connection.exec(
+      `CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`
+    );
   }
 
   public async close(): Promise<void> {

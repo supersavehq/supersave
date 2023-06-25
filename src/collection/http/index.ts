@@ -1,29 +1,28 @@
 import express from 'express';
-import Manager from '../manager';
-import { ManagedCollection } from '../types';
 import * as actions from './actions';
 import { generatePath } from './utils';
+import Manager from '../manager';
+import { ManagedCollection } from '../types';
 
 class Http {
   public static async create(manager: Manager, prefix: string): Promise<Http> {
     const requiredExpress = await import('express');
-    return new Http(
-      requiredExpress.Router(),
-      manager,
-      prefix,
-    );
+    return new Http(requiredExpress.Router(), manager, prefix);
   }
 
   private constructor(
     private readonly router: express.Router,
     private manager: Manager,
-    prefix: string, // excuding the /
+    prefix: string // excuding the /
   ) {
     this.router.use(express.json());
     this.manager.getCollections().forEach((collection: ManagedCollection) => {
       this.register(collection);
     });
-    this.router.get('/', actions.overview(prefix, () => this.getRegisteredCollections()));
+    this.router.get(
+      '/',
+      actions.overview(prefix, () => this.getRegisteredCollections())
+    );
   }
 
   public register(collection: ManagedCollection<any>): Http {

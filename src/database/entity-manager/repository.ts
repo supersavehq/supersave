@@ -1,5 +1,5 @@
-import { BaseEntity, EntityDefinition, EntityRow, Relation } from '../types';
 import Query from './query';
+import { BaseEntity, EntityDefinition, EntityRow, Relation } from '../types';
 
 export default abstract class Repository<T> {
   protected relationFields: string[];
@@ -34,8 +34,8 @@ export default abstract class Repository<T> {
     const result: T[] = [];
 
     const promises = [];
-    for (let iter = 0; iter < rows.length; iter += 1) {
-      const promise = this.transformQueryResultRow(rows[iter]);
+    for (const [iter, element] of rows.entries()) {
+      const promise = this.transformQueryResultRow(element);
       promises.push(promise);
       result[iter] = await promise;
     }
@@ -93,12 +93,12 @@ export default abstract class Repository<T> {
     return clone;
   }
 
-  protected async mapRelationToMultiple(relation: Relation, arr: string[]): Promise<BaseEntity[]> {
-    if (!Array.isArray(arr) || arr.length === 0) {
+  protected async mapRelationToMultiple(relation: Relation, array: string[]): Promise<BaseEntity[]> {
+    if (!Array.isArray(array) || array.length === 0) {
       return [];
     }
     const repository = this.getRepository(relation.name, relation.namespace);
-    const repositoryResults = await repository.getByIds(arr);
+    const repositoryResults = await repository.getByIds(array);
 
     // preserve the ordering
     const resultsMap = new Map<string, BaseEntity>();
@@ -107,7 +107,7 @@ export default abstract class Repository<T> {
     });
 
     const mappedResults: BaseEntity[] = [];
-    arr.forEach((id) => {
+    array.forEach((id) => {
       if (resultsMap.get(id)) {
         mappedResults.push(resultsMap.get(id) as BaseEntity);
       }
@@ -155,9 +155,9 @@ export default abstract class Repository<T> {
 
   public abstract deleteUsingId(id: string): Promise<void>;
 
-  public abstract create(obj: Omit<T, 'id'>): Promise<T>;
+  public abstract create(object: Omit<T, 'id'>): Promise<T>;
 
-  public abstract update(obj: T): Promise<T>;
+  public abstract update(object: T): Promise<T>;
 
   public abstract getByIds(ids: string[]): Promise<T[]>;
 

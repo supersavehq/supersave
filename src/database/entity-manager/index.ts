@@ -1,25 +1,24 @@
 import Debug, { Debugger } from 'debug';
 import EntityManager from './entity-manager';
-import Repository from './repository';
-import Query from './query';
 import { MysqlOptions } from './mysql/connection';
+import Query from './query';
+import Repository from './repository';
 
 const debug: Debugger = Debug('supersave:db:em');
 
-export {
-  Repository,
-  Query,
-  EntityManager,
-};
+export { Repository, Query, EntityManager };
 
 export const MYSQL = 'mysql';
 export const SQLITE = 'sqlite';
 
 type SqliteOptions = {
-  file: string,
+  file: string;
 };
 
-export default async (type: typeof MYSQL | typeof SQLITE, options: SqliteOptions | MysqlOptions): Promise<EntityManager> => {
+export default async (
+  type: typeof MYSQL | typeof SQLITE,
+  options: SqliteOptions | MysqlOptions
+): Promise<EntityManager> => {
   if (type === 'sqlite') {
     const { default: Sqlite } = await import('./sqlite');
     const { default: connection } = await import('./sqlite/connection');

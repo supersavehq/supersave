@@ -1,18 +1,18 @@
-import { Response, Request } from 'express';
 import Debug, { Debugger } from 'debug';
-import { ManagedCollection } from '../../types';
+import { Request, Response } from 'express';
 import transform from './utils';
 import { HookError } from '../../error';
+import { ManagedCollection } from '../../types';
 
 const debug: Debugger = Debug('supersave:http:create');
 
-export default (collection: ManagedCollection): ((req: Request, res: Response) => Promise<void>) =>
+export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
-  async (req: Request, res: Response): Promise<void> => {
+  async (request, res: Response): Promise<void> => {
     try {
-      const { body } = req;
+      const { body } = request;
       if (typeof body !== 'object') {
-        throw new Error('Request body is not an object.');
+        throw new TypeError('Request body is not an object.');
       }
       collection.relations.forEach((relation) => {
         if (body[relation.field]) {
@@ -43,7 +43,7 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
         if (hooks.createBefore) {
           // hook
           try {
-            itemBody = await hooks.createBefore(collection, req, res, itemBody);
+            itemBody = await hooks.createBefore(collection, request, res, itemBody);
           } catch (error: unknown | HookError) {
             debug('Error thrown in createBeforeHook %o', error);
             // @ts-expect-error Error has type unknown.
@@ -55,11 +55,11 @@ export default (collection: ManagedCollection): ((req: Request, res: Response) =
         }
       }
       item = await collection.repository.create(itemBody);
-      debug('Created collection item at', req.path);
+      debug('Created collection item at', request.path);
 
       // transform hook
       try {
-        item = await transform(collection, req, res, item);
+        item = await transform(collection, request, res, item);
       } catch (error: unknown | HookError) {
         debug('Error thrown in create transformHook %o', error);
         // @ts-expect-error Error has type unknown.
