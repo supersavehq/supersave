@@ -1,5 +1,4 @@
-SuperSave
-===========
+# SuperSave
 
 # Installation
 
@@ -91,7 +90,7 @@ export type Hooks = {
   createBefore?: <IN, OUT>(collection: Collection, req: Request, res: Response, entity: Omit<IN, 'id'>) => Promise<OUT> | OUT,
   deleteBefore?: <T>(collection: Collection, req: Request, res: Response, item: Omit<T, 'id'> | null) => Promise<void> | void,
 };
-``` 
+```
 
 A hook can be set when registering a collection, by providing at least one of the functions described above.
 
@@ -108,14 +107,14 @@ const planetCollection = {
 }
 ```
 
-| Hook | Description |
-| ---- |------------ |
-| get | Manipulate the filters/get parameters of the request before data is actually being requested. The endpoint is `/planet` for example. |
-| getById | Perform an action on the retrieved entity before it is transformed and then returned via the API. Entity value can be `null` if its not found. |
+| Hook            | Description                                                                                                                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| get             | Manipulate the filters/get parameters of the request before data is actually being requested. The endpoint is `/planet` for example.                                                                                                                   |
+| getById         | Perform an action on the retrieved entity before it is transformed and then returned via the API. Entity value can be `null` if its not found.                                                                                                         |
 | entityTransform | Used at every location where an entity is returned in the API (create, update, get, getById). The entity as its retrieved from the database can be changed. For example a field that should not be publicly displayed can be removed from the payload. |
-| updateBefore | This hook is invoked just before the updated statement is executed towards the database. The `entity` argument in the payload is the entire object, not just the provided fields in the request. |
-| createBefore | Invoked before an item is created, the function will receive the item as it will be saved. The `id` field will not be available, unless explicitly specified in the API request. |
-| deleteBefore | Invoked before an item is deleted. |
+| updateBefore    | This hook is invoked just before the updated statement is executed towards the database. The `entity` argument in the payload is the entire object, not just the provided fields in the request.                                                       |
+| createBefore    | Invoked before an item is created, the function will receive the item as it will be saved. The `id` field will not be available, unless explicitly specified in the API request.                                                                       |
+| deleteBefore    | Invoked before an item is deleted.                                                                                                                                                                                                                     |
 
 ## Errors
 
@@ -124,9 +123,22 @@ is leaked via the Error. A `HookError` can be imported `import { HookError } fro
 a defined HTTP status code can be initialized via is contructor: `throw new HookError('msg', 401)`. This will result in a HTTP 401 error
 in the API out, with the JSON payload: `{ "message": "msg" }`.
 
+## Access the native connection
+
+The `SuperSave` class offers a function `getConnection()`that returns the underlying connection. This can be used to perform
+custom queries.
+
+| Connection | Description                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| sqlite     | The sqlite connection is a [sqlite](https://www.npmjs.com/package/sqlite) `Database` object. |
+| mysql      | The mysql connection is a [mysql](https://www.npmjs.com/package/mysql) `Pool` object.        |
+
+In typescript, the `getConnection<T>()` provides a generic type, which you can use to set the
+expected return type from the function. You are yourself responsible for the correct type.
+
 # Development
 
-This module currently supports both sqlite and mysql. Development for sqlite is pretty straight-forward, 
+This module currently supports both sqlite and mysql. Development for sqlite is pretty straight-forward,
 you can use `:memory:` as the filename to set up a memory-only database.
 
 Mysql is a bit more cumbersome, as it requires a running mysql server. For this purpose a `docker-compose.yml` file is present in the repository. Run

@@ -62,6 +62,10 @@ class MysqlEntityManager extends EntityManager {
       });
     });
   }
+
+  public getConnection(): Pool {
+    return this.pool;
+  }
 }
 
 export default MysqlEntityManager;

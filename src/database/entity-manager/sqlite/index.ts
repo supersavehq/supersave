@@ -51,6 +51,10 @@ class SqliteEntityManager extends EntityManager {
   public async close(): Promise<void> {
     return this.connection.close();
   }
+
+  public getConnection(): Database {
+    return this.connection;
+  }
 }
 
 export default SqliteEntityManager;

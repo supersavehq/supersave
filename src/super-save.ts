@@ -63,6 +63,11 @@ class SuperSave {
   public close(): Promise<void> {
     return this.em.close();
   }
+
+  public getConnection<T>(): T {
+    // Force the provided generic to be the return type.
+    return this.em.getConnection() as T;
+  }
 }
 
 export default SuperSave;
