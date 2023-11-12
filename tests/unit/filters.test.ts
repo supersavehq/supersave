@@ -274,4 +274,27 @@ describe('there can be filtered on relation fields', () => {
 
     await superSave.close();
   });
+
+  test('there can be multiple filters on one field', async () => {
+    const filteredPlanetEntity: EntityDefinition = {
+      ...planetEntity,
+      filterSortFields: {
+        name: 'string',
+        distance: 'number',
+      },
+    };
+
+    const superSave: SuperSave = await SuperSave.create(getConnection());
+    const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
+
+    await planetRepository.create({ name: 'Earth', distance: 1000 });
+    await planetRepository.create({ name: 'Pluto', distance: 9877654 });
+
+    const results = await planetRepository.getByQuery(
+      planetRepository.createQuery().gt('distance', 800).lt('distance', 9999999)
+    );
+    expect(results.length).toBe(2);
+
+    await superSave.close();
+  });
 });

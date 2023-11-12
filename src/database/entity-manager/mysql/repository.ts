@@ -151,7 +151,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
               values.push(null);
             } else {
               // Store the individual value.
-              values.push(object[field]?.id);
+              values.push(typeof object[field] === 'string' ? object[field] : object[field]?.id);
             }
           } else if (field !== 'id') {
             values.push(typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null);
@@ -198,7 +198,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
                 values.push(null);
               } else {
                 // Store the individual value.
-                values.push(object[field]?.id);
+                values.push(typeof object[field] === 'string' ? object[field] : object[field]?.id);
               }
             } else {
               values.push(simplifiedObject[field] || null);

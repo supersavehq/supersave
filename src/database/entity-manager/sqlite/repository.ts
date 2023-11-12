@@ -65,26 +65,29 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     const values: Record<string, string | number> = {};
     const where: string[] = [];
 
+    let uniquePostfix = 1; // We use this to generate a unique placeholder, so that the attribute name can be used multiple times.
     query.getWhere().forEach((queryFilter: QueryFilter) => {
+      const placeholderName = `${queryFilter.field}_${uniquePostfix}`;
       if (queryFilter.operator === QueryOperatorEnum.IN) {
         const placeholders: string[] = [];
         queryFilter.value.forEach((value: string, order: number) => {
-          const placeholder = `:${queryFilter.field}_${order}`;
+          const placeholder = `:${placeholderName}_${order}`;
           placeholders.push(placeholder);
           values[placeholder] = value;
         });
 
         where.push(`"${queryFilter.field}" IN(${placeholders.join(',')})`);
       } else {
-        where.push(`"${queryFilter.field}" ${queryFilter.operator} :${queryFilter.field}`);
+        where.push(`"${queryFilter.field}" ${queryFilter.operator} :${placeholderName}`);
         if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
-          values[`:${queryFilter.field}`] = ['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0;
+          values[`:${placeholderName}`] = ['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0;
         } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
-          values[`:${queryFilter.field}`] = `${queryFilter.value}`.replace(/\*/g, '%');
+          values[`:${placeholderName}`] = `${queryFilter.value}`.replace(/\*/g, '%');
         } else {
-          values[`:${queryFilter.field}`] = queryFilter.value;
+          values[`:${placeholderName}`] = queryFilter.value;
         }
       }
+      uniquePostfix++;
     });
 
     let sqlQuery = `SELECT id,contents FROM ${this.tableName}
@@ -144,7 +147,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
               values[`:${field}`] = null;
             } else {
               // Store the individual value.
-              values[`:${field}`] = object[field]?.id;
+              if (typeof object[field] === 'string') {
+                // Allow relations to also be defined by only their id, not the entire object
+                values[`:${field}`] = object[field];
+              } else {
+                values[`:${field}`] = object[field]?.id;
+              }
             }
           } else if (field !== 'id') {
             values[`:${field}`] = typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null;
@@ -193,7 +201,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
                 values[`:${field}`] = null;
               } else {
                 // Store the individual value.
-                values[`:${field}`] = simplifiedObject[field]?.id;
+                if (typeof object[field] === 'string') {
+                  // Allow relations to also be defined by only their id, not the entire object
+                  values[`:${field}`] = object[field];
+                } else {
+                  values[`:${field}`] = object[field]?.id;
+                }
               }
             } else {
               values[`:${field}`] = simplifiedObject[field] || null;
