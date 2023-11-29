@@ -151,6 +151,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
               values.push(null);
             } else {
               // Store the individual value.
+              if (typeof object[field] !== 'object') {
+                throw new TypeError(`The provided relation value for ${field}/${type} is not an object. It should be.`);
+              }
               values.push(typeof object[field] === 'string' ? object[field] : object[field]?.id);
             }
           } else if (field !== 'id') {
@@ -198,7 +201,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
                 values.push(null);
               } else {
                 // Store the individual value.
-                values.push(typeof object[field] === 'string' ? object[field] : object[field]?.id);
+                if (typeof object[field] !== 'object') {
+                  throw new TypeError(
+                    `The provided relation value for ${field}/${type} is not an object. It should be.`
+                  );
+                }
+                values.push(object[field]?.id);
               }
             } else {
               values.push(simplifiedObject[field] || null);

@@ -147,12 +147,10 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
               values[`:${field}`] = null;
             } else {
               // Store the individual value.
-              if (typeof object[field] === 'string') {
-                // Allow relations to also be defined by only their id, not the entire object
-                values[`:${field}`] = object[field];
-              } else {
-                values[`:${field}`] = object[field]?.id;
+              if (typeof object[field] !== 'object') {
+                throw new TypeError(`The provided relation value for ${field}/${type} is not an object. It should be.`);
               }
+              values[`:${field}`] = object[field]?.id;
             }
           } else if (field !== 'id') {
             values[`:${field}`] = typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null;
@@ -201,12 +199,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
                 values[`:${field}`] = null;
               } else {
                 // Store the individual value.
-                if (typeof object[field] === 'string') {
-                  // Allow relations to also be defined by only their id, not the entire object
-                  values[`:${field}`] = object[field];
-                } else {
-                  values[`:${field}`] = object[field]?.id;
+                if (typeof object[field] !== 'object') {
+                  throw new TypeError(
+                    `The provided relation value for ${field}/${type} is not an object. It should be.`
+                  );
                 }
+                values[`:${field}`] = object[field]?.id;
               }
             } else {
               values[`:${field}`] = simplifiedObject[field] || null;
