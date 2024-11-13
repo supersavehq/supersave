@@ -1,5 +1,5 @@
 import Debug, { Debugger } from 'debug';
-import { Pool, PoolConnection } from 'mysql';
+import { Pool, PoolConnection } from 'mysql2/promise';
 import Repository from './repository';
 import { executeQuery, getConnectionFromPool, getQuery } from './utils';
 import { EntityDefinition, FilterSortField } from '../../types';

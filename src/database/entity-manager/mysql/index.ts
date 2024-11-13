@@ -1,5 +1,5 @@
 import Debug, { Debugger } from 'debug';
-import { Pool } from 'mysql';
+import { Pool } from 'mysql2/promise';
 import slug from 'slug';
 import Repository from './repository';
 import sync from './sync';
@@ -51,16 +51,8 @@ class MysqlEntityManager extends EntityManager {
     );
   }
 
-  public close(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.pool.end((error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-      });
-    });
+  public async close(): Promise<void> {
+    await this.pool.end();
   }
 
   public getConnection(): Pool {

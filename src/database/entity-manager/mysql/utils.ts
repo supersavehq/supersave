@@ -1,48 +1,28 @@
 import Debug, { Debugger } from 'debug';
-import { Pool, PoolConnection } from 'mysql';
+import { Pool, PoolConnection } from 'mysql2/promise';
 
 const debug: Debugger = Debug('supersave:db:em:mysql');
 
-export const getQuery = async <T>(
+export async function getQuery<T>(
   connection: PoolConnection | Pool,
   query: string,
   values: (string | number | boolean | null)[] = []
-): Promise<T[]> =>
-  new Promise((resolve, reject) => {
-    debug('Fetching results for query.', query, values);
+): Promise<T[]> {
+  debug('Fetching results for query.', query, values);
 
-    connection.query(query, values, (error, results) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve(results);
-    });
-  });
+  const [results] = await connection.query(query, values);
+  return results as unknown as T[];
+}
 
-export const executeQuery = async (
+export async function executeQuery(
   connection: PoolConnection | Pool,
   query: string,
   values: (string | number | boolean | null)[] = []
-): Promise<void> =>
-  new Promise((resolve, reject) => {
-    debug('Executing query', query);
-    connection.query(query, values, (error) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve();
-    });
-  });
+): Promise<void> {
+  debug('Executing query', query);
+  await connection.query(query, values);
+}
 
-export const getConnectionFromPool = async (pool: Pool): Promise<PoolConnection> =>
-  new Promise((resolve, reject) => {
-    pool.getConnection((error, connection) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      resolve(connection);
-    });
-  });
+export async function getConnectionFromPool(pool: Pool): Promise<PoolConnection> {
+  return await pool.getConnection();
+}
