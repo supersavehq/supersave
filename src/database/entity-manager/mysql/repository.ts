@@ -19,10 +19,10 @@ const debug: Debugger = Debug('supersave:db:mysql:repo');
 
 class Repository<T extends BaseEntity> extends BaseRepository<T> {
   constructor(
-    readonly definition: EntityDefinition,
-    readonly tableName: string,
-    readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
-    readonly pool: Pool
+    protected readonly definition: EntityDefinition,
+    protected readonly tableName: string,
+    protected readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
+    protected readonly pool: Pool
   ) {
     super(definition, tableName, getRepository);
   }

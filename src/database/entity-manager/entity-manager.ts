@@ -7,7 +7,7 @@ export { Repository, Query };
 abstract class EntityManager {
   protected repositories = new Map<string, Repository<any>>();
 
-  public abstract addEntity<T>(entity: EntityDefinition): Promise<Repository<T>>;
+  public abstract addEntity<T extends BaseEntity>(entity: EntityDefinition): Promise<Repository<T>>;
 
   protected getFullEntityName(name: string, namespace?: string): string {
     return typeof namespace !== 'undefined' ? `${namespace}_${name}` : name;
@@ -21,7 +21,7 @@ abstract class EntityManager {
         `Entity ${fullEntityName} not defined. Existing are: (${[...this.repositories.keys()].join(', ')})`
       );
     }
-    return repository;
+    return repository as Repository<T>;
   }
 
   protected abstract createTable(tableName: string): Promise<void>;

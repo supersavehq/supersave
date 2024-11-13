@@ -45,7 +45,7 @@ async function getTableColumns(
   const sqliteTypeMap: Record<SqliteType, FilterSortField> = {
     [SqliteType.TEXT]: 'string',
     [SqliteType.INTEGER]: 'number',
-    [SqliteType.BOOLEAN]: 'number',
+    // [SqliteType.BOOLEAN]: 'number', Its also maps to integer
   };
 
   const mappedColumns: Record<string, SqliteType> = {};
@@ -133,6 +133,7 @@ export default async (
 
   const oldAll = await repository.getAll();
   for (const element of oldAll) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     await newRepository.create(element);
   }
 

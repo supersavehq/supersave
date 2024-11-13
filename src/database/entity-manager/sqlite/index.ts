@@ -3,18 +3,18 @@ import slug from 'slug';
 import { Database } from 'sqlite';
 import Repository from './repository';
 import sync from './sync';
-import { EntityDefinition } from '../../types';
+import { BaseEntity, EntityDefinition } from '../../types';
 import EntityManager from '../entity-manager';
 import BaseRepository from '../repository';
 
 const debug: Debugger = Debug('supersave:db:em:sqlite');
 
 class SqliteEntityManager extends EntityManager {
-  constructor(readonly connection: Database) {
+  constructor(private readonly connection: Database) {
     super();
   }
 
-  public async addEntity<T>(entity: EntityDefinition): Promise<BaseRepository<T>> {
+  public async addEntity<T extends BaseEntity>(entity: EntityDefinition): Promise<BaseRepository<T>> {
     const { filterSortFields = {} } = entity;
     filterSortFields.id = 'string';
 

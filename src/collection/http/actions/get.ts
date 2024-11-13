@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import transform from './utils';
 import { Query } from '../../../database/entity-manager';
 import { FilterSortField, QueryOperatorEnum } from '../../../database/types';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { HookError } from '../../error';
 import { ManagedCollection } from '../../types';
 
