@@ -1,5 +1,6 @@
 import Debug, { Debugger } from 'debug';
 import { Request, Response } from 'express';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { HookError } from '../../error';
 import { ManagedCollection } from '../../types';
 
@@ -22,7 +23,7 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
         for (const hooks of collection.hooks || []) {
           if (hooks.deleteBefore) {
             try {
-              hooks.deleteBefore(collection, request, res, item);
+              await hooks.deleteBefore(collection, request, res, item);
             } catch (error: unknown | HookError) {
               debug('Error thrown in createBeforeHook %o', error);
               // @ts-expect-error Error has type unknown.

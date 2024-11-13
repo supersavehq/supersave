@@ -5,7 +5,7 @@ import { Collection } from './collection/types';
 import database from './database';
 import { EntityManager } from './database/entity-manager';
 import Repository from './database/entity-manager/repository';
-import { EntityDefinition } from './database/types';
+import { BaseEntity, EntityDefinition } from './database/types';
 
 class SuperSave {
   private collectionManager: CollectionManager;
@@ -22,11 +22,11 @@ class SuperSave {
     return new SuperSave(em);
   }
 
-  public addEntity<T>(entity: EntityDefinition): Promise<Repository<T>> {
+  public addEntity<T extends BaseEntity>(entity: EntityDefinition): Promise<Repository<T>> {
     return this.em.addEntity<T>(entity);
   }
 
-  public async addCollection<T>(collection: Collection): Promise<Repository<T>> {
+  public async addCollection<T extends BaseEntity>(collection: Collection): Promise<Repository<T>> {
     const { filterSortFields = {} } = collection;
     filterSortFields.id = 'string';
 
@@ -38,6 +38,7 @@ class SuperSave {
     const repository: Repository<T> = await this.addEntity({
       name: updatedCollection.name,
       namespace: updatedCollection.namespace,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       template: updatedCollection.template,
       relations: updatedCollection.relations,
       filterSortFields: updatedCollection.filterSortFields,
@@ -50,8 +51,8 @@ class SuperSave {
     return repository;
   }
 
-  public getRepository<T>(entityName: string, namespace?: string): Repository<T> {
-    return this.em.getRepository(entityName, namespace);
+  public getRepository<T extends BaseEntity>(entityName: string, namespace?: string): Repository<T> {
+    return this.em.getRepository<T>(entityName, namespace);
   }
 
   public async getRouter(prefix = '/'): Promise<express.Router> {

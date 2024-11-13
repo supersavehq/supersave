@@ -17,10 +17,10 @@ const debug: Debugger = Debug('supersave:db:sqlite:repo');
 
 class Repository<T extends BaseEntity> extends BaseRepository<T> {
   constructor(
-    readonly definition: EntityDefinition,
-    readonly tableName: string,
-    readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
-    readonly connection: Database
+    protected readonly definition: EntityDefinition,
+    protected readonly tableName: string,
+    protected readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
+    protected readonly connection: Database
   ) {
     super(definition, tableName, getRepository);
   }
@@ -121,7 +121,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
   public async create(object: T): Promise<T> {
     const columns: string[] = ['id', 'contents'];
-    const uuid = typeof object.id === 'string' ? (object.id as string) : shortUuid.generate();
+    const uuid = typeof object.id === 'string' ? object.id : shortUuid.generate();
 
     const values: Record<string, string | number | null> = {
       ':id': uuid,

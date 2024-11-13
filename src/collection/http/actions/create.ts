@@ -1,6 +1,7 @@
 import Debug, { Debugger } from 'debug';
 import { Request, Response } from 'express';
 import transform from './utils';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { HookError } from '../../error';
 import { ManagedCollection } from '../../types';
 

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Collection } from '../../../types';
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export default async function transform(
   collection: Collection,
   request: Request,

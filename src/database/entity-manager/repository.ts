@@ -7,9 +7,9 @@ export default abstract class Repository<T> {
   protected relationsMap: Map<string, Relation>;
 
   constructor(
-    readonly definition: EntityDefinition,
-    readonly tableName: string,
-    readonly getRepository: (name: string, namespace?: string) => Repository<any>
+    protected readonly definition: EntityDefinition,
+    protected readonly tableName: string,
+    protected readonly getRepository: (name: string, namespace?: string) => Repository<any>
   ) {
     this.relationFields = definition.relations.map((relation: Relation) => relation.field);
     this.relationsMap = new Map<string, Relation>();
