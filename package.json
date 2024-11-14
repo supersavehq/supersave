@@ -20,7 +20,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/daangemist/supersave.git"
+    "url": "git+https://github.com/supersavehq/supersave.git"
   },
   "types": "./build/index.d.ts",
   "husky": {
@@ -30,7 +30,7 @@
     }
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "keywords": [
     "sqlite",
@@ -42,12 +42,12 @@
     "supersave",
     "super"
   ],
-  "author": "daangemist",
+  "author": "debuggingdan",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/daangemist/supersave/issues"
+    "url": "https://github.com/supersavehq/supersave/issues"
   },
-  "homepage": "https://github.com/daangemist/supersave#readme",
+  "homepage": "https://github.com/supersavehq/supersave#readme",
   "prettier": "eslint-config-daangemist/.prettierrc",
   "devDependencies": {
     "@tsconfig/node14": "^1.0.1",
