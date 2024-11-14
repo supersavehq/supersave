@@ -1,6 +1,6 @@
 {
   "name": "supersave",
-  "version": "0.14.3",
+  "version": "0.15.0",
   "description": "A package to create a simple datastore with a generic API for side projects.",
   "main": "build/index.js",
   "scripts": {
@@ -12,9 +12,9 @@
     "lint:eslint": "eslint --ext=js,jsx,ts,tsx --max-warnings=0 src",
     "format": "prettier --write src && eslint --ext=js,jsx,ts,tsx --fix src",
     "test": "jest",
-    "test:mysql": "jest --runInBand --forceExit",
+    "test:mysql": "cross-env CONN=mysql://supersave:savesuper@127.0.0.1:3306/supersave jest --runInBand --forceExit",
     "test:watch": "cross-env DEBUG=supersave:* jest --watch",
-    "test:watch:mysql": "cross-env DEBUG=supersave:* jest --runInBand --forceExit --watch",
+    "test:watch:mysql": "cross-env DEBUG=supersave:* CONN=mysql://supersave:savesuper@127.0.0.1:3306/supersave jest --runInBand --forceExit --watch",
     "clean": "rimraf build",
     "start": "nodemon tests/run.js"
   },
@@ -54,7 +54,6 @@
     "@types/debug": "^4.1.7",
     "@types/express": "^4.17.13",
     "@types/jest": "^27.0.2",
-    "@types/mysql": "^2.15.19",
     "@types/node": "^14.17.27",
     "@types/pluralize": "0.0.29",
     "@types/slug": "^0.9.1",
@@ -72,8 +71,7 @@
     "express": "^4.17.1",
     "husky": "^4.3.6",
     "jest": "^29.5.0",
-    "mysql": "^2.18.1",
-    "mysql-parse": "^2.0.8",
+    "mysql2": "^3.11.4",
     "nodemon": "^3.1.7",
     "prettier": "^2.8.8",
     "rimraf": "^3.0.2",
@@ -87,7 +85,7 @@
   },
   "peerDependencies": {
     "express": "^4.17.0 || ^5.0.0",
-    "mysql": "^2.18.1",
+    "mysql2": "^3.11.0",
     "sqlite": "^4.0",
     "sqlite3": "^5.0"
   },
@@ -95,7 +93,7 @@
     "express": {
       "optional": true
     },
-    "mysql": {
+    "mysql2": {
       "optional": true
     },
     "sqlite": {

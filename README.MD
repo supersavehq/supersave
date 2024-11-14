@@ -10,9 +10,11 @@ Example connection string: `sqlite://:memory:`
 
 ## Mysql
 
-    npm i --save supersave mysql
+    npm i --save supersave mysql2
 
 Example connection string: `mysql://examplename:somepassword@examplehost:3306/dbname`
+
+_Earlier versions, before 0.15.0, used the `mysql` package. Migration is simple, remove the `mysql` dependency and install `mysql2`._
 
 # Usage
 
@@ -131,7 +133,7 @@ custom queries.
 | Connection | Description                                                                                  |
 | ---------- | -------------------------------------------------------------------------------------------- |
 | sqlite     | The sqlite connection is a [sqlite](https://www.npmjs.com/package/sqlite) `Database` object. |
-| mysql      | The mysql connection is a [mysql](https://www.npmjs.com/package/mysql) `Pool` object.        |
+| mysql      | The mysql connection is a [mysql2](https://www.npmjs.com/package/mysql2) `Pool` object.      |
 
 In typescript, the `getConnection<T>()` provides a generic type, which you can use to set the
 expected return type from the function. You are yourself responsible for the correct type.

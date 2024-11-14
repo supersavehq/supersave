@@ -1,5 +1,5 @@
 import getConnection from './connection';
-import mysql, { Connection } from 'mysql';
+import mysql, { Connection } from 'mysql2/promise';
 
 export const clear = async (): Promise<void> => {
   const connectionString = getConnection();
@@ -8,44 +8,30 @@ export const clear = async (): Promise<void> => {
     return;
   }
 
-  const connection: Connection = mysql.createConnection(connectionString);
+  const connection: Connection = await mysql.createConnection(connectionString);
 
   const tables: Record<string, any>[] = await getQuery(connection, 'SHOW TABLES');
   const promises: Promise<void>[] = [];
   Object.values(tables).forEach(async (tableRow) => {
-    promises.push(
-      executeQuery(connection, `DROP TABLE ${connection.escapeId(Object.values(tableRow)[0] as string)}`)
-    );
+    promises.push(executeQuery(connection, `DROP TABLE ${connection.escapeId(Object.values(tableRow)[0] as string)}`));
   });
   await Promise.all(promises);
-  connection.end();
+  await connection.end();
 };
 
-
-const executeQuery = async (
+async function executeQuery(
   connection: Connection,
   query: string,
-  values: (string|number|boolean|null)[] = [],
-): Promise<void> => new Promise((resolve, reject) => {
-  connection.query(query, values, (err) => {
-    if (err) {
-      reject(err);
-      return;
-    }
-    resolve();
-  });
-});
+  values: (string | number | boolean | null)[] = []
+): Promise<void> {
+  await connection.query(query, values);
+}
 
-const getQuery = async <T>(
+async function getQuery<T>(
   connection: Connection,
   query: string,
-  values: (string|number|boolean|null)[] = [],
-): Promise<T[]> => new Promise((resolve, reject) => {
-  connection.query(query, values, (err, results) => {
-    if (err) {
-      reject(err);
-      return;
-    }
-    resolve(results);
-  });
-});
+  values: (string | number | boolean | null)[] = []
+): Promise<T[]> {
+  const [results] = await connection.query(query, values);
+  return results as unknown as T[];
+}

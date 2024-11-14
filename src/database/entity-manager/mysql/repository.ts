@@ -1,5 +1,5 @@
 import Debug, { Debugger } from 'debug';
-import { Pool } from 'mysql';
+import { Pool } from 'mysql2/promise';
 import shortUuid from 'short-uuid';
 import { executeQuery, getQuery } from './utils';
 import {
