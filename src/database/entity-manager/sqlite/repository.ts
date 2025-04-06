@@ -2,16 +2,8 @@ import type { Debugger } from 'debug';
 import Debug from 'debug';
 import shortUuid from 'short-uuid';
 import type { Database } from 'sqlite';
-import type {
-  BaseEntity,
-  EntityDefinition,
-  FilterSortField,
-  QueryFilter,
-  QuerySort,
-  Relation} from '../../types';
-import {
-  QueryOperatorEnum
-} from '../../types';
+import type { BaseEntity, EntityDefinition, FilterSortField, QueryFilter, QuerySort, Relation } from '../../types';
+import { QueryOperatorEnum } from '../../types';
 import type Query from '../query';
 import BaseRepository from '../repository';
 

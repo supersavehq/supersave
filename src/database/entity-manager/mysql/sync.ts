@@ -11,6 +11,7 @@ const debug: Debugger = Debug('supersave:db:sync');
 
 const enum MysqlType {
   TEXT = 'text',
+  LONGTEXT = 'longtext',
   INTEGER = 'int(11)',
   BOOLEAN = 'tinyint(4)',
 }
@@ -49,6 +50,7 @@ async function getTableColumns(
   const mysqlTypeMap: Record<MysqlType | string, FilterSortField> = {
     'varchar(32)': 'string', // the id
     [MysqlType.TEXT]: 'string',
+    [MysqlType.LONGTEXT]: 'string',
     [MysqlType.INTEGER]: 'number',
     [MysqlType.BOOLEAN]: 'number',
   };
@@ -107,7 +109,7 @@ export default async (
   }
 
   const newTableName = `${tableName}_2`;
-  const columns = ['id VARCHAR(32) PRIMARY KEY', 'contents TEXT NOT NULL'];
+  const columns = ['id VARCHAR(32) PRIMARY KEY', 'contents LONGTEXT NOT NULL'];
   const indexes = [];
 
   const filterSortFieldNames: string[] = Object.keys(entity.filterSortFields);
