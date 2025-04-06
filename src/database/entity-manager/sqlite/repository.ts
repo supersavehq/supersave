@@ -1,16 +1,18 @@
-import Debug, { Debugger } from 'debug';
+import type { Debugger } from 'debug';
+import Debug from 'debug';
 import shortUuid from 'short-uuid';
-import { Database } from 'sqlite';
-import {
+import type { Database } from 'sqlite';
+import type {
   BaseEntity,
   EntityDefinition,
   FilterSortField,
   QueryFilter,
-  QueryOperatorEnum,
   QuerySort,
-  Relation,
+  Relation} from '../../types';
+import {
+  QueryOperatorEnum
 } from '../../types';
-import Query from '../query';
+import type Query from '../query';
 import BaseRepository from '../repository';
 
 const debug: Debugger = Debug('supersave:db:sqlite:repo');

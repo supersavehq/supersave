@@ -1,4 +1,5 @@
-import { FilterSortField, QueryFilter, QueryFilterValue, QueryOperatorEnum, QuerySort } from '../types';
+import type { FilterSortField, QueryFilter, QueryFilterValue, QuerySort } from '../types';
+import { QueryOperatorEnum } from '../types';
 
 class Query {
   private where: QueryFilter[] = [];

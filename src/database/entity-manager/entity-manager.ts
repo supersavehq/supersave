@@ -1,6 +1,6 @@
 import Query from './query';
 import Repository from './repository';
-import { BaseEntity, EntityDefinition } from '../types';
+import type { BaseEntity, EntityDefinition } from '../types';
 
 export { Repository, Query };
 

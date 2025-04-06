@@ -1,4 +1,5 @@
-import { Database, open } from 'sqlite';
+import type { Database} from 'sqlite';
+import { open } from 'sqlite';
 import sqlite3 from 'sqlite3';
 
 if (process.env.NODE_ENV !== 'production') {

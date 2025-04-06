@@ -1,5 +1,6 @@
-import Debug, { Debugger } from 'debug';
-import { Pool, PoolConnection } from 'mysql2/promise';
+import type { Debugger } from 'debug';
+import Debug from 'debug';
+import type { Pool, PoolConnection } from 'mysql2/promise';
 
 const debug: Debugger = Debug('supersave:db:em:mysql');
 

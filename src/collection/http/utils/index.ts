@@ -1,5 +1,5 @@
 import pluralize from 'pluralize';
-import { ManagedCollection } from '../../types';
+import type { ManagedCollection } from '../../types';
 
 export const generatePath = (collection: ManagedCollection): string =>
   // eslint-disable-next-line implicit-arrow-linebreak

@@ -1,5 +1,5 @@
-import { Request, RequestHandler, Response } from 'express';
-import { HttpCollection, ManagedCollection } from '../../types';
+import type { Request, RequestHandler, Response } from 'express';
+import type { HttpCollection, ManagedCollection } from '../../types';
 import { generatePath } from '../utils';
 
 export default (

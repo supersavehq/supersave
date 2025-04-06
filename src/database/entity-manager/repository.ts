@@ -1,5 +1,5 @@
 import Query from './query';
-import { BaseEntity, EntityDefinition, EntityRow, Relation } from '../types';
+import type { BaseEntity, EntityDefinition, EntityRow, Relation } from '../types';
 
 export default abstract class Repository<T> {
   protected relationFields: string[];

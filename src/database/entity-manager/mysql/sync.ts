@@ -1,9 +1,10 @@
-import Debug, { Debugger } from 'debug';
-import { Pool, PoolConnection } from 'mysql2/promise';
+import type { Debugger } from 'debug';
+import Debug from 'debug';
+import type { Pool, PoolConnection } from 'mysql2/promise';
 import Repository from './repository';
 import { executeQuery, getConnectionFromPool, getQuery } from './utils';
-import { EntityDefinition, FilterSortField } from '../../types';
-import BaseRepository from '../repository';
+import type { EntityDefinition, FilterSortField } from '../../types';
+import type BaseRepository from '../repository';
 import { isEqual } from '../utils';
 
 const debug: Debugger = Debug('supersave:db:sync');

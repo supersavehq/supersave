@@ -1,11 +1,13 @@
-import Debug, { Debugger } from 'debug';
-import { Request, Response } from 'express';
+import type { Debugger } from 'debug';
+import Debug from 'debug';
+import type { Request, Response } from 'express';
 import transform from './utils';
-import { Query } from '../../../database/entity-manager';
-import { FilterSortField, QueryOperatorEnum } from '../../../database/types';
+import type { Query } from '../../../database/entity-manager';
+import type { FilterSortField} from '../../../database/types';
+import { QueryOperatorEnum } from '../../../database/types';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { HookError } from '../../error';
-import { ManagedCollection } from '../../types';
+import type { ManagedCollection } from '../../types';
 
 const debug: Debugger = Debug('supersave:http:get');
 

@@ -1,4 +1,5 @@
-import mysql, { Pool } from 'mysql2/promise';
+import type { Pool } from 'mysql2/promise';
+import mysql from 'mysql2/promise';
 
 export type MysqlOptions = {
   connection: string;

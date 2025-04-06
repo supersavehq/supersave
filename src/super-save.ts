@@ -1,11 +1,11 @@
-import express from 'express';
+import type express from 'express';
 import CollectionHttp from './collection/http';
 import CollectionManager from './collection/manager';
-import { Collection } from './collection/types';
+import type { Collection } from './collection/types';
 import database from './database';
-import { EntityManager } from './database/entity-manager';
-import Repository from './database/entity-manager/repository';
-import { BaseEntity, EntityDefinition } from './database/types';
+import type { EntityManager } from './database/entity-manager';
+import type Repository from './database/entity-manager/repository';
+import type { BaseEntity, EntityDefinition } from './database/types';
 
 class SuperSave {
   private collectionManager: CollectionManager;

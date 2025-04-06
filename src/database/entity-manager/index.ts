@@ -1,6 +1,7 @@
-import Debug, { Debugger } from 'debug';
+import type { Debugger } from 'debug';
+import Debug from 'debug';
 import EntityManager from './entity-manager';
-import { MysqlOptions } from './mysql/connection';
+import type { MysqlOptions } from './mysql/connection';
 import Query from './query';
 import Repository from './repository';
 
