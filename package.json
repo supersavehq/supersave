@@ -1,6 +1,6 @@
 {
   "name": "supersave",
-  "version": "0.15.1",
+  "version": "0.16.0",
   "description": "A package to create a simple datastore with a generic API for side projects.",
   "main": "build/index.js",
   "scripts": {

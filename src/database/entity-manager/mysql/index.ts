@@ -1,12 +1,13 @@
-import Debug, { Debugger } from 'debug';
-import { Pool } from 'mysql2/promise';
+import type { Debugger } from 'debug';
+import Debug from 'debug';
+import type { Pool } from 'mysql2/promise';
 import slug from 'slug';
 import Repository from './repository';
 import sync from './sync';
 import { executeQuery } from './utils';
-import { BaseEntity, EntityDefinition } from '../../types';
+import type { BaseEntity, EntityDefinition } from '../../types';
 import EntityManager from '../entity-manager';
-import BaseRepository from '../repository';
+import type BaseRepository from '../repository';
 
 const debug: Debugger = Debug('supersave:db:em:mysql');
 

@@ -1,5 +1,7 @@
-import Debug, { Debugger } from 'debug';
-import dbInitializer, { EntityManager } from './entity-manager';
+import type { Debugger } from 'debug';
+import Debug from 'debug';
+import type { EntityManager } from './entity-manager';
+import dbInitializer from './entity-manager';
 
 const debug: Debugger = Debug('supersave:db');
 

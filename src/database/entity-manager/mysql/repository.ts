@@ -1,18 +1,20 @@
-import Debug, { Debugger } from 'debug';
-import { Pool } from 'mysql2/promise';
+import type { Debugger } from 'debug';
+import Debug from 'debug';
+import type { Pool } from 'mysql2/promise';
 import shortUuid from 'short-uuid';
 import { executeQuery, getQuery } from './utils';
-import {
+import type {
   BaseEntity,
   EntityDefinition,
   EntityRow,
   FilterSortField,
   QueryFilter,
-  QueryOperatorEnum,
   QuerySort,
-  Relation,
+  Relation} from '../../types';
+import {
+  QueryOperatorEnum
 } from '../../types';
-import Query from '../query';
+import type Query from '../query';
 import BaseRepository from '../repository';
 
 const debug: Debugger = Debug('supersave:db:mysql:repo');

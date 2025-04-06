@@ -1,6 +1,6 @@
-import { Request, Response } from 'express';
-import { Repository } from '../database/entity-manager';
-import { FilterSortField, Relation } from '../database/types';
+import type { Request, Response } from 'express';
+import type { Repository } from '../database/entity-manager';
+import type { FilterSortField, Relation } from '../database/types';
 
 export type HttpCollection = {
   name: string;

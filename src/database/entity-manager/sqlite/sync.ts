@@ -1,8 +1,9 @@
-import Debug, { Debugger } from 'debug';
-import { Database } from 'sqlite';
+import type { Debugger } from 'debug';
+import Debug from 'debug';
+import type { Database } from 'sqlite';
 import Repository from './repository';
-import { EntityDefinition, FilterSortField } from '../../types';
-import BaseRepository from '../repository';
+import type { EntityDefinition, FilterSortField } from '../../types';
+import type BaseRepository from '../repository';
 import { isEqual } from '../utils';
 
 const debug: Debugger = Debug('supersave:db:sync');
