@@ -1,7 +1,7 @@
 {
   "name": "supersave",
   "version": "0.16.0",
-  "description": "A package to create a simple datastore with a generic API for side projects.",
+  "description": "A library to create a simple datastore with a generic API for side projects.",
   "main": "build/index.js",
   "scripts": {
     "watch": "tsc -w",
@@ -80,7 +80,6 @@
     "superagent": "^7.1.6",
     "supertest": "^6.1.6",
     "ts-jest": "^29.1.0",
-    "ts-node": "^9.1.1",
     "typescript": "^5.6.3"
   },
   "peerDependencies": {

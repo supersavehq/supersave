@@ -6,6 +6,7 @@ import database from './database';
 import type { EntityManager } from './database/entity-manager';
 import type Repository from './database/entity-manager/repository';
 import type { BaseEntity, EntityDefinition } from './database/types';
+import type { EntityEngineOptions } from './types';
 
 class SuperSave {
   private collectionManager: CollectionManager;
@@ -22,8 +23,11 @@ class SuperSave {
     return new SuperSave(em);
   }
 
-  public addEntity<T extends BaseEntity>(entity: EntityDefinition): Promise<Repository<T>> {
-    return this.em.addEntity<T>(entity);
+  public addEntity<T extends BaseEntity>(
+    entity: EntityDefinition,
+    options?: EntityEngineOptions
+  ): Promise<Repository<T>> {
+    return this.em.addEntity<T>(entity, options);
   }
 
   public async addCollection<T extends BaseEntity>(collection: Collection): Promise<Repository<T>> {

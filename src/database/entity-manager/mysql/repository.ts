@@ -10,10 +10,9 @@ import type {
   FilterSortField,
   QueryFilter,
   QuerySort,
-  Relation} from '../../types';
-import {
-  QueryOperatorEnum
+  Relation,
 } from '../../types';
+import { QueryOperatorEnum } from '../../types';
 import type Query from '../query';
 import BaseRepository from '../repository';
 

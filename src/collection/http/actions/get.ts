@@ -3,7 +3,7 @@ import Debug from 'debug';
 import type { Request, Response } from 'express';
 import transform from './utils';
 import type { Query } from '../../../database/entity-manager';
-import type { FilterSortField} from '../../../database/types';
+import type { FilterSortField } from '../../../database/types';
 import { QueryOperatorEnum } from '../../../database/types';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { HookError } from '../../error';

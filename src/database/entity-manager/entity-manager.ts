@@ -1,5 +1,6 @@
 import Query from './query';
 import Repository from './repository';
+import type { EntityEngineOptions } from '../../types';
 import type { BaseEntity, EntityDefinition } from '../types';
 
 export { Repository, Query };
@@ -7,7 +8,10 @@ export { Repository, Query };
 abstract class EntityManager {
   protected repositories = new Map<string, Repository<any>>();
 
-  public abstract addEntity<T extends BaseEntity>(entity: EntityDefinition): Promise<Repository<T>>;
+  public abstract addEntity<T extends BaseEntity>(
+    entity: EntityDefinition,
+    options?: EntityEngineOptions
+  ): Promise<Repository<T>>;
 
   protected getFullEntityName(name: string, namespace?: string): string {
     return typeof namespace !== 'undefined' ? `${namespace}_${name}` : name;
