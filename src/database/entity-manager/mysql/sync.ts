@@ -3,6 +3,7 @@ import Debug from 'debug';
 import type { Pool, PoolConnection } from 'mysql2/promise';
 import Repository from './repository';
 import { executeQuery, getConnectionFromPool, getQuery } from './utils';
+import type { EntityMysqlOptions } from '../../../types';
 import type { EntityDefinition, FilterSortField } from '../../types';
 import type BaseRepository from '../repository';
 import { isEqual } from '../utils';
@@ -11,6 +12,8 @@ const debug: Debugger = Debug('supersave:db:sync');
 
 const enum MysqlType {
   TEXT = 'text',
+  MEDIUMTEXT = 'mediumtext',
+  LONGTEXT = 'longtext',
   INTEGER = 'int(11)',
   BOOLEAN = 'tinyint(4)',
 }
@@ -31,9 +34,8 @@ const filterSortFieldTypeMap = {
 
 async function getTableColumns(
   connection: PoolConnection,
-  tableName: string,
-  entity: EntityDefinition
-): Promise<Record<string, MysqlType>> {
+  tableName: string
+): Promise<Record<'contents' | string, MysqlType>> {
   const query = `DESC \`${tableName}\`;`;
   const columns = await getQuery<MysqlDescRow>(connection, query);
 
@@ -41,26 +43,26 @@ async function getTableColumns(
     throw new Error(`Unable to query table structure for ${tableName}.`);
   }
 
-  if (columns.length === 2 && !entity.filterSortFields) {
-    debug('Only id column found and no additional filterSortFields defined.');
-    return {};
-  }
-
   const mysqlTypeMap: Record<MysqlType | string, FilterSortField> = {
     'varchar(32)': 'string', // the id
     [MysqlType.TEXT]: 'string',
+    [MysqlType.MEDIUMTEXT]: 'string',
+    [MysqlType.LONGTEXT]: 'string',
     [MysqlType.INTEGER]: 'number',
     [MysqlType.BOOLEAN]: 'number',
   };
 
   const mappedColumns: Record<string, MysqlType> = {};
   columns.forEach((column: MysqlDescRow) => {
-    if (column.Field === 'contents' || column.Field === 'id') {
+    if (column.Field === 'id') {
       return;
     }
+
     if (!mysqlTypeMap[column.Type]) {
       throw new Error(`Unrecognized Mysql column type ${column.Type}`);
     }
+
+    // We include contents as a column here, since it can be different because of the provided options.
     mappedColumns[column.Field] = column.Type;
   });
   return mappedColumns;
@@ -89,6 +91,7 @@ function mapFilterSortFieldsToColumns(filterSortFields: Record<string, FilterSor
 export default async (
   entity: EntityDefinition,
   tableName: string,
+  options: EntityMysqlOptions | undefined,
   pool: Pool,
   repository: Repository<any>,
   getRepository: (name: string, namespace?: string) => BaseRepository<any>
@@ -98,16 +101,18 @@ export default async (
   }
 
   const connection: PoolConnection = await getConnectionFromPool(pool);
-  const mysqlColumns = await getTableColumns(connection, tableName, entity);
+  const { contents: contentsColumnType, ...mysqlColumns } = await getTableColumns(connection, tableName);
   const newMysqlColumns: Record<string, MysqlType> = mapFilterSortFieldsToColumns(entity.filterSortFields);
-  if (!hasTableChanged(mysqlColumns, newMysqlColumns)) {
+
+  const contentsColumnChanged = contentsColumnType !== (options?.contentsColumnType ?? MysqlType.TEXT);
+  if (!contentsColumnChanged && !hasTableChanged(mysqlColumns, newMysqlColumns)) {
     debug('Table has not changed, not making changes.');
     connection.release();
     return;
   }
 
   const newTableName = `${tableName}_2`;
-  const columns = ['id VARCHAR(32) PRIMARY KEY', 'contents TEXT NOT NULL'];
+  const columns = ['id VARCHAR(32) PRIMARY KEY', `contents ${options?.contentsColumnType ?? MysqlType.TEXT}  NOT NULL`];
   const indexes = [];
 
   const filterSortFieldNames: string[] = Object.keys(entity.filterSortFields);
