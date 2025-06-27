@@ -1,10 +1,12 @@
+import type { Request, Response } from 'express';
+import express from 'express';
 import supertest from 'supertest';
-import express, { Request, Response } from 'express';
-import { Planet } from '../../../types';
-import { planetCollection } from '../../../entities';
-import { Collection, HookError, Repository, SuperSave } from '../../../../build';
+import type { Collection, Repository} from '../../../../build';
+import { HookError, SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
+import { planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Planet } from '../../../types';
 
 beforeEach(clear);
 

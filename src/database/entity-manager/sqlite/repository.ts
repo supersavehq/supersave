@@ -23,11 +23,11 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     const wherePlaceholders: string[] = [];
     const whereValues: { [key: string]: string } = {};
 
-    ids.forEach((value, idx) => {
-      const key = `:p${idx}`;
+    for (const [index, value] of ids.entries()) {
+      const key = `:p${index}`;
       wherePlaceholders.push(key);
       whereValues[key] = value;
-    });
+    }
 
     const query = `SELECT id,contents FROM ${this.tableName} WHERE id IN(${wherePlaceholders.join(',')})`;
     const result = await this.connection.all(query, whereValues);

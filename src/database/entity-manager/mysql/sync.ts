@@ -127,18 +127,14 @@ export default async (
 
   await executeQuery(connection, `DROP TABLE IF EXISTS ${pool.escapeId(newTableName)};`);
   let createQuery = `CREATE TABLE ${pool.escapeId(newTableName)} (${columns.join(',')}`;
-  if (indexes.length > 0) {
-    createQuery = `${createQuery}, ${indexes
+  createQuery = indexes.length > 0 ? `${createQuery}, ${indexes
       .map(
         (index) =>
           `INDEX(${pool.escapeId(index)}${
             (entity.filterSortFields as Record<string, FilterSortField>)[index] === 'string' ? '(999)' : ''
           })`
       )
-      .join(',')})`;
-  } else {
-    createQuery = `${createQuery})`;
-  }
+      .join(',')})` : `${createQuery})`;
 
   // TODO start a transaction
   debug('Creating temporary table.', createQuery);

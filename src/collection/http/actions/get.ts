@@ -18,7 +18,7 @@ function sort(query: Query, sortRequest: string): void {
     let parsedSortField = sortField;
 
     if (sortField.startsWith('-')) {
-      parsedSortField = sortField.substring(1);
+      parsedSortField = sortField.slice(1);
       direction = 'desc';
     }
     query.sort(parsedSortField, direction);
@@ -36,7 +36,7 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
   // eslint-disable-next-line max-len
   const filterSortFields: Record<string, FilterSortField> = collection.filterSortFields;
   Object.entries(filters).forEach(([field, value]: [string, string]) => {
-    const matches: string[] | null = (field || '').match(/(.*)\[(.*)\]$/);
+    const matches: string[] | null = (field || '').match(/(.*)\[(.*)]$/);
     if (matches === null || matches.length !== 3) {
       if (collection.filterSortFields && collection.filterSortFields[field] === 'boolean') {
         query.eq(field, ['1', 1, 'true', true].includes(value));
@@ -88,15 +88,15 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
   });
 }
 
-function limitOffset(query: Query, params: Record<string, string>): void {
-  const { limit = '25', offset = '0' } = params;
+function limitOffset(query: Query, parameters: Record<string, string>): void {
+  const { limit = '25', offset = '0' } = parameters;
   if (limit === '-1') {
-    query.limit(undefined);
+    query.limit();
   } else {
-    query.limit(parseInt(limit, 10) || 25);
+    query.limit(Number.parseInt(limit, 10) || 25);
   }
 
-  query.offset(parseInt(offset, 10) || 0);
+  query.offset(Number.parseInt(offset, 10) || 0);
 }
 
 export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>

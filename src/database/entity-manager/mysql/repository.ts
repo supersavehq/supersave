@@ -32,10 +32,10 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     const wherePlaceholders: string[] = [];
     const whereValues: (string | number | boolean)[] = [];
 
-    ids.forEach((value) => {
+    for (const value of ids) {
       wherePlaceholders.push('?');
       whereValues.push(value);
-    });
+    }
 
     const query = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)} WHERE id IN(${wherePlaceholders.join(
       ','

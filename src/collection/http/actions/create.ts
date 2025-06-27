@@ -16,7 +16,7 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
       if (typeof body !== 'object') {
         throw new TypeError('Request body is not an object.');
       }
-      collection.relations.forEach((relation) => {
+      for (const relation of collection.relations) {
         if (body[relation.field]) {
           if (relation.multiple && !Array.isArray(body[relation.field])) {
             throw new Error(
@@ -28,15 +28,13 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
                 id,
               }));
             }
-          } else if (!relation.multiple) {
-            if (typeof body[relation.field] === 'string') {
+          } else if (!relation.multiple && typeof body[relation.field] === 'string') {
               body[relation.field] = {
                 id: body[relation.field],
               };
             }
-          }
         }
-      });
+      }
 
       let item: any;
       let itemBody = body;

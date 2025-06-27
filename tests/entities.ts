@@ -1,4 +1,4 @@
-import { Collection, EntityDefinition } from '../build';
+import type { Collection, EntityDefinition } from '../build';
 
 export const planetEntity: EntityDefinition = {
   name: 'planet',

@@ -13,9 +13,9 @@ export default abstract class Repository<T> {
   ) {
     this.relationFields = definition.relations.map((relation: Relation) => relation.field);
     this.relationsMap = new Map<string, Relation>();
-    definition.relations.forEach((relation) => {
+    for (const relation of definition.relations) {
       this.relationsMap.set(relation.field, relation);
-    });
+    }
   }
 
   public async getById(id: string): Promise<T | null> {
@@ -102,16 +102,16 @@ export default abstract class Repository<T> {
 
     // preserve the ordering
     const resultsMap = new Map<string, BaseEntity>();
-    repositoryResults.forEach((result) => {
+    for (const result of repositoryResults) {
       resultsMap.set(result.id, result);
-    });
+    }
 
     const mappedResults: BaseEntity[] = [];
-    array.forEach((id) => {
+    for (const id of array) {
       if (resultsMap.get(id)) {
         mappedResults.push(resultsMap.get(id) as BaseEntity);
       }
-    });
+    }
     return mappedResults;
   }
 

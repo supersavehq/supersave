@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/**/*", // Include all files in src
+    "tests/**/*", // Include all files in tests
+    "jest.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
+  ],
+  "compilerOptions": {
+    "noEmit": true, // We only need this for type-checking, not for emitting files
+    "allowJs": true // Ensure JS files are checked
+  }
+}

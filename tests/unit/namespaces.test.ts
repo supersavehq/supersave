@@ -1,8 +1,9 @@
-import { SuperSave, EntityDefinition, Repository } from '../../build';
-import { moonEntity, planetEntity } from '../entities';
-import { Moon, Planet } from '../types';
+import type { EntityDefinition, Repository } from '../../build';
+import { SuperSave } from '../../build';
 import getConnection from '../connection';
+import { moonEntity, planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Moon, Planet } from '../types';
 
 beforeEach(clear);
 
@@ -73,7 +74,7 @@ test('relations from different namespace', async () => {
   expect(earthMoon.name).toEqual('Moon');
   expect(earthMoon.planet.name).toEqual('Earth');
 
-  const retrievedMoon = await moonRepository.getById((earthMoon.id as string));
+  const retrievedMoon = await moonRepository.getById((earthMoon.id ));
   expect(retrievedMoon).toBeDefined();
   expect((retrievedMoon as Moon).planet).toBeDefined();
   await superSave.close();

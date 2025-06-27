@@ -23,7 +23,7 @@ export default (
         endpoint: `${prefix}${path}`,
         filters: collection.filterSortFields,
         sort: Object.keys(collection.filterSortFields || {}),
-        ...(collection.additionalProperties || {}),
+        ...collection.additionalProperties,
       });
     });
 

@@ -1,8 +1,8 @@
-import Query from './query';
-import Repository from './repository';
+
+import type Repository from './repository';
 import type { BaseEntity, EntityDefinition } from '../types';
 
-export { Repository, Query };
+
 
 abstract class EntityManager {
   protected repositories = new Map<string, Repository<any>>();
@@ -31,3 +31,6 @@ abstract class EntityManager {
 }
 
 export default EntityManager;
+
+export {default as Query} from './query';
+export {default as Repository} from './repository';

@@ -23,7 +23,7 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
 
       const { body } = request;
       debug('Incoming update request', body);
-      collection.relations.forEach((relation) => {
+      for (const relation of collection.relations) {
         if (body[relation.field]) {
           if (relation.multiple && Array.isArray(body[relation.field]) && body[relation.field].length > 0) {
             // check if an array of strings was provided, if so, we translate it to an array of empty objects with the id attribute set.
@@ -37,7 +37,7 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
             };
           }
         }
-      });
+      }
 
       let updatedEntity = {
         ...item,

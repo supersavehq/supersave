@@ -1,12 +1,12 @@
 {
-  "extends": ["daangemist"],
+  "extends": ["debuggingdan"],
   "env": {
     "browser": true,
     "node": true
   },
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
-    "project": "./tsconfig.json"
+    "project": "./tsconfig.eslint.json"
   },
   "rules": {
     "indent": 0,
@@ -18,14 +18,9 @@
     "@typescript-eslint/no-unsafe-return": 0,
     "@typescript-eslint/no-unsafe-call": 0,
     "@typescript-eslint/no-misused-promises": 0,
-    "unicorn/prevent-abbreviations": [
-      "error",
-      {
-        "whitelist": {
-          "res": true
-        }
-      }
-    ],
+    // "unicorn/prevent-abbreviations" is now handled by eslint-config-debuggingdan
+    // and the compatible eslint-plugin-unicorn version.
+    "unicorn/expiring-todo-comments": "off", // Disable problematic rule
     "@typescript-eslint/consistent-type-imports": "error"
   }
 }

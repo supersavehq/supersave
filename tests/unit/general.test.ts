@@ -1,8 +1,9 @@
-import { SuperSave, Repository, EntityDefinition } from '../../build';
-import { moonEntity, planetEntity } from '../entities';
-import { Moon, Planet } from '../types';
+import type { EntityDefinition, Repository } from '../../build';
+import { SuperSave } from '../../build';
 import getConnection from '../connection';
+import { moonEntity, planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Moon, Planet } from '../types';
 
 beforeEach(clear);
 
@@ -35,7 +36,7 @@ test('entity with relations', async () => {
   expect(earthMoon.name).toEqual('Moon');
   expect(earthMoon.planet.name).toEqual('Earth');
 
-  const retrievedMoon = await moonRepository.getById(earthMoon.id as string);
+  const retrievedMoon = await moonRepository.getById(earthMoon.id );
   expect(retrievedMoon).toBeDefined();
   await superSave.close();
 });
@@ -73,7 +74,7 @@ test('entity delete', async () => {
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
   await planetRepository.create({ name: 'Mars' });
   // @ts-ignore
-  await planetRepository.deleteUsingId(earth.id as string);
+  await planetRepository.deleteUsingId(earth.id );
 
   const remainingEarths = await planetRepository.getAll();
   expect(remainingEarths).toHaveLength(1);

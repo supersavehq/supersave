@@ -1,13 +1,13 @@
 import type { Debugger } from 'debug';
 import Debug from 'debug';
-import EntityManager from './entity-manager';
+import type EntityManager from './entity-manager';
 import type { MysqlOptions } from './mysql/connection';
-import Query from './query';
-import Repository from './repository';
+
+
 
 const debug: Debugger = Debug('supersave:db:em');
 
-export { Repository, Query, EntityManager };
+
 
 export const MYSQL = 'mysql';
 export const SQLITE = 'sqlite';
@@ -37,3 +37,7 @@ export default async (
 
   throw new Error(`Unrecognized db type ${type}.`);
 };
+
+export {default as Query} from './query';
+export {default as Repository} from './repository';
+export {default as EntityManager} from './entity-manager';

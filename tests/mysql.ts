@@ -1,10 +1,11 @@
+import type { Connection } from 'mysql2/promise';
+import mysql from 'mysql2/promise';
 import getConnection from './connection';
-import mysql, { Connection } from 'mysql2/promise';
 
 export const clear = async (): Promise<void> => {
   const connectionString = getConnection();
 
-  if (connectionString.substring(0, 9) === 'sqlite://') {
+  if (connectionString.slice(0, 9) === 'sqlite://') {
     return;
   }
 

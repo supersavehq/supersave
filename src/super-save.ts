@@ -56,7 +56,7 @@ class SuperSave {
   }
 
   public async getRouter(prefix = '/'): Promise<express.Router> {
-    const prefixWithoutSlash = prefix.charAt(prefix.length - 1) === '/' ? prefix.substr(0, prefix.length - 2) : prefix;
+    const prefixWithoutSlash = prefix.charAt(prefix.length - 1) === '/' ? prefix.slice(0, Math.max(0, prefix.length - 2)) : prefix;
     this.collectionHttp = await CollectionHttp.create(this.collectionManager, prefixWithoutSlash);
     return this.collectionHttp.getRouter();
   }

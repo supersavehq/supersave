@@ -1,10 +1,10 @@
-import supertest from 'supertest';
 import express from 'express';
-import { Planet, Moon } from '../../../types';
-import { planetCollection, moonCollection } from '../../../entities';
+import supertest from 'supertest';
 import { SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
+import { moonCollection, planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Moon, Planet } from '../../../types';
 
 beforeEach(clear);
 

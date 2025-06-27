@@ -1,8 +1,9 @@
-import { planetEntity, moonEntity } from '../entities';
-import { SuperSave, Repository } from '../../build';
-import { Moon, Planet } from '../types';
+import type { Repository } from '../../build';
+import { SuperSave } from '../../build';
 import getConnection from '../connection';
+import { moonEntity, planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Moon, Planet } from '../types';
 
 beforeEach(clear);
 

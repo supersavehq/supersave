@@ -1,8 +1,9 @@
-import { SuperSave, Repository, BaseEntity } from '../../build';
-import { planetEntity } from '../entities';
-import { Planet } from '../types';
+import type { BaseEntity, Repository } from '../../build';
+import { SuperSave } from '../../build';
 import getConnection from '../connection';
+import { planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Planet } from '../types';
 
 beforeEach(clear);
 
@@ -12,9 +13,9 @@ describe('update', () => {
     const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
 
     const earth: Planet = await planetRepository.create({ name: 'Earth' });
-    await planetRepository.update({ id: earth.id as string, name: 'Updated Earth' });
+    await planetRepository.update({ id: earth.id , name: 'Updated Earth' });
 
-    const checkEarth = await planetRepository.getById(earth.id as string);
+    const checkEarth = await planetRepository.getById(earth.id );
 
     expect(checkEarth).toBeDefined();
     expect((checkEarth as Planet).name).toBe('Updated Earth');

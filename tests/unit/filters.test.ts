@@ -1,8 +1,9 @@
-import { SuperSave, EntityDefinition, Query, BaseEntity } from '../../build';
-import { planetEntity } from '../entities';
+import type { BaseEntity, EntityDefinition, Query } from '../../build';
+import { SuperSave } from '../../build';
 import getConnection from '../connection';
-import { Planet } from '../types';
+import { planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Planet } from '../types';
 
 beforeEach(clear);
 
@@ -288,10 +289,10 @@ describe('there can be filtered on relation fields', () => {
     const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
 
     await planetRepository.create({ name: 'Earth', distance: 1000 });
-    await planetRepository.create({ name: 'Pluto', distance: 9877654 });
+    await planetRepository.create({ name: 'Pluto', distance: 9_877_654 });
 
     const results = await planetRepository.getByQuery(
-      planetRepository.createQuery().gt('distance', 800).lt('distance', 9999999)
+      planetRepository.createQuery().gt('distance', 800).lt('distance', 9_999_999)
     );
     expect(results.length).toBe(2);
 
