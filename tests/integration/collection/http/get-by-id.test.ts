@@ -1,8 +1,9 @@
 
+import { beforeEach, expect, test } from 'vitest';
 import express from 'express';
 import supertest from 'supertest';
-import type { Repository} from '../../../../build';
-import { SuperSave } from '../../../../build';
+import type { Repository} from '../../../../src';
+import { SuperSave } from '../../../../src';
 import getConnection from '../../../connection';
 import { planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';

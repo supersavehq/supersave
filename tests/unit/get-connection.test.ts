@@ -1,4 +1,5 @@
-import { SuperSave } from '../../build';
+import { expect, test } from 'vitest';
+import { SuperSave } from '../../src';
 import getConnection from '../connection';
 
 test('get-connection returns something', async () => {

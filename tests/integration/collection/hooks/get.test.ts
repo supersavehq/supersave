@@ -1,8 +1,9 @@
+import { beforeEach, describe, expect, test } from 'vitest';
 import type { Request, Response } from 'express';
 import express from 'express';
 import supertest from 'supertest';
-import type { Collection} from '../../../../build';
-import { HookError, SuperSave } from '../../../../build';
+import type { Collection} from '../../../../src';
+import { HookError, SuperSave } from '../../../../src';
 import getConnection from '../../../connection';
 import { planetCollection } from '../../../entities';
 
@@ -18,10 +19,16 @@ describe('getHook', () => {
 
     const repository = await superSave.addCollection<Planet>({
       ...planetCollection,
+      filterSortFields: {
+        // id: 'string', // No longer needed as we filter by name
+        name: 'string',
+      },
       hooks: [
         {
           get: (_collection: Collection, req: Request, _res: Response) => {
-            req.query.id = 'non-existing-id';
+            // req.query.id = 'non-existing-id'; // Commented out
+            // req.query.name = 'NonExistingPlanetName'; // Test with name
+            (req as any).CUSTOM_FILTER_NAME = 'NonExistingPlanetName';
           },
         },
       ],

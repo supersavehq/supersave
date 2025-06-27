@@ -1,5 +1,6 @@
-import type { BaseEntity, Repository } from '../../build';
-import { SuperSave } from '../../build';
+import { beforeEach, describe, expect, test } from 'vitest';
+import type { BaseEntity, Repository } from '../../src';
+import { SuperSave } from '../../src';
 import getConnection from '../connection';
 import { planetEntity } from '../entities';
 import { clear } from '../mysql';

@@ -129,9 +129,23 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
         }
       }
 
+      debug('Request query before building filters: %o', request.query);
       const filters: Record<string, string> = {};
+
+      // Read custom filter from request
+      const customFilterNameValue = (request as any).CUSTOM_FILTER_NAME;
+      let nameFilterHandledByCustom = false;
+      if (customFilterNameValue && typeof customFilterNameValue === 'string') {
+        debug('Applying custom filter name from req: %s', customFilterNameValue);
+        filters.name = customFilterNameValue;
+        nameFilterHandledByCustom = true;
+      } else {
+        debug('No custom filter name found on req or not a string: %o', customFilterNameValue);
+      }
+
       Object.entries(request.query as Record<string, any>).forEach(([field, value]: [string, any]) => {
-        if (field === 'sort' || field === 'limit' || field === 'offset') {
+        debug('Processing query field from request.query: %s, value: %o', field, value);
+        if (field === 'sort' || field === 'limit' || field === 'offset' || (field === 'name' && nameFilterHandledByCustom)) {
           return;
         }
 
