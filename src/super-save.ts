@@ -1,11 +1,11 @@
-import type express from 'express';
-import CollectionHttp from './collection/http';
-import CollectionManager from './collection/manager';
-import type { Collection } from './collection/types';
-import database from './database';
-import type { EntityManager } from './database/entity-manager';
-import type Repository from './database/entity-manager/repository';
-import type { BaseEntity, EntityDefinition } from './database/types';
+import type express from "express";
+import CollectionHttp from "./collection/http";
+import CollectionManager from "./collection/manager";
+import type { Collection } from "./collection/types";
+import database from "./database";
+import type { EntityManager } from "./database/entity-manager";
+import type Repository from "./database/entity-manager/repository";
+import type { BaseEntity, EntityDefinition } from "./database/types";
 
 class SuperSave {
   private collectionManager: CollectionManager;
@@ -22,13 +22,17 @@ class SuperSave {
     return new SuperSave(em);
   }
 
-  public addEntity<T extends BaseEntity>(entity: EntityDefinition): Promise<Repository<T>> {
+  public addEntity<T extends BaseEntity>(
+    entity: EntityDefinition,
+  ): Promise<Repository<T>> {
     return this.em.addEntity<T>(entity);
   }
 
-  public async addCollection<T extends BaseEntity>(collection: Collection): Promise<Repository<T>> {
+  public async addCollection<T extends BaseEntity>(
+    collection: Collection,
+  ): Promise<Repository<T>> {
     const { filterSortFields = {} } = collection;
-    filterSortFields.id = 'string';
+    filterSortFields.id = "string";
 
     const updatedCollection: Collection = {
       ...collection,
@@ -45,20 +49,33 @@ class SuperSave {
     });
     const managedCollection = { ...updatedCollection, repository };
     this.collectionManager.addCollection(managedCollection);
-    if (typeof this.collectionHttp !== 'undefined') {
+    if (typeof this.collectionHttp !== "undefined") {
       this.collectionHttp.register(managedCollection);
     }
     return repository;
   }
 
-  public getRepository<T extends BaseEntity>(entityName: string, namespace?: string): Repository<T> {
+  public getRepository<T extends BaseEntity>(
+    entityName: string,
+    namespace?: string,
+  ): Repository<T> {
     return this.em.getRepository<T>(entityName, namespace);
   }
 
-  public async getRouter(prefix = '/'): Promise<express.Router> {
-    const prefixWithoutSlash = prefix.charAt(prefix.length - 1) === '/' ? prefix.substr(0, prefix.length - 2) : prefix;
-    this.collectionHttp = await CollectionHttp.create(this.collectionManager, prefixWithoutSlash);
+  public async getRouter(prefix = "/"): Promise<express.Router> {
+    const prefixWithoutSlash =
+      prefix.charAt(prefix.length - 1) === "/"
+        ? prefix.substr(0, prefix.length - 2)
+        : prefix;
+    this.collectionHttp = await CollectionHttp.create(
+      this.collectionManager,
+      prefixWithoutSlash,
+    );
     return this.collectionHttp.getRouter();
+  }
+
+  public getManager(): CollectionManager {
+    return this.collectionManager;
   }
 
   public close(): Promise<void> {

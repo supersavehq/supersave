@@ -1,5 +1,5 @@
 {
-  "extends": ["daangemist"],
+  "extends": ["debuggingdan"],
   "env": {
     "browser": true,
     "node": true

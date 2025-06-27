@@ -9,8 +9,8 @@
     "lint": "concurrently --kill-others-on-fail \"npm:lint:*\"",
     "lint:prettier": "prettier --check --loglevel=warn src",
     "lint:tsc": "tsc --noEmit",
-    "lint:eslint": "eslint --ext=js,jsx,ts,tsx --max-warnings=0 src",
-    "format": "prettier --write src && eslint --ext=js,jsx,ts,tsx --fix src",
+    "lint:eslint": "ESLINT_USE_FLAT_CONFIG=false eslint --ext=js,jsx,ts,tsx --max-warnings=0 src",
+    "format": "prettier --write src && ESLINT_USE_FLAT_CONFIG=false eslint --ext=js,jsx,ts,tsx --fix src",
     "test": "jest",
     "test:mysql": "cross-env CONN=mysql://supersave:savesuper@127.0.0.1:3306/supersave jest --runInBand --forceExit",
     "test:watch": "cross-env DEBUG=supersave:* jest --watch",
@@ -23,6 +23,11 @@
     "url": "git+https://github.com/supersavehq/supersave.git"
   },
   "types": "./build/index.d.ts",
+  "exports": {
+    ".": "./build/index.js",
+    "./express": "./build/express.js",
+    "./next": "./build/next.js"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "npm run lint",
@@ -48,7 +53,6 @@
     "url": "https://github.com/supersavehq/supersave/issues"
   },
   "homepage": "https://github.com/supersavehq/supersave#readme",
-  "prettier": "eslint-config-daangemist/.prettierrc",
   "devDependencies": {
     "@tsconfig/node14": "^1.0.1",
     "@types/debug": "^4.1.7",
@@ -60,10 +64,11 @@
     "@types/supertest": "^2.0.11",
     "@typescript-eslint/eslint-plugin": "^5.60.0",
     "@typescript-eslint/parser": "^5.60.0",
+    "better-call": "^0.3.0",
     "concurrently": "^8.2.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.43.0",
-    "eslint-config-daangemist": "^1.0.2",
+    "eslint-config-debuggingdan": "2.0.0",
     "eslint-import-resolver-typescript": "^3.5.5",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-only-warn": "^1.1.0",
@@ -84,12 +89,16 @@
     "typescript": "^5.6.3"
   },
   "peerDependencies": {
+    "better-call": "^0.3.0",
     "express": "^4.17.0 || ^5.0.0",
     "mysql2": "^3.11.0",
     "sqlite": "^4.0 || ^5.0",
     "sqlite3": "^5.0"
   },
   "peerDependenciesMeta": {
+    "better-call": {
+      "optional": true
+    },
     "express": {
       "optional": true
     },
@@ -108,5 +117,15 @@
     "pluralize": "^8.0.0",
     "short-uuid": "^4.2.0",
     "slug": "^4.1.0"
+  },
+  "typesVersions": {
+    "*": {
+      "express": [
+        "./build/express.d.ts"
+      ],
+      "next": [
+        "./build/next.d.ts"
+      ]
+    }
   }
 }

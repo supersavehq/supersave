@@ -43,7 +43,11 @@ const main = async () => {
   const app = express();
   const port = process.env.PORT || 4567;
 
-  app.use('/api', await superSave.getRouter());
+  // Assuming createExpressRoutes is available in '../build/express'
+  // We need to require it.
+  const { createExpressRoutes } = require('../build/express');
+  const manager = superSave.getManager(); // Assuming getManager is available
+  await createExpressRoutes(app, manager, '/api');
 
   app.listen(port, () => {
     console.log(`Test server listening at http://0.0.0.0:${port}`)

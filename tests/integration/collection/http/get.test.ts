@@ -3,6 +3,7 @@ import express from 'express';
 import { Planet, Moon } from '../../../types';
 import { planetCollection, moonCollection } from '../../../entities';
 import { Repository, SuperSave } from '../../../../build';
+import { createExpressRoutes } from '../../../../build/express';
 import getConnection from '../../../connection';
 
 import { clear } from '../../../mysql';
@@ -14,8 +15,9 @@ test('empty collection returns empty array', async() => {
   const superSave = await SuperSave.create(getConnection());
 
   await superSave.addCollection<Planet>(planetCollection);
-  app.use('/', await superSave.getRouter());
-  await superSave.addCollection<Moon>(moonCollection);
+  await superSave.addCollection<Moon>(moonCollection); // Add collections first
+  const manager = superSave.getManager();
+  await createExpressRoutes(app, manager, '/'); // Then setup routes
 
   const response = await supertest(app)
     .get('/planets')
@@ -32,7 +34,8 @@ test('collection items are returned', async() => {
   const superSave = await SuperSave.create(getConnection());
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
-  app.use('/', await superSave.getRouter());
+  const manager = superSave.getManager();
+  await createExpressRoutes(app, manager, '/');
 
   await repository.create({ name: 'Earth' });
   const response = await supertest(app)
@@ -54,7 +57,8 @@ test('collection items are sorted when requested: ascending', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' },
   });
-  app.use('/', await superSave.getRouter());
+  const manager = superSave.getManager();
+  await createExpressRoutes(app, manager, '/');
 
   await repository.create({ name: 'Mars' });
   await repository.create({ name: 'Earth' });
@@ -79,7 +83,8 @@ test('collection items are sorted when requested: descending', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' },
   });
-  app.use('/', await superSave.getRouter());
+  const manager = superSave.getManager();
+  await createExpressRoutes(app, manager, '/');
 
   await repository.create({ name: 'Mars' });
   await repository.create({ name: 'Earth' });
@@ -104,7 +109,8 @@ test('undefined sort fields are not accepted.', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' }
   });
-  app.use('/', await superSave.getRouter());
+  const manager = superSave.getManager();
+  await createExpressRoutes(app, manager, '/');
 
   await supertest(app)
     .get('/planets')
@@ -121,7 +127,8 @@ test('offset is honored', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' }
   });
-  app.use('/', await superSave.getRouter());
+  const manager = superSave.getManager();
+  await createExpressRoutes(app, manager, '/');
 
   await repository.create({ name: 'Mars' });
   await repository.create({ name: 'Earth' });
@@ -149,7 +156,8 @@ test('limit is honored', async () => {
     ...planetCollection,
     filterSortFields: { name: 'string' }
   });
-  app.use('/', await superSave.getRouter());
+  const manager = superSave.getManager();
+  await createExpressRoutes(app, manager, '/');
 
   await repository.create({ name: 'Mars' });
   await repository.create({ name: 'Earth' });

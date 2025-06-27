@@ -1,14 +1,16 @@
-import type { Debugger } from 'debug';
-import Debug from 'debug';
-import type { Request, Response } from 'express';
-import transform from './utils';
+import type { Debugger } from "debug";
+import Debug from "debug";
+import type { Request, Response } from "express";
+import transform from "./utils";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { HookError } from '../../error';
-import type { ManagedCollection } from '../../types';
+import { HookError } from "../../error";
+import type { ManagedCollection } from "../../types";
 
-const debug: Debugger = Debug('supersave:http:getById');
+const debug: Debugger = Debug("supersave:http:getById");
 
-export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>
+export default (
+    collection: ManagedCollection,
+  ): ((request: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (request, res: Response): Promise<void> => {
     try {
@@ -23,7 +25,7 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
           try {
             item = await hooks.getById(collection, request, res, item);
           } catch (error: unknown | HookError) {
-            debug('Error thrown in getById hook %o', error);
+            debug("Error thrown in getById hook %o", error);
             // @ts-expect-error Error has type unknown.
             const code = error?.statusCode ?? 500;
             // @ts-expect-error Error has type unknown.
@@ -33,7 +35,7 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
         }
       }
       if (item === null) {
-        res.status(404).json({ message: 'Not found', meta: { id } });
+        res.status(404).json({ message: "Not found", meta: { id } });
         return;
       }
 
@@ -41,7 +43,7 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
       try {
         item = await transform(collection, request, res, item);
       } catch (error: unknown | HookError) {
-        debug('Error thrown in getById transformHook %o', error);
+        debug("Error thrown in getById transformHook %o", error);
         // @ts-expect-error Error has type unknown.
         const code = error?.statusCode ?? 500;
         // @ts-expect-error Error has type unknown.
@@ -51,7 +53,11 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
 
       res.json({ data: item });
     } catch (error) {
-      debug('Error while fetching item with id %s, %o', request.params.id, error);
+      debug(
+        "Error while fetching item with id %s, %o",
+        request.params.id,
+        error,
+      );
       res.status(500).json({ message: (error as Error).message });
     }
   };

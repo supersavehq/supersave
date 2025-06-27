@@ -5,7 +5,7 @@ export interface Relation {
   multiple: boolean;
 }
 
-export type FilterSortField = 'string' | 'number' | 'boolean';
+export type FilterSortField = "string" | "number" | "boolean";
 
 export interface EntityDefinition {
   name: string;
@@ -26,13 +26,13 @@ export interface EntityRow {
 }
 
 export const enum QueryOperatorEnum {
-  EQUALS = '=',
-  GREATER_THAN = '>',
-  GREATER_THAN_EQUALS = '>=',
-  LESS_THAN = '<',
-  LESS_THAN_EQUALS = '<=',
-  IN = 'IN',
-  LIKE = 'LIKE',
+  EQUALS = "=",
+  GREATER_THAN = ">",
+  GREATER_THAN_EQUALS = ">=",
+  LESS_THAN = "<",
+  LESS_THAN_EQUALS = "<=",
+  IN = "IN",
+  LIKE = "LIKE",
 }
 
 export type QueryFilter = {
@@ -43,7 +43,7 @@ export type QueryFilter = {
 
 export type QuerySort = {
   field: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 };
 
 export type QueryFilterValue = string | number | any;

@@ -1,20 +1,30 @@
-import type { Debugger } from 'debug';
-import Debug from 'debug';
-import shortUuid from 'short-uuid';
-import type { Database } from 'sqlite';
-import type { BaseEntity, EntityDefinition, FilterSortField, QueryFilter, QuerySort, Relation } from '../../types';
-import { QueryOperatorEnum } from '../../types';
-import type Query from '../query';
-import BaseRepository from '../repository';
+import type { Debugger } from "debug";
+import Debug from "debug";
+import shortUuid from "short-uuid";
+import type { Database } from "sqlite";
+import type {
+  BaseEntity,
+  EntityDefinition,
+  FilterSortField,
+  QueryFilter,
+  QuerySort,
+  Relation,
+} from "../../types";
+import { QueryOperatorEnum } from "../../types";
+import type Query from "../query";
+import BaseRepository from "../repository";
 
-const debug: Debugger = Debug('supersave:db:sqlite:repo');
+const debug: Debugger = Debug("supersave:db:sqlite:repo");
 
 class Repository<T extends BaseEntity> extends BaseRepository<T> {
   constructor(
     protected readonly definition: EntityDefinition,
     protected readonly tableName: string,
-    protected readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
-    protected readonly connection: Database
+    protected readonly getRepository: (
+      name: string,
+      namespace?: string,
+    ) => BaseRepository<any>,
+    protected readonly connection: Database,
   ) {
     super(definition, tableName, getRepository);
   }
@@ -29,7 +39,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       whereValues[key] = value;
     });
 
-    const query = `SELECT id,contents FROM ${this.tableName} WHERE id IN(${wherePlaceholders.join(',')})`;
+    const query = `SELECT id,contents FROM ${this.tableName} WHERE id IN(${wherePlaceholders.join(",")})`;
     const result = await this.connection.all(query, whereValues);
     if (result) {
       const promises = [];
@@ -70,13 +80,25 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
           values[placeholder] = value;
         });
 
-        where.push(`"${queryFilter.field}" IN(${placeholders.join(',')})`);
+        where.push(`"${queryFilter.field}" IN(${placeholders.join(",")})`);
       } else {
-        where.push(`"${queryFilter.field}" ${queryFilter.operator} :${placeholderName}`);
-        if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
-          values[`:${placeholderName}`] = ['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0;
+        where.push(
+          `"${queryFilter.field}" ${queryFilter.operator} :${placeholderName}`,
+        );
+        if (
+          this.definition.filterSortFields &&
+          this.definition.filterSortFields[queryFilter.field] === "boolean"
+        ) {
+          values[`:${placeholderName}`] = ["1", 1, "true", true].includes(
+            queryFilter.value,
+          )
+            ? 1
+            : 0;
         } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
-          values[`:${placeholderName}`] = `${queryFilter.value}`.replace(/\*/g, '%');
+          values[`:${placeholderName}`] = `${queryFilter.value}`.replace(
+            /\*/g,
+            "%",
+          );
         } else {
           values[`:${placeholderName}`] = queryFilter.value;
         }
@@ -85,23 +107,25 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     });
 
     let sqlQuery = `SELECT id,contents FROM ${this.tableName}
-      ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
+      ${where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""}
     `;
     if (query.getSort().length > 0) {
       sqlQuery = `${sqlQuery} ORDER BY ${query
         .getSort()
         .map((sort: QuerySort) => `"${sort.field}" ${sort.direction}`)
-        .join(',')}`;
+        .join(",")}`;
     }
     if (query.getLimit()) {
       sqlQuery = `${sqlQuery} LIMIT ${
-        typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()
+        typeof query.getOffset() !== "undefined"
+          ? `${query.getOffset()},${query.getLimit()}`
+          : query.getLimit()
       }`;
     }
 
-    debug('Querying data using query.', sqlQuery);
+    debug("Querying data using query.", sqlQuery);
     const result = await this.connection.all(sqlQuery, values, values);
-    debug('Found result count', result.length);
+    debug("Found result count", result.length);
     if (result) {
       return this.transformQueryResultRows(result);
     }
@@ -110,53 +134,61 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
   public async deleteUsingId(id: string): Promise<void> {
     const query = `DELETE FROM ${this.tableName} WHERE id = :id`;
-    await this.connection.run(query, { ':id': id });
+    await this.connection.run(query, { ":id": id });
   }
 
   public async create(object: T): Promise<T> {
-    const columns: string[] = ['id', 'contents'];
-    const uuid = typeof object.id === 'string' ? object.id : shortUuid.generate();
+    const columns: string[] = ["id", "contents"];
+    const uuid =
+      typeof object.id === "string" ? object.id : shortUuid.generate();
 
     const values: Record<string, string | number | null> = {
-      ':id': uuid,
-      ':contents': JSON.stringify({
+      ":id": uuid,
+      ":contents": JSON.stringify({
         ...this.definition.template,
         ...this.simplifyRelations(object),
       }),
     };
-    if (typeof this.definition.filterSortFields !== 'undefined') {
+    if (typeof this.definition.filterSortFields !== "undefined") {
       // eslint-disable-next-line max-len
       Object.entries(this.definition.filterSortFields).forEach(
         ([field, type]: [field: string, type: FilterSortField]) => {
           columns.push(field);
-          if (type === 'boolean') {
+          if (type === "boolean") {
             values[`:${field}`] = object[field] === true ? 1 : 0;
           } else if (this.relationsMap.has(field)) {
             const relation = this.relationsMap.get(field) as Relation;
             if (Array.isArray(object[field]) && relation.multiple) {
               // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
-              values[`:${field}`] = object[field].map((entity: BaseEntity) => entity.id).join(',');
+              values[`:${field}`] = object[field]
+                .map((entity: BaseEntity) => entity.id)
+                .join(",");
             } else if (relation.multiple) {
               // Its a list, but no array is set.
               values[`:${field}`] = null;
             } else {
               // Store the individual value.
-              if (typeof object[field] !== 'object') {
-                throw new TypeError(`The provided relation value for ${field}/${type} is not an object. It should be.`);
+              if (typeof object[field] !== "object") {
+                throw new TypeError(
+                  `The provided relation value for ${field}/${type} is not an object. It should be.`,
+                );
               }
               values[`:${field}`] = object[field]?.id;
             }
-          } else if (field !== 'id') {
-            values[`:${field}`] = typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null;
+          } else if (field !== "id") {
+            values[`:${field}`] =
+              typeof object[field] !== "undefined" && object[field] !== null
+                ? object[field]
+                : null;
           }
-        }
+        },
       );
     }
 
-    const query = `INSERT INTO ${this.tableName} (${columns.map((column: string) => `"${column}"`).join(',')}) VALUES(
+    const query = `INSERT INTO ${this.tableName} (${columns.map((column: string) => `"${column}"`).join(",")}) VALUES(
       ${columns.map((column: string) => `:${column}`)}
     )`;
-    debug('Generated create query.', query, values);
+    debug("Generated create query.", query, values);
 
     await this.connection.run(query, values);
 
@@ -164,38 +196,40 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   }
 
   public async update(object: T): Promise<T> {
-    const columns = ['contents'];
+    const columns = ["contents"];
     const simplifiedObject: any = this.simplifyRelations(object);
     delete simplifiedObject.id; // the id is already stored as a column
 
     const values: Record<string, string | number | boolean | null> = {
-      ':contents': JSON.stringify(simplifiedObject),
-      ':id': object.id || '',
+      ":contents": JSON.stringify(simplifiedObject),
+      ":id": object.id || "",
     };
 
-    if (typeof this.definition.filterSortFields !== 'undefined') {
+    if (typeof this.definition.filterSortFields !== "undefined") {
       Object.entries(this.definition.filterSortFields).forEach(
         ([field, type]: [field: string, type: FilterSortField]) => {
-          if (field === 'id') {
+          if (field === "id") {
             return;
           }
-          if (typeof object[field] !== 'undefined') {
+          if (typeof object[field] !== "undefined") {
             columns.push(field);
-            if (type === 'boolean') {
+            if (type === "boolean") {
               values[`:${field}`] = object[field] === true ? 1 : 0;
             } else if (this.relationsMap.has(field)) {
               const relation = this.relationsMap.get(field) as Relation;
               if (Array.isArray(simplifiedObject[field]) && relation.multiple) {
                 // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
-                values[`:${field}`] = simplifiedObject[field].map((entity: BaseEntity) => entity.id).join(',');
+                values[`:${field}`] = simplifiedObject[field]
+                  .map((entity: BaseEntity) => entity.id)
+                  .join(",");
               } else if (relation.multiple) {
                 // Its a list, but no array is set.
                 values[`:${field}`] = null;
               } else {
                 // Store the individual value.
-                if (typeof object[field] !== 'object') {
+                if (typeof object[field] !== "object") {
                   throw new TypeError(
-                    `The provided relation value for ${field}/${type} is not an object. It should be.`
+                    `The provided relation value for ${field}/${type} is not an object. It should be.`,
                   );
                 }
                 values[`:${field}`] = object[field]?.id;
@@ -204,7 +238,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
               values[`:${field}`] = simplifiedObject[field] || null;
             }
           }
-        }
+        },
       );
     }
 
@@ -212,7 +246,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       ${columns.map((column: string) => `"${column}" = :${column}`)}
       WHERE id = :id
     `;
-    debug('Generated update query.', query);
+    debug("Generated update query.", query);
 
     await this.connection.run(query, values);
     return this.queryById(object.id as string) as unknown as T;
@@ -220,12 +254,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
   protected async queryById(id: string): Promise<T | null> {
     const query = `SELECT id,contents FROM ${this.tableName} WHERE id = :id LIMIT 1`;
-    debug('Query for getById', query, id);
-    const result = await this.connection.get(query, { ':id': id });
+    debug("Query for getById", query, id);
+    const result = await this.connection.get(query, { ":id": id });
     if (result) {
       return this.transformQueryResultRow(result);
     }
-    debug('No result for queryById().');
+    debug("No result for queryById().");
     return null;
   }
 }

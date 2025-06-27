@@ -1,5 +1,10 @@
-import Query from './query';
-import type { BaseEntity, EntityDefinition, EntityRow, Relation } from '../types';
+import Query from "./query";
+import type {
+  BaseEntity,
+  EntityDefinition,
+  EntityRow,
+  Relation,
+} from "../types";
 
 export default abstract class Repository<T> {
   protected relationFields: string[];
@@ -9,9 +14,14 @@ export default abstract class Repository<T> {
   constructor(
     protected readonly definition: EntityDefinition,
     protected readonly tableName: string,
-    protected readonly getRepository: (name: string, namespace?: string) => Repository<any>
+    protected readonly getRepository: (
+      name: string,
+      namespace?: string,
+    ) => Repository<any>,
   ) {
-    this.relationFields = definition.relations.map((relation: Relation) => relation.field);
+    this.relationFields = definition.relations.map(
+      (relation: Relation) => relation.field,
+    );
     this.relationsMap = new Map<string, Relation>();
     definition.relations.forEach((relation) => {
       this.relationsMap.set(relation.field, relation);
@@ -66,13 +76,15 @@ export default abstract class Repository<T> {
       if (!relation.multiple) {
         // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
         const id = clone[relation.field];
-        if (typeof id === 'string') {
+        if (typeof id === "string") {
           const promise = repository.getById(id);
           promises.push(promise);
           const relatedEntity = await promise;
           if (!relatedEntity) {
             // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
-            throw new Error(`Unable to find related entity ${relation.name} with id ${entity[relation.field]}`);
+            throw new Error(
+              `Unable to find related entity ${relation.name} with id ${entity[relation.field]}`,
+            );
           }
           // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
           clone[relation.field] = relatedEntity;
@@ -81,7 +93,7 @@ export default abstract class Repository<T> {
         const promise = this.mapRelationToMultiple(
           relation,
           // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
-          clone[relation.field]
+          clone[relation.field],
         );
         promises.push(promise);
         const mappedEntities = await promise;
@@ -93,7 +105,10 @@ export default abstract class Repository<T> {
     return clone;
   }
 
-  protected async mapRelationToMultiple(relation: Relation, array: string[]): Promise<BaseEntity[]> {
+  protected async mapRelationToMultiple(
+    relation: Relation,
+    array: string[],
+  ): Promise<BaseEntity[]> {
     if (!Array.isArray(array) || array.length === 0) {
       return [];
     }
@@ -134,12 +149,17 @@ export default abstract class Repository<T> {
       if (relation.multiple) {
         clone[relation.field] = entity[relation.field].map(
           // if it is an object, use its id, else the entity is already represented by its as as string, use that immediately
-          (relationEntity: BaseEntity) => (typeof relationEntity === 'string' ? relationEntity : relationEntity.id)
+          (relationEntity: BaseEntity) =>
+            typeof relationEntity === "string"
+              ? relationEntity
+              : relationEntity.id,
         );
       } else {
         // if it is an object, use its id, else the entity is already represented by its as as string, use that immediately
         clone[relation.field] =
-          typeof clone[relation.field] === 'string' ? clone[relation.field] : clone[relation.field].id;
+          typeof clone[relation.field] === "string"
+            ? clone[relation.field]
+            : clone[relation.field].id;
       }
     });
     return clone;
@@ -155,7 +175,7 @@ export default abstract class Repository<T> {
 
   public abstract deleteUsingId(id: string): Promise<void>;
 
-  public abstract create(object: Omit<T, 'id'>): Promise<T>;
+  public abstract create(object: Omit<T, "id">): Promise<T>;
 
   public abstract update(object: T): Promise<T>;
 

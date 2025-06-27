@@ -1,5 +1,5 @@
-import type { Request, Response } from 'express';
-import type { Collection } from '../../../types';
+import type { Request, Response } from "express";
+import type { Collection } from "../../../types";
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export default async function transform(
@@ -7,12 +7,17 @@ export default async function transform(
   request: Request,
   res: Response,
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-  item: any
+  item: any,
 ): Promise<any> {
   let transformedItem = item;
   for (const hooks of collection.hooks || []) {
     if (hooks.entityTransform) {
-      transformedItem = hooks.entityTransform(collection, request, res, transformedItem);
+      transformedItem = hooks.entityTransform(
+        collection,
+        request,
+        res,
+        transformedItem,
+      );
     }
   }
   return transformedItem;

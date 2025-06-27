@@ -1,8 +1,8 @@
-import type { Debugger } from 'debug';
-import Debug from 'debug';
-import type { Pool } from 'mysql2/promise';
-import shortUuid from 'short-uuid';
-import { executeQuery, getQuery } from './utils';
+import type { Debugger } from "debug";
+import Debug from "debug";
+import type { Pool } from "mysql2/promise";
+import shortUuid from "short-uuid";
+import { executeQuery, getQuery } from "./utils";
 import type {
   BaseEntity,
   EntityDefinition,
@@ -11,19 +11,22 @@ import type {
   QueryFilter,
   QuerySort,
   Relation,
-} from '../../types';
-import { QueryOperatorEnum } from '../../types';
-import type Query from '../query';
-import BaseRepository from '../repository';
+} from "../../types";
+import { QueryOperatorEnum } from "../../types";
+import type Query from "../query";
+import BaseRepository from "../repository";
 
-const debug: Debugger = Debug('supersave:db:mysql:repo');
+const debug: Debugger = Debug("supersave:db:mysql:repo");
 
 class Repository<T extends BaseEntity> extends BaseRepository<T> {
   constructor(
     protected readonly definition: EntityDefinition,
     protected readonly tableName: string,
-    protected readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
-    protected readonly pool: Pool
+    protected readonly getRepository: (
+      name: string,
+      namespace?: string,
+    ) => BaseRepository<any>,
+    protected readonly pool: Pool,
   ) {
     super(definition, tableName, getRepository);
   }
@@ -33,12 +36,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     const whereValues: (string | number | boolean)[] = [];
 
     ids.forEach((value) => {
-      wherePlaceholders.push('?');
+      wherePlaceholders.push("?");
       whereValues.push(value);
     });
 
     const query = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)} WHERE id IN(${wherePlaceholders.join(
-      ','
+      ",",
     )})`;
     const result = await getQuery<EntityRow>(this.pool, query, whereValues);
     const transformResult: T[] = [];
@@ -74,18 +77,27 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       if (queryFilter.operator === QueryOperatorEnum.IN) {
         const placeholders: string[] = [];
         queryFilter.value.forEach((value: string) => {
-          const placeholder = '?';
+          const placeholder = "?";
           placeholders.push(placeholder);
           values.push(value);
         });
 
-        where.push(`${this.pool.escapeId(queryFilter.field)} IN(${placeholders.join(',')})`);
+        where.push(
+          `${this.pool.escapeId(queryFilter.field)} IN(${placeholders.join(",")})`,
+        );
       } else {
-        where.push(`${this.pool.escapeId(queryFilter.field)} ${queryFilter.operator} ?`);
-        if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
-          values.push(['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0);
+        where.push(
+          `${this.pool.escapeId(queryFilter.field)} ${queryFilter.operator} ?`,
+        );
+        if (
+          this.definition.filterSortFields &&
+          this.definition.filterSortFields[queryFilter.field] === "boolean"
+        ) {
+          values.push(
+            ["1", 1, "true", true].includes(queryFilter.value) ? 1 : 0,
+          );
         } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
-          values.push(`${queryFilter.value}`.replace(/\*/g, '%'));
+          values.push(`${queryFilter.value}`.replace(/\*/g, "%"));
         } else {
           values.push(queryFilter.value);
         }
@@ -93,23 +105,28 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     });
 
     let sqlQuery = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)}
-      ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
+      ${where.length > 0 ? `WHERE ${where.join(" AND ")}` : ""}
     `;
     if (query.getSort().length > 0) {
       sqlQuery = `${sqlQuery} ORDER BY ${query
         .getSort()
-        .map((sort: QuerySort) => `${this.pool.escapeId(sort.field)} ${sort.direction}`)
-        .join(',')}`;
+        .map(
+          (sort: QuerySort) =>
+            `${this.pool.escapeId(sort.field)} ${sort.direction}`,
+        )
+        .join(",")}`;
     }
     if (query.getLimit()) {
       sqlQuery = `${sqlQuery} LIMIT ${
-        typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()
+        typeof query.getOffset() !== "undefined"
+          ? `${query.getOffset()},${query.getLimit()}`
+          : query.getLimit()
       }`;
     }
 
-    debug('Querying data using query.', sqlQuery);
+    debug("Querying data using query.", sqlQuery);
     const result = await getQuery<EntityRow>(this.pool, sqlQuery, values);
-    debug('Found result count', result.length);
+    debug("Found result count", result.length);
     if (result) {
       return this.transformQueryResultRows(result);
     }
@@ -121,9 +138,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     await executeQuery(this.pool, query, [id]);
   }
 
-  public async create(object: Omit<T, 'id'>): Promise<T> {
-    const columns: string[] = ['id', 'contents'];
-    const uuid = typeof object.id === 'string' ? (object.id as string) : shortUuid.generate();
+  public async create(object: Omit<T, "id">): Promise<T> {
+    const columns: string[] = ["id", "contents"];
+    const uuid =
+      typeof object.id === "string"
+        ? (object.id as string)
+        : shortUuid.generate();
 
     const values: (string | number | null)[] = [
       uuid,
@@ -132,44 +152,56 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
         ...this.simplifyRelations(object),
       }),
     ];
-    if (typeof this.definition.filterSortFields !== 'undefined') {
+    if (typeof this.definition.filterSortFields !== "undefined") {
       // eslint-disable-next-line max-len
       Object.entries(this.definition.filterSortFields).forEach(
         ([field, type]: [field: string, type: FilterSortField]) => {
-          if (field === 'id') {
+          if (field === "id") {
             return;
           }
           columns.push(field);
-          if (type === 'boolean') {
+          if (type === "boolean") {
             values.push(object[field] === true ? 1 : 0);
           } else if (this.relationsMap.has(field)) {
             const relation = this.relationsMap.get(field) as Relation;
             if (Array.isArray(object[field]) && relation.multiple) {
               // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
-              values.push(object[field].map((entity: BaseEntity) => entity.id).join(','));
+              values.push(
+                object[field].map((entity: BaseEntity) => entity.id).join(","),
+              );
             } else if (relation.multiple) {
               // Its a list, but no array is set.
               values.push(null);
             } else {
               // Store the individual value.
-              if (typeof object[field] !== 'object') {
-                throw new TypeError(`The provided relation value for ${field}/${type} is not an object. It should be.`);
+              if (typeof object[field] !== "object") {
+                throw new TypeError(
+                  `The provided relation value for ${field}/${type} is not an object. It should be.`,
+                );
               }
-              values.push(typeof object[field] === 'string' ? object[field] : object[field]?.id);
+              values.push(
+                typeof object[field] === "string"
+                  ? object[field]
+                  : object[field]?.id,
+              );
             }
-          } else if (field !== 'id') {
-            values.push(typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null);
+          } else if (field !== "id") {
+            values.push(
+              typeof object[field] !== "undefined" && object[field] !== null
+                ? object[field]
+                : null,
+            );
           }
-        }
+        },
       );
     }
 
     const query = `INSERT INTO ${this.pool.escapeId(this.tableName)} (${columns
       .map((column: string) => this.pool.escapeId(column))
-      .join(',')}) VALUES(
-      ${columns.map(() => '?')}
+      .join(",")}) VALUES(
+      ${columns.map(() => "?")}
     )`;
-    debug('Generated create query.', query, values);
+    debug("Generated create query.", query, values);
 
     await executeQuery(this.pool, query, values);
 
@@ -177,34 +209,40 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   }
 
   public async update(object: T): Promise<T> {
-    const columns = ['contents'];
+    const columns = ["contents"];
     const simplifiedObject: any = this.simplifyRelations(object);
     delete simplifiedObject.id; // the id is already stored as a column
-    const values: (string | number | boolean | null)[] = [JSON.stringify(simplifiedObject)];
+    const values: (string | number | boolean | null)[] = [
+      JSON.stringify(simplifiedObject),
+    ];
 
-    if (typeof this.definition.filterSortFields !== 'undefined') {
+    if (typeof this.definition.filterSortFields !== "undefined") {
       Object.entries(this.definition.filterSortFields).forEach(
         ([field, type]: [field: string, type: FilterSortField]) => {
-          if (field === 'id') {
+          if (field === "id") {
             return;
           }
-          if (typeof object[field] !== 'undefined') {
+          if (typeof object[field] !== "undefined") {
             columns.push(field);
-            if (type === 'boolean') {
+            if (type === "boolean") {
               values.push(object[field] === true ? 1 : 0);
             } else if (this.relationsMap.has(field)) {
               const relation = this.relationsMap.get(field) as Relation;
               if (Array.isArray(object[field]) && relation.multiple) {
                 // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
-                values.push(object[field].map((entity: BaseEntity) => entity.id).join(','));
+                values.push(
+                  object[field]
+                    .map((entity: BaseEntity) => entity.id)
+                    .join(","),
+                );
               } else if (relation.multiple) {
                 // Its a list, but no array is set.
                 values.push(null);
               } else {
                 // Store the individual value.
-                if (typeof object[field] !== 'object') {
+                if (typeof object[field] !== "object") {
                   throw new TypeError(
-                    `The provided relation value for ${field}/${type} is not an object. It should be.`
+                    `The provided relation value for ${field}/${type} is not an object. It should be.`,
                   );
                 }
                 values.push(object[field]?.id);
@@ -213,7 +251,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
               values.push(simplifiedObject[field] || null);
             }
           }
-        }
+        },
       );
     }
 
@@ -221,20 +259,20 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       ${columns.map((column: string) => `${this.pool.escapeId(column)} = ?`)}
       WHERE id = ?
     `;
-    values.push(object.id || '');
-    debug('Generated update query.', query);
+    values.push(object.id || "");
+    debug("Generated update query.", query);
     await executeQuery(this.pool, query, values);
     return this.queryById(object.id as string) as unknown as Promise<T>;
   }
 
   protected async queryById(id: string): Promise<T | null> {
     const query = `SELECT id,contents FROM ${this.pool.escapeId(this.tableName)} WHERE id = ? LIMIT 1`;
-    debug('Query for getById', query, id);
+    debug("Query for getById", query, id);
     const result = await getQuery<EntityRow>(this.pool, query, [id]);
     if (result.length > 0) {
       return this.transformQueryResultRow(result[0]);
     }
-    debug('No result for queryById().');
+    debug("No result for queryById().");
     return null;
   }
 }

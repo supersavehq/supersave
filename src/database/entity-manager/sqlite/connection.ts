@@ -1,8 +1,8 @@
-import type { Database } from 'sqlite';
-import { open } from 'sqlite';
-import sqlite3 from 'sqlite3';
+import type { Database } from "sqlite";
+import { open } from "sqlite";
+import sqlite3 from "sqlite3";
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   sqlite3.verbose();
 }
 

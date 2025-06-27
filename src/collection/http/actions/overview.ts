@@ -1,10 +1,10 @@
-import type { Request, RequestHandler, Response } from 'express';
-import type { HttpCollection, ManagedCollection } from '../../types';
-import { generatePath } from '../utils';
+import type { Request, RequestHandler, Response } from "express";
+import type { HttpCollection, ManagedCollection } from "../../types";
+import { generatePath } from "../utils";
 
 export default (
     prefix: string, // without a trailing /
-    getRegisteredCollections: () => ManagedCollection[]
+    getRegisteredCollections: () => ManagedCollection[],
   ): RequestHandler =>
   (_request: Request, res: Response): void => {
     const output: { [key: string]: HttpCollection[] } = {};
@@ -12,7 +12,7 @@ export default (
     const collections = getRegisteredCollections();
     collections.forEach((collection: ManagedCollection) => {
       const path = generatePath(collection);
-      const namespace = collection.namespace ? `/${collection.namespace}` : '/';
+      const namespace = collection.namespace ? `/${collection.namespace}` : "/";
 
       if (Array.isArray(output[namespace]) === false) {
         output[namespace] = [];
@@ -27,8 +27,11 @@ export default (
       });
     });
 
-    if (Object.keys(output).length === 1 && typeof output['/'] !== 'undefined') {
-      res.json({ data: output['/'] });
+    if (
+      Object.keys(output).length === 1 &&
+      typeof output["/"] !== "undefined"
+    ) {
+      res.json({ data: output["/"] });
       return;
     }
 

@@ -1,41 +1,50 @@
-import type { Debugger } from 'debug';
-import Debug from 'debug';
-import slug from 'slug';
-import type { Database } from 'sqlite';
-import Repository from './repository';
-import sync from './sync';
-import type { BaseEntity, EntityDefinition } from '../../types';
-import EntityManager from '../entity-manager';
-import type BaseRepository from '../repository';
+import type { Debugger } from "debug";
+import Debug from "debug";
+import slug from "slug";
+import type { Database } from "sqlite";
+import Repository from "./repository";
+import sync from "./sync";
+import type { BaseEntity, EntityDefinition } from "../../types";
+import EntityManager from "../entity-manager";
+import type BaseRepository from "../repository";
 
-const debug: Debugger = Debug('supersave:db:em:sqlite');
+const debug: Debugger = Debug("supersave:db:em:sqlite");
 
 class SqliteEntityManager extends EntityManager {
   constructor(private readonly connection: Database) {
     super();
   }
 
-  public async addEntity<T extends BaseEntity>(entity: EntityDefinition): Promise<BaseRepository<T>> {
+  public async addEntity<T extends BaseEntity>(
+    entity: EntityDefinition,
+  ): Promise<BaseRepository<T>> {
     const { filterSortFields = {} } = entity;
-    filterSortFields.id = 'string';
+    filterSortFields.id = "string";
 
     const updatedEntity: EntityDefinition = {
       ...entity,
       filterSortFields,
     };
 
-    const fullEntityName = this.getFullEntityName(entity.name, entity.namespace);
-    const tableName = slug(fullEntityName).replace(/-/g, '_'); // sqlite does not allow - (dash) in table names.
+    const fullEntityName = this.getFullEntityName(
+      entity.name,
+      entity.namespace,
+    );
+    const tableName = slug(fullEntityName).replace(/-/g, "_"); // sqlite does not allow - (dash) in table names.
     await this.createTable(tableName);
 
     const repository: Repository<T> = new Repository(
       updatedEntity,
       tableName,
       (name: string, namespace?: string) => this.getRepository(name, namespace),
-      this.connection
+      this.connection,
     );
-    await sync(updatedEntity, tableName, this.connection, repository, (name: string, namespace?: string) =>
-      this.getRepository(name, namespace)
+    await sync(
+      updatedEntity,
+      tableName,
+      this.connection,
+      repository,
+      (name: string, namespace?: string) => this.getRepository(name, namespace),
     );
 
     this.repositories.set(fullEntityName, repository);
@@ -45,7 +54,7 @@ class SqliteEntityManager extends EntityManager {
   protected async createTable(tableName: string): Promise<void> {
     debug(`Creating table ${tableName}.`);
     await this.connection.exec(
-      `CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`
+      `CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`,
     );
   }
 

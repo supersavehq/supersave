@@ -2,15 +2,21 @@
 
 # Installation
 
-## Sqlite
+SuperSave core can be installed directly. For HTTP integration (Express, Next.js), you'll need additional peer dependencies.
 
-    npm i --save supersave sqlite3 sqlite
+    npm i --save supersave
+
+## Database Drivers
+
+### Sqlite
+
+    npm i --save sqlite3 sqlite
 
 Example connection string: `sqlite://:memory:`
 
-## Mysql
+### Mysql
 
-    npm i --save supersave mysql2
+    npm i --save mysql2
 
 Example connection string: `mysql://examplename:somepassword@examplehost:3306/dbname`
 
@@ -18,11 +24,76 @@ _Earlier versions, before 0.15.0, used the `mysql` package. Migration is simple,
 
 # Usage
 
-You can use `addEntity` to create a database-only entity, use `addCollection` to add an entity that will automatically become available via the API.
+You can use `addEntity` to create a database-only entity. Use `addCollection` to define entities that can be exposed via an HTTP API.
 
-Use `await superSave.getRouter()` to register the API at your express application. For example: `app.use('/api', await superSave.getRouter());`.
+SuperSave's core is HTTP framework-agnostic. To expose collections via an API, you use framework-specific integration helpers.
 
-## Entity
+## HTTP API Integration
+
+SuperSave uses `better-call` internally to provide its HTTP capabilities in a generic way. For most integrations, you'll need to install `better-call` as a peer dependency:
+
+    npm i --save better-call
+
+### With Express.js
+
+1.  Install `express` and `better-call` (if not already):
+    ```bash
+    npm i --save express better-call
+    ```
+
+2.  Use the `createExpressRoutes` helper from `supersave/express`:
+    ```typescript
+    import express from 'express';
+    import { SuperSave } from 'supersave';
+    import { createExpressRoutes } from 'supersave/express';
+    // import your collections
+
+    async function setup() {
+      const app = express();
+      const superSave = await SuperSave.create('sqlite://:memory:');
+      // Example: await superSave.addCollection(myPlanetCollection);
+
+      const manager = superSave.getManager();
+      await createExpressRoutes(app, manager, '/api');
+
+      app.listen(3000, () => console.log('Server running on port 3000'));
+    }
+
+    setup();
+    ```
+
+### With Next.js
+
+1.  Install `better-call` (if not already):
+    ```bash
+    npm i --save better-call
+    ```
+
+2.  Use the `createNextApiHandler` helper from `supersave/next` in your API route file (e.g., `pages/api/supersave/[...slug].ts`):
+    ```typescript
+    // pages/api/supersave/[...slug].ts
+    import type { NextApiRequest, NextApiResponse } from 'next';
+    import { SuperSave } from 'supersave';
+    import { createNextApiHandler } from 'supersave/next';
+    // import your collections (e.g., myPlanetCollection)
+
+    let handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>;
+
+    export default async function (req: NextApiRequest, res: NextApiResponse) {
+      if (!handler) {
+        const superSave = await SuperSave.create(process.env.DATABASE_URL || 'sqlite://:memory:');
+        // Example: await superSave.addCollection(myPlanetCollection);
+
+        const manager = superSave.getManager();
+        // The prefix should match the base path of your API route file.
+        // If this file is pages/api/supersave/[...slug].ts, the prefix is /api/supersave
+        handler = await createNextApiHandler(manager, '/api/supersave');
+      }
+      return handler(req, res);
+    }
+    ```
+
+## Database-Only Entities (Entity)
 
     const planetEntity = {
         name: 'planet',
@@ -81,9 +152,10 @@ and the superSave instance can no longer be used. When using _mysql_ this will c
 
 # Hooks
 
-There are several hooks available that can be used to manipulate the behavior in the HTTP endpoints:
+There are several hooks available that can be used to manipulate the behavior in the HTTP endpoints. When using SuperSave's HTTP features (via Express or Next.js integrations), these hooks receive `req` and `res` objects that are compatible with the Express.js `Request` and `Response` types. Internally, these are provided by `better-call`.
 
-```
+```typescript
+// Note: `Request` and `Response` types are Express-compatible.
 export type Hooks = {
   get?: (collection: Collection, req: Request, res: Response) => Promise<void> | void,
   getById?: <T>(collection: Collection, req: Request, res: Response, entity: T | null) => Promise<T> | T,

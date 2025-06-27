@@ -3,6 +3,7 @@ import express from 'express';
 import { Planet } from '../../../types';
 import { planetCollection } from '../../../entities';
 import { Repository, SuperSave } from '../../../../build';
+import { createExpressRoutes } from '../../../../build/express';
 import getConnection from '../../../connection';
 
 import { clear } from '../../../mysql';
@@ -18,7 +19,8 @@ const appForFilter: () => Promise<[express.Application, SuperSave]> = async (): 
     filterSortFields: { name: 'string', distance: 'number', },
   });
 
-  app.use('/', await superSave.getRouter());
+  const manager = superSave.getManager();
+  await createExpressRoutes(app, manager, '/');
   await repository.create({ name: 'Mars', distance: 0, });
   await repository.create({ name: 'Earth', distance: 1000, });
   await repository.create({ name: 'Jupiter', distance: 2500, });

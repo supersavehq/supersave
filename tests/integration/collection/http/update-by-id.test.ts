@@ -3,6 +3,7 @@ import express from 'express';
 import { Planet } from '../../../types';
 import { planetCollection } from '../../../entities';
 import { Repository, SuperSave } from '../../../../build';
+import { createExpressRoutes } from '../../../../build/express';
 import getConnection from '../../../connection';
 import { clear } from '../../../mysql';
 

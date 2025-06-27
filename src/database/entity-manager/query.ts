@@ -1,5 +1,10 @@
-import type { FilterSortField, QueryFilter, QueryFilterValue, QuerySort } from '../types';
-import { QueryOperatorEnum } from '../types';
+import type {
+  FilterSortField,
+  QueryFilter,
+  QueryFilterValue,
+  QuerySort,
+} from "../types";
+import { QueryOperatorEnum } from "../types";
 
 class Query {
   private where: QueryFilter[] = [];
@@ -10,10 +15,16 @@ class Query {
 
   private offsetValue?: number;
 
-  constructor(private readonly filterSortFields: Record<string, FilterSortField>) {}
+  constructor(
+    private readonly filterSortFields: Record<string, FilterSortField>,
+  ) {}
 
-  private addFilter(operator: QueryOperatorEnum, field: string, value: QueryFilterValue): Query {
-    if (typeof this.filterSortFields[field] === 'undefined') {
+  private addFilter(
+    operator: QueryOperatorEnum,
+    field: string,
+    value: QueryFilterValue,
+  ): Query {
+    if (typeof this.filterSortFields[field] === "undefined") {
       throw new TypeError(`Cannot filter on not defined field ${field}.`);
     }
     this.where.push({ operator, field, value });
@@ -70,8 +81,8 @@ class Query {
     return this.offsetValue;
   }
 
-  public sort(field: string, direction: 'asc' | 'desc' = 'asc'): Query {
-    if (typeof this.filterSortFields[field] === 'undefined') {
+  public sort(field: string, direction: "asc" | "desc" = "asc"): Query {
+    if (typeof this.filterSortFields[field] === "undefined") {
       throw new TypeError(`Requested sort field ${field} is not defined.`);
     }
     this.sortValues.push({ field, direction });

@@ -2,7 +2,8 @@ import express from 'express';
 import supertest from 'supertest';
 import { Planet, Moon } from '../../../types';
 import { planetCollection, moonCollection } from '../../../entities';
-import { SuperSave } from '../../../../build';
+import { Repository, SuperSave } from '../../../../build'; // Corrected import
+import { createExpressRoutes } from '../../../../build/express';
 import getConnection from '../../../connection';
 import { clear } from '../../../mysql';
 

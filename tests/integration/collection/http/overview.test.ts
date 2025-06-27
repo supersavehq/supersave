@@ -1,8 +1,9 @@
 import supertest from 'supertest';
 import express from 'express';
-import { Planet, Moon } from '../../../types';
-import { planetCollection, moonCollection } from '../../../entities';
+import { Planet } from '../../../types'; // Moon and moonCollection removed
+import { planetCollection } from '../../../entities';
 import { SuperSave } from '../../../../build';
+import { createExpressRoutes } from '../../../../build/express';
 import getConnection from '../../../connection';
 import { clear } from '../../../mysql';
 

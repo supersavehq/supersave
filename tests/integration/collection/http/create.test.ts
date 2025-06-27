@@ -3,6 +3,7 @@ import express from 'express';
 import { Planet } from '../../../types';
 import { planetCollection } from '../../../entities';
 import { Repository, SuperSave } from '../../../../build';
+import { createExpressRoutes } from '../../../../build/express'; // Import the new function
 import getConnection from '../../../connection';
 import { clear } from '../../../mysql';
 
@@ -13,7 +14,8 @@ test('only collections with no namespace returns array', async() => {
   const superSave = await SuperSave.create(getConnection());
 
   const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
-  app.use('/api', await superSave.getRouter());
+  const manager = superSave.getManager(); // Get manager after collection is added
+  await createExpressRoutes(app, manager, '/api'); // Use the new function
 
   const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
 

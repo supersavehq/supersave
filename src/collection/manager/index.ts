@@ -1,5 +1,5 @@
 // import { Repository } from "../../database/EntityManager";
-import type { ManagedCollection } from '../types';
+import type { ManagedCollection } from "../types";
 
 class Manager {
   private collections: Map<string, ManagedCollection<any>>;
@@ -13,7 +13,10 @@ class Manager {
   }
 
   public addCollection<T>(collection: ManagedCollection<T>): Manager {
-    this.collections.set(this.getCollectionIdentifier(collection.name, collection.namespace), collection);
+    this.collections.set(
+      this.getCollectionIdentifier(collection.name, collection.namespace),
+      collection,
+    );
     return this;
   }
 
