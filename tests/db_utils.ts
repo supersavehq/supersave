@@ -59,14 +59,8 @@ export const clear = async (): Promise<void> => {
     try {
       connection = await mysql.createConnection(connectionString);
       const tables = await getDbQueryResults<{ [key: string]: string }>(connection, 'SHOW TABLES');
-      const tables = await getDbQueryResults<{ [key: string]: string }>(connection, 'SHOW TABLES');
       const dropPromises: Promise<void>[] = tables.map(tableRow => {
-        // SHOW TABLES returns different column names depending on MySQL version
-        // Common names: 'Tables_in_<database>', 'Table_name', etc.
-        const tableName = Object.values(tableRow)[0] as string;
-        if (!tableName) {
-          throw new Error('Unable to extract table name from SHOW TABLES result');
-        }
+        const tableName = Object.values(tableRow)[0];
         // MySQL escapeId is available on the connection object itself.
         return executeDbQuery(connection!, `DROP TABLE IF EXISTS ${connection!.escapeId(tableName)}`);
       });

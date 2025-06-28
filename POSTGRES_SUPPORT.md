@@ -25,6 +25,7 @@ A key feature of the PostgreSQL implementation is how `filterSortFields` (define
 -   The value for these generated columns is automatically derived by PostgreSQL from the data within the `contents` JSONB column. For example, a `name` field might be generated as `(contents->>'name')`.
 -   These generated columns are `STORED`, meaning their values are computed on write and stored on disk, behaving like regular columns for read performance.
 -   Indexes are automatically created on these generated columns to ensure efficient filtering and sorting operations.
+-   Schema synchronization (e.g., adding or removing a `filterSortField`) for these generated columns is handled by applying direct `ALTER TABLE` commands to the existing table, rather than recreating the table. This is generally efficient for additions and removals.
 
 **Advantages of this approach:**
 

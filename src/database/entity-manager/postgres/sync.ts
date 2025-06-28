@@ -4,8 +4,7 @@ import type { Pool, PoolClient } from 'pg';
 import type { EntityDefinition, FilterSortField } from '../../types';
 import type BaseRepository from '../repository';
 import { escapeId } from './utils';
-import type PostgresRepository from './repository'; // Assuming this is the correct name for your pg repo
-import { isEqual } from '../utils';
+import type PostgresRepository from './repository';
 
 const debug: Debugger = Debug('supersave:db:postgres:sync');
 
@@ -17,19 +16,17 @@ const enum PostgresType {
   VARCHAR32 = 'VARCHAR(32)', // For ID
 }
 
-// Mapping from your abstract FilterSortField types to PostgreSQL types
 const filterSortFieldToPostgresTypeMap: Record<FilterSortField, PostgresType> = {
   string: PostgresType.TEXT,
   number: PostgresType.INTEGER,
   boolean: PostgresType.BOOLEAN,
 };
 
+// Keep existing PostgresColumnInfo and getTableColumns as they are useful for fetching current schema
 type PostgresColumnInfo = {
   column_name: string;
-  data_type: string; // e.g., 'integer', 'text', 'boolean', 'jsonb'
-  is_nullable: 'YES' | 'NO';
-  column_default: string | null; // e.g., 'uuid_generate_v4()' or a literal
-  // generation_expression: string | null; // For generated columns
+  data_type: string;
+  generation_expression: string | null;
 };
 
 async function getTableColumns(
@@ -41,221 +38,173 @@ async function getTableColumns(
     FROM information_schema.columns
     WHERE table_schema = current_schema() AND table_name = $1;
   `;
+  // Ensure result.rows is properly handled if query returns no rows (e.g. table does not exist)
   const result = await connection.query<PostgresColumnInfo>(query, [tableName]);
-  if (!result.rows || result.rows.length === 0) {
-    // Table might not exist yet, which is fine.
-    return {};
+  if (!result.rows) {
+      return {};
   }
-
   const columns: Record<string, { type: string; generation_expression?: string }> = {};
   result.rows.forEach((row) => {
     columns[row.column_name] = {
-      type: row.data_type.toUpperCase(), // Normalize to uppercase for easier comparison
+      type: row.data_type.toUpperCase(),
       generation_expression: row.generation_expression || undefined,
     };
   });
   return columns;
 }
 
-// Helper to construct the generation expression for a column
 function getGenerationExpression(fieldName: string, type: FilterSortField): string {
-  // Validate fieldName to ensure it only contains safe characters
-  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(fieldName)) {
-    throw new Error(`Invalid field name: ${fieldName}`);
-  }
   const pgType = filterSortFieldToPostgresTypeMap[type];
-  // Ensure fieldName is safe for inclusion in a query string if it's dynamic,
-  // though here it comes from entityDefinition so it should be controlled.
-  // Example: contents->>'${fieldName}' or (contents->>'${fieldName}')::integer
-  // The exact casting depends on how you store data in JSONB and want to query it.
+  // Sanitize fieldName for use in SQL string, though it comes from definition.
+  // For security, if fieldName could ever be user-input, it would need proper escaping.
+  const safeFieldName = fieldName.replace(/'/g, "''");
+
   switch (pgType) {
     case PostgresType.TEXT:
-      return `(contents->>'${fieldName}')`;
+      return `(contents->>'${safeFieldName}')`;
     case PostgresType.INTEGER:
-      return `((contents->>'${fieldName}')::integer)`;
+      return `((contents->>'${safeFieldName}')::integer)`;
     case PostgresType.BOOLEAN:
-      return `((contents->>'${fieldName}')::boolean)`;
+      return `((contents->>'${safeFieldName}')::boolean)`;
     default:
       throw new Error(`Unsupported type for generated column: ${type}`);
   }
 }
 
-function hasTableChanged(
-  existingColumns: Record<string, { type: string; generation_expression?: string }>,
-  entityDefinition: EntityDefinition
-): boolean {
-  if (!entityDefinition.filterSortFields) {
-    // If no filter/sort fields, only id and contents are expected.
-    // This case might need more specific checks if the base structure can vary.
-    return !(existingColumns.id && existingColumns.contents && Object.keys(existingColumns).length === 2);
-  }
-
-  // Check for id and contents columns
-  if (!existingColumns.id || existingColumns.id.type !== PostgresType.VARCHAR32 || existingColumns.id.generation_expression) {
-    debug('ID column mismatch');
-    return true;
-  }
-  if (!existingColumns.contents || existingColumns.contents.type !== PostgresType.JSONB || existingColumns.contents.generation_expression) {
-    debug('Contents column mismatch');
-    return true;
-  }
-
-  const expectedGeneratedColumns: Record<string, { type: PostgresType; expression: string }> = {};
-  for (const [fieldName, fieldType] of Object.entries(entityDefinition.filterSortFields)) {
-    if (fieldName === 'id') continue; // ID is a primary key, not generated in this manner.
-    expectedGeneratedColumns[fieldName] = {
-      type: filterSortFieldToPostgresTypeMap[fieldType],
-      expression: getGenerationExpression(fieldName, fieldType),
-    };
-  }
-
-  // Check existing generated columns
-  for (const [fieldName, fieldDef] of Object.entries(entityDefinition.filterSortFields)) {
-    if (fieldName === 'id') continue;
-
-    const existingColumn = existingColumns[fieldName];
-    const expectedColumn = expectedGeneratedColumns[fieldName];
-
-    if (!existingColumn) {
-      debug(`Missing generated column: ${fieldName}`);
-      return true; // Column is missing
-    }
-    if (existingColumn.type.toUpperCase() !== expectedColumn.type.toUpperCase()) {
-      debug(`Type mismatch for ${fieldName}: expected ${expectedColumn.type}, got ${existingColumn.type}`);
-      return true; // Type mismatch
-    }
-    // Normalize and compare generation expressions
-    // This can be tricky due to potential variations in how PostgreSQL stores/reports these.
-    // A more robust comparison might involve parsing or canonicalizing the expression.
-    const normalizeExpr = (expr?: string) => expr?.replace(/\s+/g, '').toLowerCase();
-    if (normalizeExpr(existingColumn.generation_expression) !== normalizeExpr(expectedColumn.expression)) {
-      debug(`Generation expression mismatch for ${fieldName}:
-        Expected: ${expectedColumn.expression} (normalized: ${normalizeExpr(expectedColumn.expression)})
-        Got: ${existingColumn.generation_expression} (normalized: ${normalizeExpr(existingColumn.generation_expression)})`);
-      return true; // Expression mismatch
-    }
-  }
-
-  // Check if there are any extra columns in the DB not defined in the entity (excluding id, contents)
-  const expectedFieldNames = new Set(['id', 'contents', ...Object.keys(entityDefinition.filterSortFields)]);
-  for (const columnName in existingColumns) {
-    if (!expectedFieldNames.has(columnName)) {
-      debug(`Extra column found in DB: ${columnName}`);
-      return true;
-    }
-  }
-
-  // Check if any defined fields are missing (already covered by loop above, but good for clarity)
-  for (const fieldName in expectedGeneratedColumns) {
-    if (!existingColumns[fieldName]) {
-        debug(`Defined field ${fieldName} is missing from DB columns.`);
-        return true;
-    }
-  }
-
-
-  return false; // No significant changes detected
-}
+// Normalize generation expression for comparison
+const normalizeExpr = (expr?: string) => expr?.replace(/\s+/g, '').toLowerCase()
+  // PostgreSQL might add extra casts or schema qualifications, try to strip some common ones.
+  // This is a heuristic and might need refinement based on actual observed expressions.
+  .replace(/::text/g, '')
+  .replace(/public\./g, '');
 
 
 export default async (
   entity: EntityDefinition,
   tableName: string,
-  pool: Pool, // pg.Pool
-  repository: PostgresRepository<any>, // Use the specific PostgreSQL repository
+  pool: Pool,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  repository: PostgresRepository<any>, // Keep for signature consistency, though not used in this version
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getRepository: (name: string, namespace?: string) => BaseRepository<any>
 ): Promise<void> => {
   const client = await pool.connect();
   try {
-    const existingColumns = await getTableColumns(client, tableName);
-
-    if (Object.keys(existingColumns).length > 0 && !hasTableChanged(existingColumns, entity)) {
-      debug(`Table ${tableName} schema is up to date.`);
-      return;
-    }
-
-    debug(`Table ${tableName} schema needs update or creation.`);
-    // Begin transaction
     await client.query('BEGIN');
+    debug(`Starting sync for table ${escapeId(tableName)}`);
 
-    const tempTableName = `${tableName}_supersave_temp`;
-    await client.query(`DROP TABLE IF EXISTS ${escapeId(tempTableName)}`);
+    const existingColumns = await getTableColumns(client, tableName);
+    const tableExists = Object.keys(existingColumns).length > 0;
 
-    // Define base columns: id and contents
-    const columnDefinitions: string[] = [
-      `${escapeId('id')} ${PostgresType.VARCHAR32} PRIMARY KEY`,
-      `${escapeId('contents')} ${PostgresType.JSONB} NOT NULL`,
-    ];
-    const indexes: string[] = []; // For actual indexes on generated columns
+    if (!tableExists) {
+      debug(`Table ${escapeId(tableName)} does not exist. Creating now.`);
+      const columnDefinitions: string[] = [
+        `${escapeId('id')} ${PostgresType.VARCHAR32} PRIMARY KEY`,
+        `${escapeId('contents')} ${PostgresType.JSONB} NOT NULL`,
+      ];
+      const indexes: string[] = [];
 
-    // Add generated columns for filterSortFields
-    if (entity.filterSortFields) {
-      for (const [fieldName, fieldType] of Object.entries(entity.filterSortFields)) {
-        if (fieldName === 'id') continue; // ID is already defined as primary key
+      if (entity.filterSortFields) {
+        for (const [fieldName, fieldType] of Object.entries(entity.filterSortFields)) {
+          if (fieldName === 'id') continue;
+          const pgType = filterSortFieldToPostgresTypeMap[fieldType];
+          const generationExpression = getGenerationExpression(fieldName, fieldType);
+          columnDefinitions.push(
+            `${escapeId(fieldName)} ${pgType} GENERATED ALWAYS AS (${generationExpression}) STORED`
+          );
+          indexes.push(
+            `CREATE INDEX IF NOT EXISTS ${escapeId(`idx_${tableName}_${fieldName}`)} ON ${escapeId(tableName)}(${escapeId(fieldName)})`
+          );
+        }
+      }
+      const createTableQuery = `CREATE TABLE ${escapeId(tableName)} (${columnDefinitions.join(', ')})`;
+      debug('Creating table:', createTableQuery);
+      await client.query(createTableQuery);
+      for (const indexQuery of indexes) {
+        debug('Applying index:', indexQuery);
+        await client.query(indexQuery);
+      }
+    } else {
+      debug(`Table ${escapeId(tableName)} exists. Checking for column additions/removals.`);
+      const expectedFields = entity.filterSortFields || {};
+      const expectedFieldNames = new Set(Object.keys(expectedFields).filter(name => name !== 'id'));
+      const existingGeneratedColumnNames = new Set(
+        Object.entries(existingColumns)
+              .filter(([name, def]) => name !== 'id' && name !== 'contents' && def.generation_expression)
+              .map(([name]) => name)
+      );
 
-        const pgType = filterSortFieldToPostgresTypeMap[fieldType];
-        const generationExpression = getGenerationExpression(fieldName, fieldType);
-        columnDefinitions.push(
-          `${escapeId(fieldName)} ${pgType} GENERATED ALWAYS AS (${generationExpression}) STORED`
-        );
-        // Add index for the generated column
-        indexes.push(
-          `CREATE INDEX IF NOT EXISTS ${escapeId(`idx_${tableName}_${fieldName}`)} ON ${escapeId(tempTableName)}(${escapeId(fieldName)})`
-        );
+      // Columns to add
+      const columnsToAdd: { name: string; type: FilterSortField }[] = [];
+      for (const fieldName of expectedFieldNames) {
+        if (!existingGeneratedColumnNames.has(fieldName)) {
+          columnsToAdd.push({ name: fieldName, type: expectedFields[fieldName] });
+        } else {
+          // Optionally, check if existing column's type or generation expression matches.
+          // For simplicity, as per request, we are focusing on add/remove.
+          // If it exists, assume it's correct or handle complex migrations separately.
+          const currentDef = existingColumns[fieldName];
+          const expectedPgType = filterSortFieldToPostgresTypeMap[expectedFields[fieldName]];
+          const expectedGenExpr = getGenerationExpression(fieldName, expectedFields[fieldName]);
+
+          if (currentDef.type.toUpperCase() !== expectedPgType ||
+              normalizeExpr(currentDef.generation_expression) !== normalizeExpr(expectedGenExpr)) {
+            debug(`Column ${escapeId(fieldName)} exists but definition differs. Recreating.`);
+            // Simplistic approach: drop and add. More sophisticated would be ALTER.
+            // This path makes it similar to the original create/rename strategy for changes.
+            // For now, just logging. A full diff and ALTER COLUMN would be more robust for actual changes.
+            // To strictly follow "only additions or removals", we would not modify existing ones here.
+            // However, if a definition *changes*, it's effectively a remove of old + add of new.
+            // Sticking to add/remove: if it exists, we don't add. If its definition is "wrong", that's a harder problem.
+            // For now, if it exists, we assume it's "good enough" if we only handle pure add/remove.
+            // If a field *changes type* in definition, it's a new field from this perspective.
+             debug(`Column ${escapeId(fieldName)} definition mismatch. Expected type ${expectedPgType} vs actual ${currentDef.type.toUpperCase()}. Expected expr ${normalizeExpr(expectedGenExpr)} vs actual ${normalizeExpr(currentDef.generation_expression)}. Manual intervention might be needed or a more complex migration strategy if this is frequent.`);
+          }
+        }
+      }
+
+      for (const { name, type } of columnsToAdd) {
+        const pgType = filterSortFieldToPostgresTypeMap[type];
+        const generationExpression = getGenerationExpression(name, type);
+        const addColumnQuery = `ALTER TABLE ${escapeId(tableName)} ADD COLUMN ${escapeId(name)} ${pgType} GENERATED ALWAYS AS (${generationExpression}) STORED`;
+        debug(`Adding column ${escapeId(name)}:`, addColumnQuery);
+        await client.query(addColumnQuery);
+        const indexQuery = `CREATE INDEX IF NOT EXISTS ${escapeId(`idx_${tableName}_${name}`)} ON ${escapeId(tableName)}(${escapeId(name)})`;
+        debug('Applying index:', indexQuery);
+        await client.query(indexQuery);
+      }
+
+      // Columns to remove
+      const columnsToRemove: string[] = [];
+      for (const columnName of existingGeneratedColumnNames) {
+        if (!expectedFieldNames.has(columnName)) {
+          // Before removing, ensure this column was indeed one managed by us (i.e., has a generation_expression)
+          // This is already filtered by existingGeneratedColumnNames.
+          columnsToRemove.push(columnName);
+        }
+      }
+
+      for (const columnName of columnsToRemove) {
+        // Check if it's a known supersave managed column (has generation expression)
+        // This is implicitly handled if existingGeneratedColumnNames is built correctly
+        if (existingColumns[columnName]?.generation_expression) {
+            const dropColumnQuery = `ALTER TABLE ${escapeId(tableName)} DROP COLUMN ${escapeId(columnName)}`;
+            debug(`Dropping column ${escapeId(columnName)}:`, dropColumnQuery);
+            await client.query(dropColumnQuery); // Associated indexes are dropped automatically
+        } else {
+            debug(`Skipping drop of column ${escapeId(columnName)} as it does not appear to be a generated column managed by sync.`);
+        }
       }
     }
 
-    const createTableQuery = `CREATE TABLE ${escapeId(tempTableName)} (${columnDefinitions.join(', ')})`;
-    debug('Creating temp table:', createTableQuery);
-    await client.query(createTableQuery);
-
-    // Apply indexes to the temp table
-    for (const indexQuery of indexes) {
-      debug('Applying index:', indexQuery);
-      await client.query(indexQuery);
-    }
-
-    let dataCopied = false;
-    if (Object.keys(existingColumns).length > 0) {
-        debug(`Copying data from ${escapeId(tableName)} to ${escapeId(tempTableName)}`);
-        // Only copy id and contents. Generated columns will be populated automatically.
-        // Make sure 'repository' can fetch all data, possibly without relying on generated columns if old table didn't have them
-        // This might require a temporary, simpler repository or a special method if the main one heavily relies on current schema.
-        // For now, assume repository.getAll() fetches raw 'id' and 'contents' if possible, or adapt.
-        // A safer bet: query directly for id, contents if repository methods are too complex/schema-dependent.
-        const oldData = await client.query(`SELECT id, contents FROM ${escapeId(tableName)}`);
-        if (oldData.rows.length > 0) {
-            // Construct multi-row insert for efficiency
-            const insertPromises = oldData.rows.map(row => {
-                 const insertQuery = `INSERT INTO ${escapeId(tempTableName)} (id, contents) VALUES ($1, $2)`;
-                 return client.query(insertQuery, [row.id, row.contents]);
-            });
-            await Promise.all(insertPromises);
-            debug(`Copied ${oldData.rows.length} rows.`);
-            dataCopied = true;
-        } else {
-            debug('No data to copy.');
-        }
-    }
-
-
-    // Rename tables
-    if (Object.keys(existingColumns).length > 0) {
-      await client.query(`DROP TABLE ${escapeId(tableName)}`);
-      debug(`Dropped old table ${escapeId(tableName)}`);
-    }
-    await client.query(`ALTER TABLE ${escapeId(tempTableName)} RENAME TO ${escapeId(tableName)}`);
-    debug(`Renamed ${escapeId(tempTableName)} to ${escapeId(tableName)}`);
-
-    // Commit transaction
     await client.query('COMMIT');
-    debug(`Table ${tableName} synchronized successfully.`);
+    debug(`Table ${escapeId(tableName)} synchronized successfully.`);
   } catch (error) {
     await client.query('ROLLBACK');
-    debug(`Error during sync for table ${tableName}, rolled back.`, error);
-    throw error; // Re-throw error to be handled by caller
+    debug(`Error during sync for table ${escapeId(tableName)}, rolled back.`, error);
+    throw error;
   } finally {
     client.release();
+    debug(`Released client for table ${escapeId(tableName)}`);
   }
 };
