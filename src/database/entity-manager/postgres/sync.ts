@@ -59,6 +59,10 @@ async function getTableColumns(
 
 // Helper to construct the generation expression for a column
 function getGenerationExpression(fieldName: string, type: FilterSortField): string {
+  // Validate fieldName to ensure it only contains safe characters
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(fieldName)) {
+    throw new Error(`Invalid field name: ${fieldName}`);
+  }
   const pgType = filterSortFieldToPostgresTypeMap[type];
   // Ensure fieldName is safe for inclusion in a query string if it's dynamic,
   // though here it comes from entityDefinition so it should be controlled.
