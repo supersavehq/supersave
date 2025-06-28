@@ -20,6 +20,18 @@ services:
   #   links:
   #     - mysql
 
+  # test-postgres: # Optional: Service for running tests specifically against postgres
+  #   image: node:14 # Or your specific test runner image
+  #   command: 'npm run test:watch:postgres' # Assuming you'll have a script like this
+  #   volumes:
+  #       - .:/app
+  #   working_dir: /app
+  #   environment:
+  #     CONN: postgresql://supersave:savesuper@postgres:5432/supersave # Ensure port is included
+  #     #DEBUG: supersave:*
+  #   depends_on:
+  #     - postgres
+
   # test-sqlite:
   #   image: node:14
   #   command: npm run test:watch
@@ -39,3 +51,17 @@ services:
       - MYSQL_USER=supersave
       - MYSQL_PASSWORD=savesuper
       - MYSQL_RANDOM_ROOT_PASSWORD=1
+
+  postgres:
+    image: postgres:13 # Using version 13, can be latest or other specific version
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=supersave
+      - POSTGRES_USER=supersave
+      - POSTGRES_PASSWORD=savesuper
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Optional: for data persistence
+
+volumes: # Optional: for data persistence for postgres
+  postgres_data:

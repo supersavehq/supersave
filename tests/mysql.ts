@@ -1,37 +1,9 @@
-import getConnection from './connection';
-import mysql, { Connection } from 'mysql2/promise';
+// The specific clear, executeQuery, and getQuery for MySQL have been generalized
+// and moved to db_utils.ts.
+// Tests should ideally import `clear` directly from 'tests/db_utils'.
+// However, to minimize immediate changes to existing test files if they
+// import clear from './mysql', we can re-export it here.
 
-export const clear = async (): Promise<void> => {
-  const connectionString = getConnection();
+import { clear as genericClear } from './db_utils';
 
-  if (connectionString.substring(0, 9) === 'sqlite://') {
-    return;
-  }
-
-  const connection: Connection = await mysql.createConnection(connectionString);
-
-  const tables: Record<string, any>[] = await getQuery(connection, 'SHOW TABLES');
-  const promises: Promise<void>[] = [];
-  Object.values(tables).forEach(async (tableRow) => {
-    promises.push(executeQuery(connection, `DROP TABLE ${connection.escapeId(Object.values(tableRow)[0] as string)}`));
-  });
-  await Promise.all(promises);
-  await connection.end();
-};
-
-async function executeQuery(
-  connection: Connection,
-  query: string,
-  values: (string | number | boolean | null)[] = []
-): Promise<void> {
-  await connection.query(query, values);
-}
-
-async function getQuery<T>(
-  connection: Connection,
-  query: string,
-  values: (string | number | boolean | null)[] = []
-): Promise<T[]> {
-  const [results] = await connection.query(query, values);
-  return results as unknown as T[];
-}
+export const clear = genericClear;
