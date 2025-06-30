@@ -49,8 +49,8 @@
 	},
 	"homepage": "https://github.com/supersavehq/supersave#readme",
 	"devDependencies": {
-		"@biomejs/biome": "^2.1.1",
 		"@tsconfig/node14": "^1.0.3",
+		"@types/better-sqlite3": "^7.6.13",
 		"@types/debug": "^4.1.12",
 		"@types/express": "^4.17.23",
 		"@types/jest": "^27.5.2",
@@ -58,6 +58,7 @@
 		"@types/pluralize": "0.0.29",
 		"@types/slug": "^0.9.1",
 		"@types/supertest": "^2.0.16",
+		"better-sqlite3": "^12.2.0",
 		"concurrently": "^8.2.2",
 		"cross-env": "^7.0.3",
 		"express": "^4.21.2",
@@ -66,19 +67,16 @@
 		"mysql2": "^3.14.2",
 		"nodemon": "^3.1.10",
 		"prettier": "^2.8.8",
-		"rimraf": "^3.0.2",
-		"sqlite": "^4.2.1",
-		"sqlite3": "^5.1.7",
-		"superagent": "^7.1.6",
-		"supertest": "^6.3.4",
+		"rimraf": "^6.0.1",
+		"superagent": "^10.2.2",
+		"supertest": "^7.1.3",
 		"ts-jest": "^29.4.0",
 		"typescript": "^5.8.3"
 	},
 	"peerDependencies": {
+		"better-sqlite3": "^11.1.2",
 		"express": "^4.17.0 || ^5.0.0",
-		"mysql2": "^3.11.0",
-		"sqlite": "^4.0 || ^5.0",
-		"sqlite3": "^5.0"
+		"mysql2": "^3.11.0"
 	},
 	"peerDependenciesMeta": {
 		"express": {
@@ -87,10 +85,7 @@
 		"mysql2": {
 			"optional": true
 		},
-		"sqlite": {
-			"optional": true
-		},
-		"sqlite3": {
+		"better-sqlite3": {
 			"optional": true
 		}
 	},

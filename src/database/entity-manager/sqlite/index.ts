@@ -1,7 +1,7 @@
 import type { Debugger } from 'debug';
 import Debug from 'debug';
 import slug from 'slug';
-import type { Database } from 'sqlite';
+import type { Database } from 'better-sqlite3';
 import Repository from './repository';
 import sync from './sync';
 import type { BaseEntity, EntityDefinition } from '../../types';
@@ -26,7 +26,7 @@ class SqliteEntityManager extends EntityManager {
 
     const fullEntityName = this.getFullEntityName(entity.name, entity.namespace);
     const tableName = slug(fullEntityName).replace(/-/g, '_'); // sqlite does not allow - (dash) in table names.
-    await this.createTable(tableName);
+    this.createTable(tableName);
 
     const repository: Repository<T> = new Repository(
       updatedEntity,
@@ -44,13 +44,11 @@ class SqliteEntityManager extends EntityManager {
 
   protected async createTable(tableName: string): Promise<void> {
     debug(`Creating table ${tableName}.`);
-    await this.connection.exec(
-      `CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`
-    );
+    this.connection.exec(`CREATE TABLE IF NOT EXISTS ${tableName} (id TEXT PRIMARY KEY , contents TEXT NOT NULL)`);
   }
 
   public async close(): Promise<void> {
-    return this.connection.close();
+    this.connection.close();
   }
 
   public getConnection(): Database {

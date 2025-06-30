@@ -31,16 +31,11 @@ export default abstract class Repository<T> {
   }
 
   protected async transformQueryResultRows(rows: EntityRow[]): Promise<T[]> {
-    const result: T[] = [];
-
-    const promises = [];
-    for (const [iter, element] of rows.entries()) {
-      const promise = this.transformQueryResultRow(element);
-      promises.push(promise);
-      result[iter] = await promise;
+    const results: T[] = [];
+    for (const row of rows) {
+      results.push(await this.transformQueryResultRow(row));
     }
-    await Promise.all(promises);
-    return result;
+    return results;
   }
 
   protected async transformQueryResultRow(row: EntityRow): Promise<T> {
@@ -59,17 +54,14 @@ export default abstract class Repository<T> {
 
     const clone: T = JSON.parse(JSON.stringify(entity)); // TODO replace with clone function
 
-    const promises: Promise<any>[] = [];
-    this.definition.relations.forEach(async (relation: Relation) => {
+    for (const relation of this.definition.relations) {
       const repository = this.getRepository(relation.name, relation.namespace);
 
       if (!relation.multiple) {
         // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
         const id = clone[relation.field];
         if (typeof id === 'string') {
-          const promise = repository.getById(id);
-          promises.push(promise);
-          const relatedEntity = await promise;
+          const relatedEntity = await repository.getById(id);
           if (!relatedEntity) {
             throw new Error(
               `Unable to find related entity ${relation.name} with id ${
@@ -82,18 +74,12 @@ export default abstract class Repository<T> {
           clone[relation.field] = relatedEntity;
         }
       } else {
-        const promise = this.mapRelationToMultiple(
-          relation,
-          // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
-          clone[relation.field]
-        );
-        promises.push(promise);
-        const mappedEntities = await promise;
+        // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
+        const mappedEntities = await this.mapRelationToMultiple(relation, clone[relation.field]);
         // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
         clone[relation.field] = mappedEntities;
       }
-    });
-    await Promise.all(promises);
+    }
     return clone;
   }
 
