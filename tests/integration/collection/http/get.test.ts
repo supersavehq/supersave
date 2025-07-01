@@ -96,6 +96,41 @@ test('collection items are sorted when requested: descending', async () => {
   expect(response.body.data[0].name).toBe('Mars');
 });
 
+test('collection items are sorted case-insensitive', async () => {
+  const app: express.Application = express();
+  const superSave = await SuperSave.create(getConnection());
+
+  const repository: Repository<Planet> = await superSave.addCollection<Planet>({
+    ...planetCollection,
+    filterSortFields: { name: 'string' },
+  });
+  app.use('/', await superSave.getRouter());
+
+  await repository.create({ name: 'mars' });
+  await repository.create({ name: 'Earth' });
+  await repository.create({ name: 'venus' });
+  await repository.create({ name: 'Z Planet' });
+
+  const response = await supertest(app)
+    .get('/planets')
+    .query({ sort: 'name' })
+    .expect('Content-Type', /json/)
+    .expect(200);
+
+  expect(response.body.data).toBeDefined();
+  expect(Array.isArray(response.body.data)).toBe(true);
+  expect(response.body.data).toHaveLength(4);
+
+  expect(response.body.data).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ name: 'Earth' }),
+      expect.objectContaining({ name: 'mars' }),
+      expect.objectContaining({ name: 'venus' }),
+      expect.objectContaining({ name: 'Z Planet' }),
+    ])
+  );
+});
+
 test('undefined sort fields are not accepted.', async () => {
   const app: express.Application = express();
   const superSave = await SuperSave.create(getConnection());
