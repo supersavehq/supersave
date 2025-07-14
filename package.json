@@ -3,6 +3,7 @@
   "version": "0.17.0",
   "description": "A package to create a simple datastore with a generic API for side projects.",
   "main": "build/index.js",
+  "packageManager": "pnpm@10.10.0",
   "scripts": {
     "watch": "tsc -w",
     "build": "tsc",
