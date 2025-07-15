@@ -9,7 +9,7 @@ import { isEqual } from '../utils';
 
 const debug: Debugger = Debug('supersave:db:sync');
 
-const enum MysqlType {
+enum MysqlType {
   TEXT = 'text',
   LONGTEXT = 'longtext',
   INTEGER = 'int(11)',

@@ -1,0 +1,4 @@
+ignoredBuiltDependencies:
+  - husky
+onlyBuiltDependencies:
+  - sqlite3

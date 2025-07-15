@@ -19,8 +19,5 @@
     "useDefineForClassFields": false,
     "esModuleInterop": true
   },
-  "exclude": [
-    "tests",
-    "build"
-  ]
+  "exclude": ["tests", "build"]
 }

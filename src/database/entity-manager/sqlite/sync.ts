@@ -76,6 +76,10 @@ function hasTableChanged(
 function mapFilterSortFieldsToColumns(filterSortFields: Record<string, FilterSortField>): Record<string, SqliteType> {
   const result: Record<string, SqliteType> = {};
   Object.entries(filterSortFields).forEach(([fieldName, filter]: [string, FilterSortField]) => {
+    const sqliteType = filterSortFieldSqliteTypeMap[filter];
+    if (!sqliteType) {
+      throw new TypeError(`Unsupported filter type "${filter}" for "${fieldName}"`);
+    }
     result[fieldName] = filterSortFieldSqliteTypeMap[filter];
   });
   return result;

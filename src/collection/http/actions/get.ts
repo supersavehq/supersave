@@ -182,7 +182,7 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
         });
       } catch (error) {
         debug('Unexpected error while querying collection.', error);
-        res.status(500).json({ mesage: 'An unexpected error occurred, try again later.' });
+        res.status(500).json({ message: 'An unexpected error occurred, try again later.' });
       }
     } catch (error) {
       debug('Error while fetching items. Query: %o, %o', request.query, error);

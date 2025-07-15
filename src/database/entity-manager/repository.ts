@@ -71,8 +71,12 @@ export default abstract class Repository<T> {
           promises.push(promise);
           const relatedEntity = await promise;
           if (!relatedEntity) {
-            // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
-            throw new Error(`Unable to find related entity ${relation.name} with id ${entity[relation.field]}`);
+            throw new Error(
+              `Unable to find related entity ${relation.name} with id ${
+                // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
+                entity[relation.field]
+              }`
+            );
           }
           // @ts-expect-error Suppress the TS error because there is no guarantee that the attribute exists.
           clone[relation.field] = relatedEntity;
