@@ -1,8 +1,8 @@
-import { SuperSave, EntityDefinition, Repository } from '../../build';
-import { moonEntity, planetEntity } from '../entities';
-import type { Moon, Planet } from '../types';
+import { type EntityDefinition, type Repository, SuperSave } from '../../build';
 import getConnection from '../connection';
+import { moonEntity, planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Moon, Planet } from '../types';
 
 beforeEach(clear);
 
@@ -14,8 +14,10 @@ test('there is a difference between with and without namespace', async () => {
     namespace: 'other',
   };
 
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
-  const otherPlanetRepository: Repository<Planet> = await superSave.addEntity<Planet>(otherPlanetEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(planetEntity);
+  const otherPlanetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(otherPlanetEntity);
 
   await planetRepository.create({ name: 'Earth' });
   const otherResults = await otherPlanetRepository.getAll();
@@ -36,8 +38,10 @@ test('there is a difference between different namespaces with same entity', asyn
     namespace: 'other',
   };
 
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
-  const otherPlanetRepository: Repository<Planet> = await superSave.addEntity<Planet>(otherPlanetEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(planetEntity);
+  const otherPlanetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(otherPlanetEntity);
 
   await planetRepository.create({ name: 'Earth' });
   const otherResults = await otherPlanetRepository.getAll();
@@ -66,11 +70,16 @@ test('relations from different namespace', async () => {
     ],
   };
 
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(namespacedPlanetEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(namespacedPlanetEntity);
   const earth = await planetRepository.create({ name: 'Earth' });
 
-  const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(namespacedMoonEntity);
-  const earthMoon: Moon = await moonRepository.create({ name: 'Moon', planet: earth });
+  const moonRepository: Repository<Moon> =
+    await superSave.addEntity<Moon>(namespacedMoonEntity);
+  const earthMoon: Moon = await moonRepository.create({
+    name: 'Moon',
+    planet: earth,
+  });
   expect(earthMoon.id).toBeDefined();
   expect(earthMoon.name).toEqual('Moon');
   expect(earthMoon.planet.name).toEqual('Earth');

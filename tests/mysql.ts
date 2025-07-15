@@ -1,5 +1,5 @@
+import mysql, { type Connection } from 'mysql2/promise';
 import getConnection from './connection';
-import mysql, { Connection } from 'mysql2/promise';
 
 export const clear = async (): Promise<void> => {
   const connectionString = getConnection();
@@ -10,10 +10,19 @@ export const clear = async (): Promise<void> => {
 
   const connection: Connection = await mysql.createConnection(connectionString);
 
-  const tables: Record<string, any>[] = await getQuery(connection, 'SHOW TABLES');
+  const tables: Record<string, any>[] = await getQuery(
+    connection,
+    'SHOW TABLES'
+  );
   const promises: Promise<void>[] = [];
+  // biome-ignore lint/suspicious/useAwait: forEach with async is intentional for parallel execution
   Object.values(tables).forEach(async (tableRow) => {
-    promises.push(executeQuery(connection, `DROP TABLE ${connection.escapeId(Object.values(tableRow)[0] as string)}`));
+    promises.push(
+      executeQuery(
+        connection,
+        `DROP TABLE ${connection.escapeId(Object.values(tableRow)[0] as string)}`
+      )
+    );
   });
   await Promise.all(promises);
   await connection.end();

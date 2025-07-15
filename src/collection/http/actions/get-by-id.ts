@@ -1,14 +1,14 @@
 import type { Debugger } from 'debug';
 import Debug from 'debug';
 import type { Request, Response } from 'express';
-import transform from './utils';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { HookError } from '../../error';
 import type { ManagedCollection } from '../../types';
+import transform from './utils';
 
 const debug: Debugger = Debug('supersave:http:getById');
 
-export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>
+export default (
+  collection: ManagedCollection
+): ((request: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (request, res: Response): Promise<void> => {
     try {
@@ -22,12 +22,11 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
         if (hooks.getById) {
           try {
             item = await hooks.getById(collection, request, res, item);
-          } catch (error: unknown | HookError) {
+          } catch (error: unknown) {
             debug('Error thrown in getById hook %o', error);
-            // @ts-expect-error Error has type unknown.
-            const code = error?.statusCode ?? 500;
-            // @ts-expect-error Error has type unknown.
-            res.status(code).json({ message: error.message });
+
+            const code = (error as any)?.statusCode ?? 500;
+            res.status(code).json({ message: (error as Error).message });
             return;
           }
         }
@@ -40,18 +39,21 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
       // transform hook
       try {
         item = await transform(collection, request, res, item);
-      } catch (error: unknown | HookError) {
+      } catch (error: unknown) {
         debug('Error thrown in getById transformHook %o', error);
-        // @ts-expect-error Error has type unknown.
-        const code = error?.statusCode ?? 500;
-        // @ts-expect-error Error has type unknown.
-        res.status(code).json({ message: error.message });
+
+        const code = (error as any)?.statusCode ?? 500;
+        res.status(code).json({ message: (error as Error).message });
         return;
       }
 
       res.json({ data: item });
     } catch (error) {
-      debug('Error while fetching item with id %s, %o', request.params.id, error);
+      debug(
+        'Error while fetching item with id %s, %o',
+        request.params.id,
+        error
+      );
       res.status(500).json({ message: (error as Error).message });
     }
   };

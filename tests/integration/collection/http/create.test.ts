@@ -1,18 +1,19 @@
-import supertest from 'supertest';
 import express from 'express';
-import { Planet } from '../../../types';
-import { planetCollection } from '../../../entities';
-import { Repository, SuperSave } from '../../../../build';
+import supertest from 'supertest';
+import { type Repository, SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
+import { planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Planet } from '../../../types';
 
 beforeEach(clear);
 
-test('only collections with no namespace returns array', async() => {
+test('only collections with no namespace returns array', async () => {
   const app: express.Application = express();
   const superSave = await SuperSave.create(getConnection());
 
-  const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
+  const planetRepository: Repository<Planet> =
+    await superSave.addCollection<Planet>(planetCollection);
   app.use('/api', await superSave.getRouter());
 
   const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };

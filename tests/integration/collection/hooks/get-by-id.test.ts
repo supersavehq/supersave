@@ -1,10 +1,10 @@
+import express, { type Request, type Response } from 'express';
 import supertest from 'supertest';
-import express, { Request, Response } from 'express';
-import { Planet } from '../../../types';
-import { planetCollection } from '../../../entities';
-import { Collection, Repository, SuperSave } from '../../../../build';
+import { type Collection, type Repository, SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
+import { planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Planet } from '../../../types';
 
 beforeEach(clear);
 
@@ -13,33 +13,50 @@ describe('getById Hook', () => {
     const app: express.Application = express();
     const superSave = await SuperSave.create(getConnection());
 
-    const planetRepository: Repository<Planet> = await superSave.addCollection<Planet>({
-      ...planetCollection,
-      hooks: [
-        {
-          getById: (_collection: Collection, _req: Request, _res: Response, entity: any) => {
-            return {
-              ...entity,
-              name: `HOOK-${entity.name}`,
-            };
+    const planetRepository: Repository<Planet> =
+      await superSave.addCollection<Planet>({
+        ...planetCollection,
+        hooks: [
+          {
+            getById: (
+              _collection: Collection,
+              _req: Request,
+              _res: Response,
+
+              entity: any
+            ) => {
+              return {
+                ...entity,
+                name: `HOOK-${entity.name}`,
+              };
+            },
+            entityTransform: (
+              _collection: Collection,
+              _req: Request,
+              _res: Response,
+              entity: any
+            ): any => {
+              return {
+                ...entity,
+                extra: true,
+              };
+            },
           },
-          entityTransform: (_collection: Collection, _req: Request, _res: Response, entity: any): any => {
-            return {
-              ...entity,
-              extra: true,
-            };
+          {
+            entityTransform: (
+              _collection: Collection,
+              _req: Request,
+              _res: Response,
+              entity: any
+            ): any => {
+              return {
+                ...entity,
+                name: `2ND - ${entity.name}`,
+              };
+            },
           },
-        },
-        {
-          entityTransform: (_collection: Collection, _req: Request, _res: Response, entity: any): any => {
-            return {
-              ...entity,
-              name: `2ND - ${entity.name}`,
-            };
-          },
-        },
-      ],
-    });
+        ],
+      });
     const planet = await planetRepository.create({ name: 'Earth' });
     app.use('/', await superSave.getRouter());
 

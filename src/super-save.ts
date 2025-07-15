@@ -22,11 +22,15 @@ class SuperSave {
     return new SuperSave(em);
   }
 
-  public addEntity<T extends BaseEntity>(entity: EntityDefinition): Promise<Repository<T>> {
+  public addEntity<T extends BaseEntity>(
+    entity: EntityDefinition
+  ): Promise<Repository<T>> {
     return this.em.addEntity<T>(entity);
   }
 
-  public async addCollection<T extends BaseEntity>(collection: Collection): Promise<Repository<T>> {
+  public async addCollection<T extends BaseEntity>(
+    collection: Collection
+  ): Promise<Repository<T>> {
     const { filterSortFields = {} } = collection;
     filterSortFields.id = 'string';
 
@@ -51,13 +55,22 @@ class SuperSave {
     return repository;
   }
 
-  public getRepository<T extends BaseEntity>(entityName: string, namespace?: string): Repository<T> {
+  public getRepository<T extends BaseEntity>(
+    entityName: string,
+    namespace?: string
+  ): Repository<T> {
     return this.em.getRepository<T>(entityName, namespace);
   }
 
   public async getRouter(prefix = '/'): Promise<express.Router> {
-    const prefixWithoutSlash = prefix.charAt(prefix.length - 1) === '/' ? prefix.substr(0, prefix.length - 2) : prefix;
-    this.collectionHttp = await CollectionHttp.create(this.collectionManager, prefixWithoutSlash);
+    const prefixWithoutSlash =
+      prefix.charAt(prefix.length - 1) === '/'
+        ? prefix.substr(0, prefix.length - 2)
+        : prefix;
+    this.collectionHttp = await CollectionHttp.create(
+      this.collectionManager,
+      prefixWithoutSlash
+    );
     return this.collectionHttp.getRouter();
   }
 

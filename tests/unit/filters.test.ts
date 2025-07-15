@@ -1,8 +1,13 @@
-import { SuperSave, EntityDefinition, Query, BaseEntity } from '../../build';
-import { planetEntity } from '../entities';
+import {
+  type BaseEntity,
+  type EntityDefinition,
+  type Query,
+  SuperSave,
+} from '../../build';
 import getConnection from '../connection';
-import type { Planet } from '../types';
+import { planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Planet } from '../types';
 
 beforeEach(clear);
 
@@ -18,7 +23,8 @@ describe('general filter tests', () => {
     };
 
     const superSave: SuperSave = await SuperSave.create(getConnection());
-    const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
+    const planetRepository =
+      await superSave.addEntity<Planet>(filteredPlanetEntity);
 
     await planetRepository.create({ name: 'Earth' });
     await superSave.close();
@@ -33,7 +39,8 @@ describe('general filter tests', () => {
     };
 
     const superSave: SuperSave = await SuperSave.create(getConnection());
-    const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
+    const planetRepository =
+      await superSave.addEntity<Planet>(filteredPlanetEntity);
 
     await planetRepository.create({ name: 'Earth' });
     const query: Query = planetRepository.createQuery();
@@ -55,7 +62,8 @@ describe('general filter tests', () => {
     };
 
     const superSave: SuperSave = await SuperSave.create(getConnection());
-    const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
+    const planetRepository =
+      await superSave.addEntity<Planet>(filteredPlanetEntity);
 
     await planetRepository.create({ name: 'Mars' });
     await planetRepository.create({ name: 'Earth' });
@@ -87,7 +95,8 @@ describe('general filter tests', () => {
     };
 
     const superSave: SuperSave = await SuperSave.create(getConnection());
-    const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
+    const planetRepository =
+      await superSave.addEntity<Planet>(filteredPlanetEntity);
 
     await planetRepository.create({ name: 'Mars' });
     await planetRepository.create({ name: 'Earth' });
@@ -117,7 +126,8 @@ describe('general filter tests', () => {
     };
 
     const superSave: SuperSave = await SuperSave.create(getConnection());
-    const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
+    const planetRepository =
+      await superSave.addEntity<Planet>(filteredPlanetEntity);
 
     await planetRepository.create({ name: 'Mars' });
     await planetRepository.create({ name: 'Earth' });
@@ -155,15 +165,29 @@ describe('general filter tests', () => {
     };
 
     const superSave: SuperSave = await SuperSave.create(getConnection());
-    const planetRepository = await superSave.addEntity<FilteredPlanet>(planetEntity);
+    const planetRepository =
+      await superSave.addEntity<FilteredPlanet>(planetEntity);
 
-    await planetRepository.create({ name: 'Earth', distance: 200, visible: false });
+    await planetRepository.create({
+      name: 'Earth',
+      distance: 200,
+      visible: false,
+    });
 
     // initialize it again, with filters
-    const superSaveReinitialized: SuperSave = await SuperSave.create(getConnection());
-    const reinitializedPlanetRepository = await superSaveReinitialized.addEntity<FilteredPlanet>(filteredPlanetEntity);
+    const superSaveReinitialized: SuperSave = await SuperSave.create(
+      getConnection()
+    );
+    const reinitializedPlanetRepository =
+      await superSaveReinitialized.addEntity<FilteredPlanet>(
+        filteredPlanetEntity
+      );
 
-    await reinitializedPlanetRepository.create({ name: 'Earth', distance: 200, visible: false });
+    await reinitializedPlanetRepository.create({
+      name: 'Earth',
+      distance: 200,
+      visible: false,
+    });
 
     // initialize it again, with additional filters
     const ageFilteredPlanetEntity: EntityDefinition = {
@@ -175,12 +199,19 @@ describe('general filter tests', () => {
       },
     };
 
-    const superSaveReinitializedAge: SuperSave = await SuperSave.create(getConnection());
-    const reinitializedAgePlanetRepository = await superSaveReinitializedAge.addEntity<FilteredPlanet>(
-      ageFilteredPlanetEntity
+    const superSaveReinitializedAge: SuperSave = await SuperSave.create(
+      getConnection()
     );
+    const reinitializedAgePlanetRepository =
+      await superSaveReinitializedAge.addEntity<FilteredPlanet>(
+        ageFilteredPlanetEntity
+      );
 
-    await reinitializedAgePlanetRepository.create({ name: 'Earth', distance: 200, visible: false });
+    await reinitializedAgePlanetRepository.create({
+      name: 'Earth',
+      distance: 200,
+      visible: false,
+    });
     await superSave.close();
   });
 });
@@ -223,7 +254,9 @@ describe('there can be filtered on relation fields', () => {
     await planetRepository.create({ name: 'Earth', moon });
 
     // Attempt to retrieve the planet by the moon attribute
-    const planets = await planetRepository.getByQuery(planetRepository.createQuery().eq('moon', moon.id));
+    const planets = await planetRepository.getByQuery(
+      planetRepository.createQuery().eq('moon', moon.id)
+    );
     expect(planets).toHaveLength(1);
 
     await superSave.close();
@@ -263,8 +296,14 @@ describe('there can be filtered on relation fields', () => {
       },
     });
     const ioMoon = await moonRepository.create({ name: 'Io', size: 9 });
-    const europaMoon = await moonRepository.create({ name: 'Europa', size: 36 });
-    await planetRepository.create({ name: 'Jupiter', moons: [ioMoon, europaMoon] });
+    const europaMoon = await moonRepository.create({
+      name: 'Europa',
+      size: 36,
+    });
+    await planetRepository.create({
+      name: 'Jupiter',
+      moons: [ioMoon, europaMoon],
+    });
 
     // Attempt to retrieve the planet by the moon attribute
     const planets = await planetRepository.getByQuery(
@@ -285,7 +324,8 @@ describe('there can be filtered on relation fields', () => {
     };
 
     const superSave: SuperSave = await SuperSave.create(getConnection());
-    const planetRepository = await superSave.addEntity<Planet>(filteredPlanetEntity);
+    const planetRepository =
+      await superSave.addEntity<Planet>(filteredPlanetEntity);
 
     await planetRepository.create({ name: 'Earth', distance: 1000 });
     await planetRepository.create({ name: 'Pluto', distance: 9877654 });

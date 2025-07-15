@@ -24,6 +24,8 @@ export async function executeQuery(
   await connection.query(query, values);
 }
 
-export async function getConnectionFromPool(pool: Pool): Promise<PoolConnection> {
+export async function getConnectionFromPool(
+  pool: Pool
+): Promise<PoolConnection> {
   return await pool.getConnection();
 }

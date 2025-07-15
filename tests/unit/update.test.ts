@@ -1,18 +1,22 @@
-import { SuperSave, Repository, BaseEntity } from '../../build';
-import { planetEntity } from '../entities';
-import { Planet } from '../types';
+import { type BaseEntity, type Repository, SuperSave } from '../../build';
 import getConnection from '../connection';
+import { planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Planet } from '../types';
 
 beforeEach(clear);
 
 describe('update', () => {
   test('simple entity update', async () => {
     const superSave = await SuperSave.create(getConnection());
-    const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+    const planetRepository: Repository<Planet> =
+      await superSave.addEntity<Planet>(planetEntity);
 
     const earth: Planet = await planetRepository.create({ name: 'Earth' });
-    await planetRepository.update({ id: earth.id as string, name: 'Updated Earth' });
+    await planetRepository.update({
+      id: earth.id as string,
+      name: 'Updated Earth',
+    });
 
     const checkEarth = await planetRepository.getById(earth.id as string);
 
@@ -57,7 +61,10 @@ describe('update', () => {
     const moon = await moonRepository.create({ name: 'Moon', size: 12 });
     const planet = await planetRepository.create({ name: 'Earth', moon });
 
-    const updatedPlanet = await planetRepository.update({ ...planet, name: 'Earth 2' });
+    const updatedPlanet = await planetRepository.update({
+      ...planet,
+      name: 'Earth 2',
+    });
     expect(updatedPlanet.name).toEqual('Earth 2');
 
     await superSave.close();
@@ -97,10 +104,19 @@ describe('update', () => {
       },
     });
     const ioMoon = await moonRepository.create({ name: 'Io', size: 9 });
-    const europaMoon = await moonRepository.create({ name: 'Europa', size: 36 });
-    const planet = await planetRepository.create({ name: 'Jupiter', moons: [ioMoon, europaMoon] });
+    const europaMoon = await moonRepository.create({
+      name: 'Europa',
+      size: 36,
+    });
+    const planet = await planetRepository.create({
+      name: 'Jupiter',
+      moons: [ioMoon, europaMoon],
+    });
 
-    const updatedPlanet = await planetRepository.update({ ...planet, name: 'Jupiter 2' });
+    const updatedPlanet = await planetRepository.update({
+      ...planet,
+      name: 'Jupiter 2',
+    });
     expect(updatedPlanet.name).toEqual('Jupiter 2');
 
     await superSave.close();

@@ -3,9 +3,9 @@ import type { HttpCollection, ManagedCollection } from '../../types';
 import { generatePath } from '../utils';
 
 export default (
-    prefix: string, // without a trailing /
-    getRegisteredCollections: () => ManagedCollection[]
-  ): RequestHandler =>
+  prefix: string, // without a trailing /
+  getRegisteredCollections: () => ManagedCollection[]
+): RequestHandler =>
   (_request: Request, res: Response): void => {
     const output: { [key: string]: HttpCollection[] } = {};
 
@@ -27,7 +27,10 @@ export default (
       });
     });
 
-    if (Object.keys(output).length === 1 && typeof output['/'] !== 'undefined') {
+    if (
+      Object.keys(output).length === 1 &&
+      typeof output['/'] !== 'undefined'
+    ) {
       res.json({ data: output['/'] });
       return;
     }

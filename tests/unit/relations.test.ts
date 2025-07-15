@@ -1,18 +1,20 @@
-import { planetEntity, moonEntity } from '../entities';
-import { SuperSave, Repository } from '../../build';
-import { Moon, Planet } from '../types';
+import { type Repository, SuperSave } from '../../build';
 import getConnection from '../connection';
+import { moonEntity, planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Moon, Planet } from '../types';
 
 beforeEach(clear);
 
 test('linking entities via object', async () => {
   const superSave = await SuperSave.create(getConnection());
 
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(planetEntity);
   const earth = await planetRepository.create({ name: 'Earth' });
 
-  const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(moonEntity);
+  const moonRepository: Repository<Moon> =
+    await superSave.addEntity<Moon>(moonEntity);
   await moonRepository.create({ name: 'Moon', planet: earth });
 
   const moons = await moonRepository.getAll();
@@ -35,10 +37,12 @@ test('linking entities via object', async () => {
 test('linking entities via id', async () => {
   const superSave = await SuperSave.create(getConnection());
 
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(planetEntity);
   const earth = await planetRepository.create({ name: 'Earth' });
 
-  const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(moonEntity);
+  const moonRepository: Repository<Moon> =
+    await superSave.addEntity<Moon>(moonEntity);
   await moonRepository.create({ name: 'Moon', planet: earth.id });
 
   const moons = await moonRepository.getAll();
@@ -62,7 +66,8 @@ test('linking entities via id', async () => {
 test('linking multiple entities via objects', async () => {
   const superSave = await SuperSave.create(getConnection());
 
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(planetEntity);
   const earth = await planetRepository.create({ name: 'Earth' });
   const mars = await planetRepository.create({ name: 'Mars' });
 
@@ -102,7 +107,8 @@ test('linking multiple entities via objects', async () => {
 test('linking multiple entities via ids', async () => {
   const superSave = await SuperSave.create(getConnection());
 
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(planetEntity);
   const earth = await planetRepository.create({ name: 'Earth' });
   const mars = await planetRepository.create({ name: 'Mars' });
 

@@ -1,10 +1,10 @@
+import express, { type Request, type Response } from 'express';
 import supertest from 'supertest';
-import express, { Request, Response } from 'express';
-import { Planet } from '../../../types';
-import { planetCollection } from '../../../entities';
-import { Collection, HookError, SuperSave } from '../../../../build';
+import { type Collection, HookError, SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
+import { planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Planet } from '../../../types';
 
 beforeEach(clear);
 
@@ -17,13 +17,24 @@ describe('createBefore hook', () => {
       ...planetCollection,
       hooks: [
         {
-          createBefore: (_collection: Collection, _req: Request, _res: Response, entity: any) => {
+          createBefore: (
+            _collection: Collection,
+            _req: Request,
+            _res: Response,
+
+            entity: any
+          ) => {
             return {
               ...entity,
               name: `HOOK-${entity.name}`,
             };
           },
-          entityTransform: (_collection: Collection, _req: Request, _res: Response, entity: any) => {
+          entityTransform: (
+            _collection: Collection,
+            _req: Request,
+            _res: Response,
+            entity: any
+          ) => {
             return {
               ...entity,
               extra: true,
@@ -36,7 +47,11 @@ describe('createBefore hook', () => {
 
     const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
 
-    const response = await supertest(app).post('/api/planets').send(planet).expect('Content-Type', /json/).expect(200);
+    const response = await supertest(app)
+      .post('/api/planets')
+      .send(planet)
+      .expect('Content-Type', /json/)
+      .expect(200);
 
     expect(response.body.data).toBeDefined();
     expect(typeof response.body.data).toBe('object');
@@ -52,7 +67,12 @@ describe('createBefore hook', () => {
       ...planetCollection,
       hooks: [
         {
-          createBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
+          createBefore: (
+            _collection: Collection,
+            _req: Request,
+            _res: Response,
+            _entity: any
+          ) => {
             throw new HookError('Test message', 401);
           },
         },
@@ -62,7 +82,11 @@ describe('createBefore hook', () => {
 
     const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
 
-    const response = await supertest(app).post('/api/planets').send(planet).expect('Content-Type', /json/).expect(401);
+    const response = await supertest(app)
+      .post('/api/planets')
+      .send(planet)
+      .expect('Content-Type', /json/)
+      .expect(401);
 
     expect(response.body).toEqual({ message: 'Test message' });
   });
@@ -75,7 +99,12 @@ describe('createBefore hook', () => {
       ...planetCollection,
       hooks: [
         {
-          createBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
+          createBefore: (
+            _collection: Collection,
+            _req: Request,
+            _res: Response,
+            _entity: any
+          ) => {
             throw new HookError('Test message');
           },
         },
@@ -85,7 +114,11 @@ describe('createBefore hook', () => {
 
     const planet: Omit<Planet, 'id'> = { name: 'Jupiter' };
 
-    const response = await supertest(app).post('/api/planets').send(planet).expect('Content-Type', /json/).expect(500);
+    const response = await supertest(app)
+      .post('/api/planets')
+      .send(planet)
+      .expect('Content-Type', /json/)
+      .expect(500);
 
     expect(response.body).toEqual({ message: 'Test message' });
   });

@@ -1,4 +1,9 @@
-import type { FilterSortField, QueryFilter, QueryFilterValue, QuerySort } from '../types';
+import type {
+  FilterSortField,
+  QueryFilter,
+  QueryFilterValue,
+  QuerySort,
+} from '../types';
 import { QueryOperatorEnum } from '../types';
 
 class Query {
@@ -10,9 +15,15 @@ class Query {
 
   private offsetValue?: number;
 
-  constructor(private readonly filterSortFields: Record<string, FilterSortField>) {}
+  constructor(
+    private readonly filterSortFields: Record<string, FilterSortField>
+  ) {}
 
-  private addFilter(operator: QueryOperatorEnum, field: string, value: QueryFilterValue): Query {
+  private addFilter(
+    operator: QueryOperatorEnum,
+    field: string,
+    value: QueryFilterValue
+  ): Query {
     if (typeof this.filterSortFields[field] === 'undefined') {
       throw new TypeError(`Cannot filter on not defined field ${field}.`);
     }

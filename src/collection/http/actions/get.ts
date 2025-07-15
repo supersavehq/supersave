@@ -1,13 +1,11 @@
 import type { Debugger } from 'debug';
 import Debug from 'debug';
 import type { Request, Response } from 'express';
-import transform from './utils';
 import type { Query } from '../../../database/entity-manager';
 import type { FilterSortField } from '../../../database/types';
 import { QueryOperatorEnum } from '../../../database/types';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { HookError } from '../../error';
 import type { ManagedCollection } from '../../types';
+import transform from './utils';
 
 const debug: Debugger = Debug('supersave:http:get');
 
@@ -25,20 +23,30 @@ function sort(query: Query, sortRequest: string): void {
   });
 }
 
-function filter(collection: ManagedCollection, query: Query, filters: Record<string, string>): void {
+function filter(
+  collection: ManagedCollection,
+  query: Query,
+  filters: Record<string, string>
+): void {
   if (Object.keys(filters).length === 0) {
     return;
   }
   if (!collection.filterSortFields) {
-    throw new Error('There are no fields available to filter on, while filters were provided.');
+    throw new Error(
+      'There are no fields available to filter on, while filters were provided.'
+    );
   }
 
   // eslint-disable-next-line max-len
-  const filterSortFields: Record<string, FilterSortField> = collection.filterSortFields;
+  const filterSortFields: Record<string, FilterSortField> =
+    collection.filterSortFields;
   Object.entries(filters).forEach(([field, value]: [string, string]) => {
     const matches: string[] | null = (field || '').match(/(.*)\[(.*)\]$/);
     if (matches === null || matches.length !== 3) {
-      if (collection.filterSortFields && collection.filterSortFields[field] === 'boolean') {
+      if (
+        collection.filterSortFields &&
+        collection.filterSortFields[field] === 'boolean'
+      ) {
         query.eq(field, ['1', 1, 'true', true].includes(value));
       } else {
         query.eq(field, value);
@@ -83,7 +91,9 @@ function filter(collection: ManagedCollection, query: Query, filters: Record<str
         break;
       }
       default:
-        throw new Error(`Unrecognized operator ${operator} for filteredField ${filteredField}.`);
+        throw new Error(
+          `Unrecognized operator ${operator} for filteredField ${filteredField}.`
+        );
     }
   });
 }
@@ -99,7 +109,9 @@ function limitOffset(query: Query, params: Record<string, string>): void {
   query.offset(parseInt(offset, 10) || 0);
 }
 
-export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>
+export default (
+  collection: ManagedCollection
+): ((request: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (request, res: Response): Promise<void> => {
     try {
@@ -108,7 +120,7 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
         if (hooks.get) {
           try {
             await hooks.get(collection, request, res);
-          } catch (error: unknown | HookError) {
+          } catch (error: unknown) {
             debug('Error thrown in getHook %o', error);
             // @ts-expect-error Error has type unknown.
             const code = error?.statusCode ?? 500;
@@ -130,23 +142,28 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
       }
 
       const filters: Record<string, string> = {};
-      Object.entries(request.query as Record<string, any>).forEach(([field, value]: [string, any]) => {
-        if (field === 'sort' || field === 'limit' || field === 'offset') {
-          return;
-        }
 
-        // Express by default parses values as ?distance[>]=0 into { distance: { '>': 0 }}. Unless 'the query parser'
-        // setting is set the 'simple' on app., then its always a string.
-        if (typeof value === 'string') {
-          filters[field] = value;
-        } else if (typeof value === 'object') {
-          Object.entries(value).forEach(([operator, filterValue]: [string, any]) => {
-            filters[`${field}[${operator}]`] = `${filterValue}`;
-          });
-        } else {
-          debug('Ignoring query parameter', field, value);
+      Object.entries(request.query as Record<string, any>).forEach(
+        ([field, value]: [string, any]) => {
+          if (field === 'sort' || field === 'limit' || field === 'offset') {
+            return;
+          }
+
+          // Express by default parses values as ?distance[>]=0 into { distance: { '>': 0 }}. Unless 'the query parser'
+          // setting is set the 'simple' on app., then its always a string.
+          if (typeof value === 'string') {
+            filters[field] = value;
+          } else if (typeof value === 'object') {
+            Object.entries(value).forEach(
+              ([operator, filterValue]: [string, any]) => {
+                filters[`${field}[${operator}]`] = `${filterValue}`;
+              }
+            );
+          } else {
+            debug('Ignoring query parameter', field, value);
+          }
         }
-      });
+      );
 
       try {
         filter(collection, query, filters);
@@ -161,8 +178,10 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
 
         // transform hook
         try {
-          items = await Promise.all(items.map(async (item) => transform(collection, request, res, item)));
-        } catch (error: unknown | HookError) {
+          items = await Promise.all(
+            items.map(async (item) => transform(collection, request, res, item))
+          );
+        } catch (error: unknown) {
           debug('Error thrown in get transform %o', error);
           // @ts-expect-error Error has type unknown.
           const code = error?.statusCode ?? 500;
@@ -182,7 +201,9 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
         });
       } catch (error) {
         debug('Unexpected error while querying collection.', error);
-        res.status(500).json({ message: 'An unexpected error occurred, try again later.' });
+        res
+          .status(500)
+          .json({ message: 'An unexpected error occurred, try again later.' });
       }
     } catch (error) {
       debug('Error while fetching items. Query: %o, %o', request.query, error);

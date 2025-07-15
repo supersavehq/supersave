@@ -1,33 +1,35 @@
-import { Collection, EntityDefinition } from '../build';
+import type { Collection, EntityDefinition } from '../build';
 
 export const planetEntity: EntityDefinition = {
   name: 'planet',
   template: {
     name: '',
   },
-  relations: []
-}
+  relations: [],
+};
 
 export const planetCollection: Collection = {
   name: 'planet',
   template: planetEntity.template,
-  relations: planetEntity.relations
-}
+  relations: planetEntity.relations,
+};
 
 export const moonEntity: EntityDefinition = {
   name: 'moon',
   template: {
     name: '',
   },
-  relations: [{
-    name: 'planet',
-    field: 'planet',
-    multiple: false,
-  }],
-}
+  relations: [
+    {
+      name: 'planet',
+      field: 'planet',
+      multiple: false,
+    },
+  ],
+};
 
 export const moonCollection: Collection = {
   name: 'moon',
   template: moonEntity.template,
-  relations: moonEntity.relations
-}
+  relations: moonEntity.relations,
+};

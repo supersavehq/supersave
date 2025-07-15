@@ -1,14 +1,14 @@
-import supertest from 'supertest';
 import express from 'express';
-import { Planet, Moon } from '../../../types';
-import { planetCollection, moonCollection } from '../../../entities';
+import supertest from 'supertest';
 import { SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
+import { moonCollection, planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Moon, Planet } from '../../../types';
 
 beforeEach(clear);
 
-test('only collections with no namespace returns array', async() => {
+test('only collections with no namespace returns array', async () => {
   const app: express.Application = express();
   const superSave = await SuperSave.create(getConnection());
 
@@ -27,13 +27,19 @@ test('only collections with no namespace returns array', async() => {
   await superSave.close();
 });
 
-test('collections with namespace', async() => {
+test('collections with namespace', async () => {
   const app: express.Application = express();
   const superSave = await SuperSave.create(getConnection());
 
-  await superSave.addCollection<Planet>({...planetCollection, namespace: 'space'});
-  app.use('/',await superSave.getRouter());
-  await superSave.addCollection<Moon>({...moonCollection, namespace: 'space'});
+  await superSave.addCollection<Planet>({
+    ...planetCollection,
+    namespace: 'space',
+  });
+  app.use('/', await superSave.getRouter());
+  await superSave.addCollection<Moon>({
+    ...moonCollection,
+    namespace: 'space',
+  });
 
   const response = await supertest(app)
     .get('/')
@@ -47,11 +53,14 @@ test('collections with namespace', async() => {
   await superSave.close();
 });
 
-test('additional collection properties are returned', async() => {
+test('additional collection properties are returned', async () => {
   const app: express.Application = express();
   const superSave = await SuperSave.create(getConnection());
 
-  await superSave.addCollection<Planet>({ ...planetCollection, additionalProperties: { foo: 'bar' }});
+  await superSave.addCollection<Planet>({
+    ...planetCollection,
+    additionalProperties: { foo: 'bar' },
+  });
   app.use('/', await superSave.getRouter());
   await superSave.addCollection<Moon>(moonCollection);
 
