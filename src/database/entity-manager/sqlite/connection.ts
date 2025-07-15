@@ -1,13 +1,7 @@
-import type { Database } from 'sqlite';
-import { open } from 'sqlite';
-import sqlite3 from 'sqlite3';
+import Database from 'better-sqlite3';
 
-if (process.env.NODE_ENV !== 'production') {
-  sqlite3.verbose();
-}
-
-export default async (filename: string): Promise<Database> =>
-  open({
-    filename,
-    driver: sqlite3.Database,
-  });
+export default (filename: string): Database.Database => {
+  const db = new Database(filename);
+  db.pragma('journal_mode = WAL');
+  return db;
+};

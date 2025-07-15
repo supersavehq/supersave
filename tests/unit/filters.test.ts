@@ -1,7 +1,7 @@
 import { SuperSave, EntityDefinition, Query, BaseEntity } from '../../build';
 import { planetEntity } from '../entities';
 import getConnection from '../connection';
-import { Planet } from '../types';
+import type { Planet } from '../types';
 import { clear } from '../mysql';
 
 beforeEach(clear);

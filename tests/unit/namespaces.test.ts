@@ -1,6 +1,6 @@
 import { SuperSave, EntityDefinition, Repository } from '../../build';
 import { moonEntity, planetEntity } from '../entities';
-import { Moon, Planet } from '../types';
+import type { Moon, Planet } from '../types';
 import getConnection from '../connection';
 import { clear } from '../mysql';
 
@@ -12,7 +12,7 @@ test('there is a difference between with and without namespace', async () => {
   const otherPlanetEntity: EntityDefinition = {
     ...planetEntity,
     namespace: 'other',
-  }
+  };
 
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
   const otherPlanetRepository: Repository<Planet> = await superSave.addEntity<Planet>(otherPlanetEntity);
@@ -29,12 +29,12 @@ test('there is a difference between different namespaces with same entity', asyn
   const namespacedPlanetEntity: EntityDefinition = {
     ...planetEntity,
     namespace: 'one',
-  }
+  };
 
   const otherPlanetEntity: EntityDefinition = {
     ...namespacedPlanetEntity,
     namespace: 'other',
-  }
+  };
 
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
   const otherPlanetRepository: Repository<Planet> = await superSave.addEntity<Planet>(otherPlanetEntity);
@@ -56,13 +56,15 @@ test('relations from different namespace', async () => {
   const namespacedMoonEntity: EntityDefinition = {
     ...moonEntity,
     namespace: 'space',
-    relations: [{
-      name: namespacedPlanetEntity.name,
-      namespace: 'one',
-      field: 'planet',
-      multiple: false,
-    }],
-  }
+    relations: [
+      {
+        name: namespacedPlanetEntity.name,
+        namespace: 'one',
+        field: 'planet',
+        multiple: false,
+      },
+    ],
+  };
 
   const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(namespacedPlanetEntity);
   const earth = await planetRepository.create({ name: 'Earth' });
@@ -73,7 +75,7 @@ test('relations from different namespace', async () => {
   expect(earthMoon.name).toEqual('Moon');
   expect(earthMoon.planet.name).toEqual('Earth');
 
-  const retrievedMoon = await moonRepository.getById((earthMoon.id as string));
+  const retrievedMoon = await moonRepository.getById(earthMoon.id as string);
   expect(retrievedMoon).toBeDefined();
   expect((retrievedMoon as Moon).planet).toBeDefined();
   await superSave.close();

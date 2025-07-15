@@ -1,4 +1,4 @@
 ignoredBuiltDependencies:
   - husky
 onlyBuiltDependencies:
-  - sqlite3
+  - better-sqlite3

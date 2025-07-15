@@ -1,7 +1,7 @@
 import type { Debugger } from 'debug';
 import Debug from 'debug';
 import shortUuid from 'short-uuid';
-import type { Database } from 'sqlite';
+import type { Database } from 'better-sqlite3';
 import type { BaseEntity, EntityDefinition, FilterSortField, QueryFilter, QuerySort, Relation } from '../../types';
 import { QueryOperatorEnum } from '../../types';
 import type Query from '../query';
@@ -20,68 +20,44 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   }
 
   public async getByIds(ids: string[]): Promise<T[]> {
-    const wherePlaceholders: string[] = [];
-    const whereValues: { [key: string]: string } = {};
-
-    ids.forEach((value, idx) => {
-      const key = `:p${idx}`;
-      wherePlaceholders.push(key);
-      whereValues[key] = value;
-    });
-
-    const query = `SELECT id,contents FROM ${this.tableName} WHERE id IN(${wherePlaceholders.join(',')})`;
-    const result = await this.connection.all(query, whereValues);
+    const placeholders = ids.map(() => '?').join(',');
+    const stmt = this.connection.prepare(`SELECT id, contents FROM ${this.tableName} WHERE id IN (${placeholders})`);
+    const result = stmt.all(...ids);
     if (result) {
-      const promises = [];
-      for (let iter = 0; iter < result.length; iter += 1) {
-        const promise = this.transformQueryResultRow(result[iter]);
-        promises.push(promise);
-        result[iter] = await promise;
-      }
-      await Promise.all(promises);
-      return result;
+      return await this.transformQueryResultRows(result as { id: string; contents: string }[]);
     }
     return [];
   }
 
   public async getAll(): Promise<T[]> {
-    const query = `SELECT id,contents FROM ${this.tableName}`;
-    const result = await this.connection.all(query);
+    const stmt = this.connection.prepare(`SELECT id, contents FROM ${this.tableName}`);
+    const result = stmt.all();
 
     if (result) {
-      const newResults = await this.transformQueryResultRows(result);
-      return newResults;
+      return await this.transformQueryResultRows(result as { id: string; contents: string }[]);
     }
     return [];
   }
 
   public async getByQuery(query: Query): Promise<T[]> {
-    const values: Record<string, string | number> = {};
+    const values: (string | number)[] = [];
     const where: string[] = [];
 
-    let uniquePostfix = 1; // We use this to generate a unique placeholder, so that the attribute name can be used multiple times.
     query.getWhere().forEach((queryFilter: QueryFilter) => {
-      const placeholderName = `${queryFilter.field}_${uniquePostfix}`;
       if (queryFilter.operator === QueryOperatorEnum.IN) {
-        const placeholders: string[] = [];
-        queryFilter.value.forEach((value: string, order: number) => {
-          const placeholder = `:${placeholderName}_${order}`;
-          placeholders.push(placeholder);
-          values[placeholder] = value;
-        });
-
-        where.push(`"${queryFilter.field}" IN(${placeholders.join(',')})`);
+        const placeholders = queryFilter.value.map(() => '?').join(',');
+        where.push(`"${queryFilter.field}" IN (${placeholders})`);
+        values.push(...queryFilter.value);
       } else {
-        where.push(`"${queryFilter.field}" ${queryFilter.operator} :${placeholderName}`);
+        where.push(`"${queryFilter.field}" ${queryFilter.operator} ?`);
         if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
-          values[`:${placeholderName}`] = ['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0;
+          values.push(['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0);
         } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
-          values[`:${placeholderName}`] = `${queryFilter.value}`.replace(/\*/g, '%');
+          values.push(`${queryFilter.value}`.replace(/\*/g, '%'));
         } else {
-          values[`:${placeholderName}`] = queryFilter.value;
+          values.push(queryFilter.value);
         }
       }
-      uniquePostfix++;
     });
 
     let sqlQuery = `SELECT id,contents FROM ${this.tableName}
@@ -100,77 +76,78 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     }
 
     debug('Querying data using query.', sqlQuery);
-    const result = await this.connection.all(sqlQuery, values, values);
+    const stmt = this.connection.prepare(sqlQuery);
+    const result = stmt.all(...values);
     debug('Found result count', result.length);
     if (result) {
-      return this.transformQueryResultRows(result);
+      return await this.transformQueryResultRows(result as { id: string; contents: string }[]);
     }
     return [];
   }
 
   public async deleteUsingId(id: string): Promise<void> {
-    const query = `DELETE FROM ${this.tableName} WHERE id = :id`;
-    await this.connection.run(query, { ':id': id });
+    const stmt = this.connection.prepare(`DELETE FROM ${this.tableName} WHERE id = ?`);
+    stmt.run(id);
   }
 
   public async create(object: T): Promise<T> {
     const columns: string[] = ['id', 'contents'];
     const uuid = typeof object.id === 'string' ? object.id : shortUuid.generate();
 
-    const values: Record<string, string | number | null> = {
-      ':id': uuid,
-      ':contents': JSON.stringify({
+    const valuesObj: Record<string, string | number | null> = {
+      id: uuid,
+      contents: JSON.stringify({
         ...this.definition.template,
         ...this.simplifyRelations(object),
       }),
     };
+
     if (typeof this.definition.filterSortFields !== 'undefined') {
-      // eslint-disable-next-line max-len
       Object.entries(this.definition.filterSortFields).forEach(
         ([field, type]: [field: string, type: FilterSortField]) => {
           columns.push(field);
           if (type === 'boolean') {
-            values[`:${field}`] = object[field] === true ? 1 : 0;
+            valuesObj[field] = object[field] === true ? 1 : 0;
           } else if (this.relationsMap.has(field)) {
             const relation = this.relationsMap.get(field) as Relation;
             if (Array.isArray(object[field]) && relation.multiple) {
-              // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
-              values[`:${field}`] = object[field].map((entity: BaseEntity) => entity.id).join(',');
+              valuesObj[field] = object[field].map((entity: BaseEntity) => entity.id).join(',');
             } else if (relation.multiple) {
-              // Its a list, but no array is set.
-              values[`:${field}`] = null;
+              valuesObj[field] = null;
             } else {
-              // Store the individual value.
               if (typeof object[field] !== 'object') {
                 throw new TypeError(`The provided relation value for ${field}/${type} is not an object. It should be.`);
               }
-              values[`:${field}`] = object[field]?.id;
+              valuesObj[field] = object[field]?.id || null;
             }
           } else if (field !== 'id') {
-            values[`:${field}`] = typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null;
+            valuesObj[field] = typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null;
           }
         }
       );
     }
 
-    const query = `INSERT INTO ${this.tableName} (${columns.map((column: string) => `"${column}"`).join(',')}) VALUES(
-      ${columns.map((column: string) => `:${column}`)}
-    )`;
-    debug('Generated create query.', query, values);
+    const columnNames = columns.map((column: string) => `"${column}"`).join(',');
+    const valuePlaceholders = columns.map(() => '?').join(',');
+    const stmt = this.connection.prepare(
+      `INSERT INTO ${this.tableName} (${columnNames}) VALUES (${valuePlaceholders})`
+    );
 
-    await this.connection.run(query, values);
+    const insertValues = columns.map((col) => valuesObj[col]);
+    debug('Generated create query.', stmt.source, insertValues);
+    stmt.run(...insertValues);
 
-    return this.getById(uuid) as unknown as T;
+    return (await this.getById(uuid)) as unknown as T;
   }
 
   public async update(object: T): Promise<T> {
     const columns = ['contents'];
-    const simplifiedObject: any = this.simplifyRelations(object);
-    delete simplifiedObject.id; // the id is already stored as a column
+    const simplifiedObject: any = await this.simplifyRelations(object);
+    simplifiedObject.id = undefined;
 
-    const values: Record<string, string | number | boolean | null> = {
-      ':contents': JSON.stringify(simplifiedObject),
-      ':id': object.id || '',
+    const valuesObj: Record<string, string | number | boolean | null> = {
+      contents: JSON.stringify(simplifiedObject),
+      id: object.id || '',
     };
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
@@ -182,48 +159,45 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
           if (typeof object[field] !== 'undefined') {
             columns.push(field);
             if (type === 'boolean') {
-              values[`:${field}`] = object[field] === true ? 1 : 0;
+              valuesObj[field] = object[field] === true ? 1 : 0;
             } else if (this.relationsMap.has(field)) {
               const relation = this.relationsMap.get(field) as Relation;
               if (Array.isArray(simplifiedObject[field]) && relation.multiple) {
-                // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
-                values[`:${field}`] = simplifiedObject[field].map((entity: BaseEntity) => entity.id).join(',');
+                valuesObj[field] = simplifiedObject[field].map((entity: BaseEntity) => entity.id).join(',');
               } else if (relation.multiple) {
-                // Its a list, but no array is set.
-                values[`:${field}`] = null;
+                valuesObj[field] = null;
               } else {
-                // Store the individual value.
                 if (typeof object[field] !== 'object') {
                   throw new TypeError(
                     `The provided relation value for ${field}/${type} is not an object. It should be.`
                   );
                 }
-                values[`:${field}`] = object[field]?.id;
+                valuesObj[field] = object[field]?.id || null;
               }
             } else {
-              values[`:${field}`] = simplifiedObject[field] || null;
+              valuesObj[field] = simplifiedObject[field] || null;
             }
           }
         }
       );
     }
 
-    const query = `UPDATE ${this.tableName} SET
-      ${columns.map((column: string) => `"${column}" = :${column}`)}
-      WHERE id = :id
-    `;
-    debug('Generated update query.', query);
+    const setClauses = columns.map((column: string) => `"${column}" = ?`).join(', ');
+    const stmt = this.connection.prepare(`UPDATE ${this.tableName} SET ${setClauses} WHERE id = ?`);
+    const updateValues = columns.map((col) => valuesObj[col]);
+    updateValues.push(valuesObj.id); // for the WHERE clause
 
-    await this.connection.run(query, values);
-    return this.queryById(object.id as string) as unknown as T;
+    debug('Generated update query.', stmt.source, updateValues);
+    stmt.run(...updateValues);
+    return (await this.queryById(object.id as string)) as unknown as T;
   }
 
   protected async queryById(id: string): Promise<T | null> {
-    const query = `SELECT id,contents FROM ${this.tableName} WHERE id = :id LIMIT 1`;
-    debug('Query for getById', query, id);
-    const result = await this.connection.get(query, { ':id': id });
+    const stmt = this.connection.prepare(`SELECT id, contents FROM ${this.tableName} WHERE id = ? LIMIT 1`);
+    debug('Query for getById', stmt.source, id);
+    const result = stmt.get(id) as { id: string; contents: string } | undefined;
     if (result) {
-      return this.transformQueryResultRow(result);
+      return await this.transformQueryResultRow(result);
     }
     debug('No result for queryById().');
     return null;

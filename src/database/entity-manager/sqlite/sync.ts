@@ -1,6 +1,6 @@
 import type { Debugger } from 'debug';
 import Debug from 'debug';
-import type { Database } from 'sqlite';
+import type { Database } from 'better-sqlite3';
 import Repository from './repository';
 import type { EntityDefinition, FilterSortField } from '../../types';
 import type BaseRepository from '../repository';
@@ -8,7 +8,7 @@ import { isEqual } from '../utils';
 
 const debug: Debugger = Debug('supersave:db:sync');
 
-const enum SqliteType {
+enum SqliteType {
   TEXT = 'TEXT',
   INTEGER = 'INTEGER',
   BOOLEAN = 'INTEGER',
@@ -27,13 +27,15 @@ const filterSortFieldSqliteTypeMap = {
   boolean: SqliteType.BOOLEAN,
 };
 
-async function getTableColumns(
+function getTableColumns(
   connection: Database,
   tableName: string,
   entity: EntityDefinition
-): Promise<Record<string, SqliteType>> {
+): Record<string, SqliteType> {
   const query = `pragma table_info('${tableName}');`;
-  const columns = await connection.all<SqlitePragmaColumn[]>(query);
+  const stmt = connection.prepare(query);
+  const columns = stmt.all() as SqlitePragmaColumn[];
+
   if (columns === undefined) {
     throw new Error(`Unable to query table structure for ${tableName}.`);
   }
@@ -82,6 +84,7 @@ function mapFilterSortFieldsToColumns(filterSortFields: Record<string, FilterSor
     }
     result[fieldName] = filterSortFieldSqliteTypeMap[filter];
   });
+
   return result;
 }
 
@@ -96,8 +99,9 @@ export default async (
     return;
   }
 
-  const sqliteColumns = await getTableColumns(connection, tableName, entity);
+  const sqliteColumns = getTableColumns(connection, tableName, entity);
   const newSqliteColumns: Record<string, SqliteType> = mapFilterSortFieldsToColumns(entity.filterSortFields);
+
   if (!hasTableChanged(sqliteColumns, newSqliteColumns)) {
     debug('Table has not changed, not making changes.');
     return;
@@ -120,16 +124,16 @@ export default async (
     }
   }
 
-  await connection.run(`DROP TABLE IF EXISTS ${newTableName};`);
+  connection.prepare(`DROP TABLE IF EXISTS ${newTableName};`).run();
   const createQuery = `CREATE TABLE ${newTableName} (${columns.join(',')})`;
 
   // TODO start a transaction
   debug('Creating temporary table.', createQuery);
-  await connection.run(createQuery);
+  connection.prepare(createQuery).run();
 
   debug('Setting indexes.');
   for (let iter = indexes.length - 1; iter >= 0; iter -= 1) {
-    await connection.run(indexes[iter]);
+    connection.prepare(indexes[iter]).run();
   }
 
   // copy the fields
@@ -143,6 +147,6 @@ export default async (
   }
 
   debug(`Completed copy. Dropping table ${tableName} and renaming temporary table ${newTableName}.`);
-  await connection.run(`DROP TABLE ${tableName}`);
-  await connection.run(`ALTER TABLE ${newTableName} RENAME TO ${tableName}`);
+  connection.prepare(`DROP TABLE ${tableName}`).run();
+  connection.prepare(`ALTER TABLE ${newTableName} RENAME TO ${tableName}`).run();
 };
