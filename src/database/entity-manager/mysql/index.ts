@@ -5,7 +5,7 @@ import slug from 'slug';
 import Repository from './repository';
 import sync from './sync';
 import { executeQuery } from './utils';
-import type { BaseEntity, EntityDefinition } from '../../types';
+import type { BaseEntity, EntityDefinition, FilterSortField } from '../../types';
 import EntityManager from '../entity-manager';
 import type BaseRepository from '../repository';
 
@@ -17,8 +17,10 @@ class MysqlEntityManager extends EntityManager {
   }
 
   public async addEntity<T extends BaseEntity>(entity: EntityDefinition): Promise<BaseRepository<T>> {
-    const { filterSortFields = {} } = entity;
-    filterSortFields.id = 'string';
+    const filterSortFields: Record<string, FilterSortField> = {
+      ...(entity.filterSortFields ?? {}),
+      id: 'string',
+    };
 
     const updatedEntity: EntityDefinition = {
       ...entity,

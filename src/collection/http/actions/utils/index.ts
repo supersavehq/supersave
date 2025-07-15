@@ -12,7 +12,7 @@ export default async function transform(
   let transformedItem = item;
   for (const hooks of collection.hooks || []) {
     if (hooks.entityTransform) {
-      transformedItem = hooks.entityTransform(collection, request, res, transformedItem);
+      transformedItem = await hooks.entityTransform(collection, request, res, transformedItem);
     }
   }
   return transformedItem;
