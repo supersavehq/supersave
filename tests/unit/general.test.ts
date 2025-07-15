@@ -1,14 +1,15 @@
-import { SuperSave, Repository, EntityDefinition } from '../../build';
-import { moonEntity, planetEntity } from '../entities';
-import { Moon, Planet } from '../types';
+import { type EntityDefinition, type Repository, SuperSave } from '../../build';
 import getConnection from '../connection';
+import { moonEntity, planetEntity } from '../entities';
 import { clear } from '../mysql';
+import type { Moon, Planet } from '../types';
 
 beforeEach(clear);
 
 test('simple entity creation', async () => {
   const superSave = await SuperSave.create(getConnection());
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(planetEntity);
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
   const mars: Planet = await planetRepository.create({ name: 'Mars' });
@@ -19,8 +20,10 @@ test('simple entity creation', async () => {
 
 test('entity with relations', async () => {
   const superSave = await SuperSave.create(getConnection());
-  const moonRepository: Repository<Moon> = await superSave.addEntity<Moon>(moonEntity);
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+  const moonRepository: Repository<Moon> =
+    await superSave.addEntity<Moon>(moonEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(planetEntity);
 
   await planetRepository.create({ name: 'Earth' });
   await planetRepository.create({ name: 'Mars' });
@@ -30,7 +33,10 @@ test('entity with relations', async () => {
 
   const earth = planets[0].name === 'Earth' ? planets[0] : planets[1]; // Sorting is undetermined
 
-  const earthMoon: Moon = await moonRepository.create({ name: 'Moon', planet: earth });
+  const earthMoon: Moon = await moonRepository.create({
+    name: 'Moon',
+    planet: earth,
+  });
   expect(earthMoon.id).toBeDefined();
   expect(earthMoon.name).toEqual('Moon');
   expect(earthMoon.planet.name).toEqual('Earth');
@@ -68,7 +74,8 @@ test('not existing relation entity throws an error', async () => {
 
 test('entity delete', async () => {
   const superSave = await SuperSave.create(getConnection());
-  const planetRepository: Repository<Planet> = await superSave.addEntity<Planet>(planetEntity);
+  const planetRepository: Repository<Planet> =
+    await superSave.addEntity<Planet>(planetEntity);
 
   const earth: Planet = await planetRepository.create({ name: 'Earth' });
   await planetRepository.create({ name: 'Mars' });

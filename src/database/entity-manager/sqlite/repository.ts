@@ -1,8 +1,15 @@
+import type { Database } from 'better-sqlite3';
 import type { Debugger } from 'debug';
 import Debug from 'debug';
 import shortUuid from 'short-uuid';
-import type { Database } from 'better-sqlite3';
-import type { BaseEntity, EntityDefinition, FilterSortField, QueryFilter, QuerySort, Relation } from '../../types';
+import type {
+  BaseEntity,
+  EntityDefinition,
+  FilterSortField,
+  QueryFilter,
+  QuerySort,
+  Relation,
+} from '../../types';
 import { QueryOperatorEnum } from '../../types';
 import type Query from '../query';
 import BaseRepository from '../repository';
@@ -13,7 +20,10 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   constructor(
     protected readonly definition: EntityDefinition,
     protected readonly tableName: string,
-    protected readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
+    protected readonly getRepository: (
+      name: string,
+      namespace?: string
+    ) => BaseRepository<any>,
     protected readonly connection: Database
   ) {
     super(definition, tableName, getRepository);
@@ -21,20 +31,28 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
   public async getByIds(ids: string[]): Promise<T[]> {
     const placeholders = ids.map(() => '?').join(',');
-    const stmt = this.connection.prepare(`SELECT id, contents FROM ${this.tableName} WHERE id IN (${placeholders})`);
+    const stmt = this.connection.prepare(
+      `SELECT id, contents FROM ${this.tableName} WHERE id IN (${placeholders})`
+    );
     const result = stmt.all(...ids);
     if (result) {
-      return await this.transformQueryResultRows(result as { id: string; contents: string }[]);
+      return await this.transformQueryResultRows(
+        result as { id: string; contents: string }[]
+      );
     }
     return [];
   }
 
   public async getAll(): Promise<T[]> {
-    const stmt = this.connection.prepare(`SELECT id, contents FROM ${this.tableName}`);
+    const stmt = this.connection.prepare(
+      `SELECT id, contents FROM ${this.tableName}`
+    );
     const result = stmt.all();
 
     if (result) {
-      return await this.transformQueryResultRows(result as { id: string; contents: string }[]);
+      return await this.transformQueryResultRows(
+        result as { id: string; contents: string }[]
+      );
     }
     return [];
   }
@@ -50,8 +68,13 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
         values.push(...queryFilter.value);
       } else {
         where.push(`"${queryFilter.field}" ${queryFilter.operator} ?`);
-        if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
-          values.push(['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0);
+        if (
+          this.definition.filterSortFields &&
+          this.definition.filterSortFields[queryFilter.field] === 'boolean'
+        ) {
+          values.push(
+            ['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0
+          );
         } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
           values.push(`${queryFilter.value}`.replace(/\*/g, '%'));
         } else {
@@ -71,7 +94,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     }
     if (query.getLimit()) {
       sqlQuery = `${sqlQuery} LIMIT ${
-        typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()
+        typeof query.getOffset() !== 'undefined'
+          ? `${query.getOffset()},${query.getLimit()}`
+          : query.getLimit()
       }`;
     }
 
@@ -80,19 +105,25 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     const result = stmt.all(...values);
     debug('Found result count', result.length);
     if (result) {
-      return await this.transformQueryResultRows(result as { id: string; contents: string }[]);
+      return await this.transformQueryResultRows(
+        result as { id: string; contents: string }[]
+      );
     }
     return [];
   }
 
-  public async deleteUsingId(id: string): Promise<void> {
-    const stmt = this.connection.prepare(`DELETE FROM ${this.tableName} WHERE id = ?`);
+  public deleteUsingId(id: string): Promise<void> {
+    const stmt = this.connection.prepare(
+      `DELETE FROM ${this.tableName} WHERE id = ?`
+    );
     stmt.run(id);
+    return Promise.resolve();
   }
 
   public async create(object: T): Promise<T> {
     const columns: string[] = ['id', 'contents'];
-    const uuid = typeof object.id === 'string' ? object.id : shortUuid.generate();
+    const uuid =
+      typeof object.id === 'string' ? object.id : shortUuid.generate();
 
     const valuesObj: Record<string, string | number | null> = {
       id: uuid,
@@ -111,23 +142,32 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
           } else if (this.relationsMap.has(field)) {
             const relation = this.relationsMap.get(field) as Relation;
             if (Array.isArray(object[field]) && relation.multiple) {
-              valuesObj[field] = object[field].map((entity: BaseEntity) => entity.id).join(',');
+              valuesObj[field] = object[field]
+                .map((entity: BaseEntity) => entity.id)
+                .join(',');
             } else if (relation.multiple) {
               valuesObj[field] = null;
             } else {
               if (typeof object[field] !== 'object') {
-                throw new TypeError(`The provided relation value for ${field}/${type} is not an object. It should be.`);
+                throw new TypeError(
+                  `The provided relation value for ${field}/${type} is not an object. It should be.`
+                );
               }
               valuesObj[field] = object[field]?.id || null;
             }
           } else if (field !== 'id') {
-            valuesObj[field] = typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null;
+            valuesObj[field] =
+              typeof object[field] !== 'undefined' && object[field] !== null
+                ? object[field]
+                : null;
           }
         }
       );
     }
 
-    const columnNames = columns.map((column: string) => `"${column}"`).join(',');
+    const columnNames = columns
+      .map((column: string) => `"${column}"`)
+      .join(',');
     const valuePlaceholders = columns.map(() => '?').join(',');
     const stmt = this.connection.prepare(
       `INSERT INTO ${this.tableName} (${columnNames}) VALUES (${valuePlaceholders})`
@@ -142,6 +182,7 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
   public async update(object: T): Promise<T> {
     const columns = ['contents'];
+
     const simplifiedObject: any = await this.simplifyRelations(object);
     simplifiedObject.id = undefined;
 
@@ -163,7 +204,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
             } else if (this.relationsMap.has(field)) {
               const relation = this.relationsMap.get(field) as Relation;
               if (Array.isArray(simplifiedObject[field]) && relation.multiple) {
-                valuesObj[field] = simplifiedObject[field].map((entity: BaseEntity) => entity.id).join(',');
+                valuesObj[field] = simplifiedObject[field]
+                  .map((entity: BaseEntity) => entity.id)
+                  .join(',');
               } else if (relation.multiple) {
                 valuesObj[field] = null;
               } else {
@@ -182,8 +225,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
       );
     }
 
-    const setClauses = columns.map((column: string) => `"${column}" = ?`).join(', ');
-    const stmt = this.connection.prepare(`UPDATE ${this.tableName} SET ${setClauses} WHERE id = ?`);
+    const setClauses = columns
+      .map((column: string) => `"${column}" = ?`)
+      .join(', ');
+    const stmt = this.connection.prepare(
+      `UPDATE ${this.tableName} SET ${setClauses} WHERE id = ?`
+    );
     const updateValues = columns.map((col) => valuesObj[col]);
     updateValues.push(valuesObj.id); // for the WHERE clause
 
@@ -193,7 +240,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   }
 
   protected async queryById(id: string): Promise<T | null> {
-    const stmt = this.connection.prepare(`SELECT id, contents FROM ${this.tableName} WHERE id = ? LIMIT 1`);
+    const stmt = this.connection.prepare(
+      `SELECT id, contents FROM ${this.tableName} WHERE id = ? LIMIT 1`
+    );
     debug('Query for getById', stmt.source, id);
     const result = stmt.get(id) as { id: string; contents: string } | undefined;
     if (result) {

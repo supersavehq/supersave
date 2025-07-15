@@ -1,14 +1,14 @@
 import type { Debugger } from 'debug';
 import Debug from 'debug';
 import type { Request, Response } from 'express';
-import transform from './utils';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { HookError } from '../../error';
 import type { ManagedCollection } from '../../types';
+import transform from './utils';
 
 const debug: Debugger = Debug('supersave:http:create');
 
-export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>
+export default (
+  collection: ManagedCollection
+): ((request: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (request, res: Response): Promise<void> => {
     try {
@@ -45,7 +45,12 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
         if (hooks.createBefore) {
           // hook
           try {
-            itemBody = await hooks.createBefore(collection, request, res, itemBody);
+            itemBody = await hooks.createBefore(
+              collection,
+              request,
+              res,
+              itemBody
+            );
           } catch (error) {
             debug('Error thrown in createBeforeHook %o', error);
             // @ts-expect-error Error has type unknown.
@@ -62,12 +67,11 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
       // transform hook
       try {
         item = await transform(collection, request, res, item);
-      } catch (error: unknown | HookError) {
+      } catch (error: unknown) {
         debug('Error thrown in create transformHook %o', error);
-        // @ts-expect-error Error has type unknown.
-        const code = error?.statusCode ?? 500;
-        // @ts-expect-error Error has type unknown.
-        res.status(code).json({ message: error.message });
+
+        const code = (error as any)?.statusCode ?? 500;
+        res.status(code).json({ message: (error as Error).message });
         return;
       }
 

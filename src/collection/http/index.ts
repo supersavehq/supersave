@@ -1,8 +1,8 @@
 import type { Express, Router } from 'express';
-import * as actions from './actions';
-import { generatePath } from './utils';
 import type Manager from '../manager';
 import type { ManagedCollection } from '../types';
+import * as actions from './actions';
+import { generatePath } from './utils';
 
 class Http {
   public static async create(manager: Manager, prefix: string): Promise<Http> {

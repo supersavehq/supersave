@@ -1,15 +1,14 @@
-import supertest from 'supertest';
 import express from 'express';
-import { Planet, Moon } from '../../../types';
-import { planetCollection, moonCollection } from '../../../entities';
-import { Repository, SuperSave } from '../../../../build';
+import supertest from 'supertest';
+import { type Repository, SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
-
+import { moonCollection, planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Moon, Planet } from '../../../types';
 
 beforeEach(clear);
 
-test('empty collection returns empty array', async() => {
+test('empty collection returns empty array', async () => {
   const app: express.Application = express();
   const superSave = await SuperSave.create(getConnection());
 
@@ -27,11 +26,12 @@ test('empty collection returns empty array', async() => {
   expect(response.body.data).toHaveLength(0);
 });
 
-test('collection items are returned', async() => {
+test('collection items are returned', async () => {
   const app: express.Application = express();
   const superSave = await SuperSave.create(getConnection());
 
-  const repository: Repository<Planet> = await superSave.addCollection<Planet>(planetCollection);
+  const repository: Repository<Planet> =
+    await superSave.addCollection<Planet>(planetCollection);
   app.use('/', await superSave.getRouter());
 
   await repository.create({ name: 'Earth' });
@@ -102,7 +102,7 @@ test('undefined sort fields are not accepted.', async () => {
 
   await superSave.addCollection<Planet>({
     ...planetCollection,
-    filterSortFields: { name: 'string' }
+    filterSortFields: { name: 'string' },
   });
   app.use('/', await superSave.getRouter());
 
@@ -119,7 +119,7 @@ test('offset is honored', async () => {
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
-    filterSortFields: { name: 'string' }
+    filterSortFields: { name: 'string' },
   });
   app.use('/', await superSave.getRouter());
 
@@ -147,7 +147,7 @@ test('limit is honored', async () => {
 
   const repository: Repository<Planet> = await superSave.addCollection<Planet>({
     ...planetCollection,
-    filterSortFields: { name: 'string' }
+    filterSortFields: { name: 'string' },
   });
   app.use('/', await superSave.getRouter());
 

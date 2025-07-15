@@ -1,10 +1,10 @@
+import type { Database } from 'better-sqlite3';
 import type { Debugger } from 'debug';
 import Debug from 'debug';
-import type { Database } from 'better-sqlite3';
-import Repository from './repository';
 import type { EntityDefinition, FilterSortField } from '../../types';
 import type BaseRepository from '../repository';
 import { isEqual } from '../utils';
+import Repository from './repository';
 
 const debug: Debugger = Debug('supersave:db:sync');
 
@@ -68,22 +68,31 @@ function hasTableChanged(
   sqliteColumns: Record<string, SqliteType>,
   mappedFilterSortTypeFields: Record<string, SqliteType>
 ): boolean {
-  const tablesAreEqual: boolean = isEqual(sqliteColumns, mappedFilterSortTypeFields);
+  const tablesAreEqual: boolean = isEqual(
+    sqliteColumns,
+    mappedFilterSortTypeFields
+  );
   if (!tablesAreEqual) {
     debug('Table changed', sqliteColumns, mappedFilterSortTypeFields);
   }
   return !tablesAreEqual;
 }
 
-function mapFilterSortFieldsToColumns(filterSortFields: Record<string, FilterSortField>): Record<string, SqliteType> {
+function mapFilterSortFieldsToColumns(
+  filterSortFields: Record<string, FilterSortField>
+): Record<string, SqliteType> {
   const result: Record<string, SqliteType> = {};
-  Object.entries(filterSortFields).forEach(([fieldName, filter]: [string, FilterSortField]) => {
-    const sqliteType = filterSortFieldSqliteTypeMap[filter];
-    if (!sqliteType) {
-      throw new TypeError(`Unsupported filter type "${filter}" for "${fieldName}"`);
+  Object.entries(filterSortFields).forEach(
+    ([fieldName, filter]: [string, FilterSortField]) => {
+      const sqliteType = filterSortFieldSqliteTypeMap[filter];
+      if (!sqliteType) {
+        throw new TypeError(
+          `Unsupported filter type "${filter}" for "${fieldName}"`
+        );
+      }
+      result[fieldName] = filterSortFieldSqliteTypeMap[filter];
     }
-    result[fieldName] = filterSortFieldSqliteTypeMap[filter];
-  });
+  );
 
   return result;
 }
@@ -92,7 +101,9 @@ export default async (
   entity: EntityDefinition,
   tableName: string,
   connection: Database,
+
   repository: Repository<any>,
+
   getRepository: (name: string, namespace?: string) => BaseRepository<any>
 ): Promise<void> => {
   if (typeof entity.filterSortFields === 'undefined') {
@@ -100,7 +111,8 @@ export default async (
   }
 
   const sqliteColumns = getTableColumns(connection, tableName, entity);
-  const newSqliteColumns: Record<string, SqliteType> = mapFilterSortFieldsToColumns(entity.filterSortFields);
+  const newSqliteColumns: Record<string, SqliteType> =
+    mapFilterSortFieldsToColumns(entity.filterSortFields);
 
   if (!hasTableChanged(sqliteColumns, newSqliteColumns)) {
     debug('Table has not changed, not making changes.');
@@ -114,13 +126,19 @@ export default async (
   const filterSortFieldNames: string[] = Object.keys(entity.filterSortFields);
   for (const fieldName of filterSortFieldNames) {
     const filterSortFieldType = entity.filterSortFields[fieldName];
-    if (typeof filterSortFieldSqliteTypeMap[filterSortFieldType] === 'undefined') {
+    if (
+      typeof filterSortFieldSqliteTypeMap[filterSortFieldType] === 'undefined'
+    ) {
       throw new TypeError(`Unrecognized field type ${filterSortFieldType}.`);
     }
 
     if (fieldName !== 'id') {
-      columns.push(`"${fieldName}" ${filterSortFieldSqliteTypeMap[filterSortFieldType]} NULL`);
-      indexes.push(`CREATE INDEX IF NOT EXISTS idx_${fieldName} ON ${newTableName}("${fieldName}")`);
+      columns.push(
+        `"${fieldName}" ${filterSortFieldSqliteTypeMap[filterSortFieldType]} NULL`
+      );
+      indexes.push(
+        `CREATE INDEX IF NOT EXISTS idx_${fieldName} ON ${newTableName}("${fieldName}")`
+      );
     }
   }
 
@@ -138,7 +156,12 @@ export default async (
 
   // copy the fields
   debug('Copying contents to new table.');
-  const newRepository = new Repository(entity, newTableName, getRepository, connection);
+  const newRepository = new Repository(
+    entity,
+    newTableName,
+    getRepository,
+    connection
+  );
 
   const oldAll = await repository.getAll();
   for (const element of oldAll) {
@@ -146,7 +169,11 @@ export default async (
     await newRepository.create(element);
   }
 
-  debug(`Completed copy. Dropping table ${tableName} and renaming temporary table ${newTableName}.`);
+  debug(
+    `Completed copy. Dropping table ${tableName} and renaming temporary table ${newTableName}.`
+  );
   connection.prepare(`DROP TABLE ${tableName}`).run();
-  connection.prepare(`ALTER TABLE ${newTableName} RENAME TO ${tableName}`).run();
+  connection
+    .prepare(`ALTER TABLE ${newTableName} RENAME TO ${tableName}`)
+    .run();
 };

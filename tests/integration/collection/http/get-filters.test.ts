@@ -1,33 +1,35 @@
-import supertest from 'supertest';
 import express from 'express';
-import { Planet } from '../../../types';
-import { planetCollection } from '../../../entities';
-import { Repository, SuperSave } from '../../../../build';
+import supertest from 'supertest';
+import { type Repository, SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
-
+import { planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Planet } from '../../../types';
 
 beforeEach(clear);
 
-const appForFilter: () => Promise<[express.Application, SuperSave]> = async (): Promise<[express.Application, SuperSave]> => {
-  const app: express.Application = express();
-  const superSave = await SuperSave.create(getConnection());
+const appForFilter: () => Promise<[express.Application, SuperSave]> =
+  async (): Promise<[express.Application, SuperSave]> => {
+    const app: express.Application = express();
+    const superSave = await SuperSave.create(getConnection());
 
-  const repository: Repository<Planet> = await superSave.addCollection<Planet>({
-    ...planetCollection,
-    filterSortFields: { name: 'string', distance: 'number', },
-  });
+    const repository: Repository<Planet> =
+      await superSave.addCollection<Planet>({
+        ...planetCollection,
+        filterSortFields: { name: 'string', distance: 'number' },
+      });
 
-  app.use('/', await superSave.getRouter());
-  await repository.create({ name: 'Mars', distance: 0, });
-  await repository.create({ name: 'Earth', distance: 1000, });
-  await repository.create({ name: 'Jupiter', distance: 2500, });
+    app.use('/', await superSave.getRouter());
+    await repository.create({ name: 'Mars', distance: 0 });
+    await repository.create({ name: 'Earth', distance: 1000 });
+    await repository.create({ name: 'Jupiter', distance: 2500 });
 
-  return [app, superSave];
-}
+    return [app, superSave];
+  };
 
 test('filter on equals', async () => {
-  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] =
+    await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -43,7 +45,8 @@ test('filter on equals', async () => {
 });
 
 test('filter using gt()', async () => {
-  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] =
+    await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -58,7 +61,8 @@ test('filter using gt()', async () => {
 });
 
 test('filter using gte()', async () => {
-  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] =
+    await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -73,7 +77,8 @@ test('filter using gte()', async () => {
 });
 
 test('filter using gte() with express simple query', async () => {
-  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] =
+    await appForFilter();
   app.set('query parser', 'simple');
 
   const response = await supertest(app)
@@ -89,7 +94,8 @@ test('filter using gte() with express simple query', async () => {
 });
 
 test('filter using lt()', async () => {
-  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] =
+    await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -104,7 +110,8 @@ test('filter using lt()', async () => {
 });
 
 test('filter using lte()', async () => {
-  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] =
+    await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -119,7 +126,8 @@ test('filter using lte()', async () => {
 });
 
 test('filter using like()', async () => {
-  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] =
+    await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -135,7 +143,8 @@ test('filter using like()', async () => {
 });
 
 test('filter using in()', async () => {
-  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] =
+    await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
@@ -149,13 +158,13 @@ test('filter using in()', async () => {
   await superSave.close();
 });
 
-
 test('not existing filters', async () => {
-  const [app, superSave]: [express.Application, SuperSave] = await appForFilter();
+  const [app, superSave]: [express.Application, SuperSave] =
+    await appForFilter();
 
   const response = await supertest(app)
     .get('/planets')
-    .query({ 'foo': 'bar' })
+    .query({ foo: 'bar' })
     .expect('Content-Type', /json/)
     .expect(400);
 

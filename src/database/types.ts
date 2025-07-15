@@ -17,15 +17,17 @@ export interface EntityDefinition {
 
 export interface BaseEntity {
   id?: string;
+
   [key: string]: any;
 }
 export interface EntityRow {
   id: string;
   contents: string;
+
   [key: string]: any;
 }
 
-export const enum QueryOperatorEnum {
+export enum QueryOperatorEnum {
   EQUALS = '=',
   GREATER_THAN = '>',
   GREATER_THAN_EQUALS = '>=',

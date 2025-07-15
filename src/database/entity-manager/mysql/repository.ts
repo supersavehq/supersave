@@ -2,7 +2,6 @@ import type { Debugger } from 'debug';
 import Debug from 'debug';
 import type { Pool } from 'mysql2/promise';
 import shortUuid from 'short-uuid';
-import { executeQuery, getQuery } from './utils';
 import type {
   BaseEntity,
   EntityDefinition,
@@ -15,6 +14,7 @@ import type {
 import { QueryOperatorEnum } from '../../types';
 import type Query from '../query';
 import BaseRepository from '../repository';
+import { executeQuery, getQuery } from './utils';
 
 const debug: Debugger = Debug('supersave:db:mysql:repo');
 
@@ -22,7 +22,10 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
   constructor(
     protected readonly definition: EntityDefinition,
     protected readonly tableName: string,
-    protected readonly getRepository: (name: string, namespace?: string) => BaseRepository<any>,
+    protected readonly getRepository: (
+      name: string,
+      namespace?: string
+    ) => BaseRepository<any>,
     protected readonly pool: Pool
   ) {
     super(definition, tableName, getRepository);
@@ -79,11 +82,20 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
           values.push(value);
         });
 
-        where.push(`${this.pool.escapeId(queryFilter.field)} IN(${placeholders.join(',')})`);
+        where.push(
+          `${this.pool.escapeId(queryFilter.field)} IN(${placeholders.join(',')})`
+        );
       } else {
-        where.push(`${this.pool.escapeId(queryFilter.field)} ${queryFilter.operator} ?`);
-        if (this.definition.filterSortFields && this.definition.filterSortFields[queryFilter.field] === 'boolean') {
-          values.push(['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0);
+        where.push(
+          `${this.pool.escapeId(queryFilter.field)} ${queryFilter.operator} ?`
+        );
+        if (
+          this.definition.filterSortFields &&
+          this.definition.filterSortFields[queryFilter.field] === 'boolean'
+        ) {
+          values.push(
+            ['1', 1, 'true', true].includes(queryFilter.value) ? 1 : 0
+          );
         } else if (queryFilter.operator === QueryOperatorEnum.LIKE) {
           values.push(`${queryFilter.value}`.replace(/\*/g, '%'));
         } else {
@@ -98,12 +110,17 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     if (query.getSort().length > 0) {
       sqlQuery = `${sqlQuery} ORDER BY ${query
         .getSort()
-        .map((sort: QuerySort) => `${this.pool.escapeId(sort.field)} ${sort.direction}`)
+        .map(
+          (sort: QuerySort) =>
+            `${this.pool.escapeId(sort.field)} ${sort.direction}`
+        )
         .join(',')}`;
     }
     if (query.getLimit()) {
       sqlQuery = `${sqlQuery} LIMIT ${
-        typeof query.getOffset() !== 'undefined' ? `${query.getOffset()},${query.getLimit()}` : query.getLimit()
+        typeof query.getOffset() !== 'undefined'
+          ? `${query.getOffset()},${query.getLimit()}`
+          : query.getLimit()
       }`;
     }
 
@@ -123,7 +140,10 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
   public async create(object: Omit<T, 'id'>): Promise<T> {
     const columns: string[] = ['id', 'contents'];
-    const uuid = typeof object.id === 'string' ? (object.id as string) : shortUuid.generate();
+    const uuid =
+      typeof object.id === 'string'
+        ? (object.id as string)
+        : shortUuid.generate();
 
     const values: (string | number | null)[] = [
       uuid,
@@ -146,19 +166,31 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
             const relation = this.relationsMap.get(field) as Relation;
             if (Array.isArray(object[field]) && relation.multiple) {
               // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
-              values.push(object[field].map((entity: BaseEntity) => entity.id).join(','));
+              values.push(
+                object[field].map((entity: BaseEntity) => entity.id).join(',')
+              );
             } else if (relation.multiple) {
               // Its a list, but no array is set.
               values.push(null);
             } else {
               // Store the individual value.
               if (typeof object[field] !== 'object') {
-                throw new TypeError(`The provided relation value for ${field}/${type} is not an object. It should be.`);
+                throw new TypeError(
+                  `The provided relation value for ${field}/${type} is not an object. It should be.`
+                );
               }
-              values.push(typeof object[field] === 'string' ? object[field] : object[field]?.id);
+              values.push(
+                typeof object[field] === 'string'
+                  ? object[field]
+                  : object[field]?.id
+              );
             }
           } else if (field !== 'id') {
-            values.push(typeof object[field] !== 'undefined' && object[field] !== null ? object[field] : null);
+            values.push(
+              typeof object[field] !== 'undefined' && object[field] !== null
+                ? object[field]
+                : null
+            );
           }
         }
       );
@@ -178,9 +210,12 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
   public async update(object: T): Promise<T> {
     const columns = ['contents'];
+
     const simplifiedObject: any = this.simplifyRelations(object);
     delete simplifiedObject.id; // the id is already stored as a column
-    const values: (string | number | boolean | null)[] = [JSON.stringify(simplifiedObject)];
+    const values: (string | number | boolean | null)[] = [
+      JSON.stringify(simplifiedObject),
+    ];
 
     if (typeof this.definition.filterSortFields !== 'undefined') {
       Object.entries(this.definition.filterSortFields).forEach(
@@ -196,7 +231,9 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
               const relation = this.relationsMap.get(field) as Relation;
               if (Array.isArray(object[field]) && relation.multiple) {
                 // If an filterSortField is a list, store its ids , separated, so we can filter on it using a LIKE.
-                values.push(object[field].map((entity: BaseEntity) => entity.id).join(','));
+                values.push(
+                  object[field].map((entity: BaseEntity) => entity.id).join(',')
+                );
               } else if (relation.multiple) {
                 // Its a list, but no array is set.
                 values.push(null);

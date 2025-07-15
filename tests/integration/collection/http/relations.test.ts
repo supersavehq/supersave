@@ -1,10 +1,10 @@
 import express from 'express';
 import supertest from 'supertest';
-import { Planet, Moon } from '../../../types';
-import { planetCollection, moonCollection } from '../../../entities';
 import { SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
+import { moonCollection, planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Moon, Planet } from '../../../types';
 
 beforeEach(clear);
 
@@ -116,8 +116,8 @@ test('linking related collections via objects', async () => {
         name: 'planet',
         field: 'planet',
         multiple: true,
-      }
-    ]
+      },
+    ],
   });
   app.use('/', await superSave.getRouter());
 
@@ -135,7 +135,10 @@ test('linking related collections via objects', async () => {
     .expect(200);
   const { data: createdSaturn } = saturnResponse.body;
 
-  const moon: Omit<Moon, 'id'> = { name: 'Europa', planet: [createdJupiter, createdSaturn] };
+  const moon: Omit<Moon, 'id'> = {
+    name: 'Europa',
+    planet: [createdJupiter, createdSaturn],
+  };
   const moonResponse = await supertest(app)
     .post('/moons')
     .send(moon)
@@ -169,8 +172,8 @@ test('linking related collections via object ids', async () => {
         name: 'planet',
         field: 'planet',
         multiple: true,
-      }
-    ]
+      },
+    ],
   });
   app.use('/', await superSave.getRouter());
 
@@ -188,7 +191,10 @@ test('linking related collections via object ids', async () => {
     .expect(200);
   const { data: createdSaturn } = saturnResponse.body;
 
-  const moon: Omit<Moon, 'id'> = { name: 'Europa', planet: [createdJupiter.id, createdSaturn.id] };
+  const moon: Omit<Moon, 'id'> = {
+    name: 'Europa',
+    planet: [createdJupiter.id, createdSaturn.id],
+  };
   const moonResponse = await supertest(app)
     .post('/moons')
     .send(moon)

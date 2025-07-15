@@ -1,10 +1,10 @@
+import express, { type Request, type Response } from 'express';
 import supertest from 'supertest';
-import express, { Request, Response } from 'express';
-import { Planet } from '../../../types';
-import { planetCollection } from '../../../entities';
-import { Collection, HookError, SuperSave } from '../../../../build';
+import { type Collection, HookError, SuperSave } from '../../../../build';
 import getConnection from '../../../connection';
+import { planetCollection } from '../../../entities';
 import { clear } from '../../../mysql';
+import type { Planet } from '../../../types';
 
 beforeEach(clear);
 
@@ -17,13 +17,24 @@ describe('updateBefore hook', () => {
       ...planetCollection,
       hooks: [
         {
-          updateBefore: (_collection: Collection, _req: Request, _res: Response, entity: any): any => {
+          updateBefore: (
+            _collection: Collection,
+            _req: Request,
+            _res: Response,
+
+            entity: any
+          ): any => {
             return {
               ...entity,
               name: `HOOK-${entity.name ?? ''}`,
             };
           },
-          entityTransform: (_collection: Collection, _req: Request, _res: Response, entity: any): any => {
+          entityTransform: (
+            _collection: Collection,
+            _req: Request,
+            _res: Response,
+            entity: any
+          ): any => {
             return {
               ...entity,
               name: `${entity.name}-TRANSFORM`,
@@ -51,7 +62,9 @@ describe('updateBefore hook', () => {
       .expect('Content-Type', /json/)
       .expect(200);
 
-    expect(updateResponse.body.data?.name).toBe(`HOOK-${planet.name}-TRANSFORM`);
+    expect(updateResponse.body.data?.name).toBe(
+      `HOOK-${planet.name}-TRANSFORM`
+    );
   });
 
   test('the statusCode and message are copied from the exception', async () => {
@@ -62,7 +75,12 @@ describe('updateBefore hook', () => {
       ...planetCollection,
       hooks: [
         {
-          updateBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
+          updateBefore: (
+            _collection: Collection,
+            _req: Request,
+            _res: Response,
+            _entity: any
+          ) => {
             throw new HookError('Test message', 401);
           },
         },
@@ -97,7 +115,12 @@ describe('updateBefore hook', () => {
       ...planetCollection,
       hooks: [
         {
-          updateBefore: (_collection: Collection, _req: Request, _res: Response, _entity: any) => {
+          updateBefore: (
+            _collection: Collection,
+            _req: Request,
+            _res: Response,
+            _entity: any
+          ) => {
             throw new HookError('Test message');
           },
         },

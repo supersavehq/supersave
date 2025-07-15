@@ -1,14 +1,14 @@
 import type { Debugger } from 'debug';
 import Debug from 'debug';
 import type { Request, Response } from 'express';
-import transform from './utils';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { HookError } from '../../error';
 import type { ManagedCollection } from '../../types';
+import transform from './utils';
 
 const debug: Debugger = Debug('supersave:http:updateById');
 
-export default (collection: ManagedCollection): ((request: Request, res: Response) => Promise<void>) =>
+export default (
+  collection: ManagedCollection
+): ((request: Request, res: Response) => Promise<void>) =>
   // eslint-disable-next-line implicit-arrow-linebreak
   async (request, res: Response): Promise<void> => {
     try {
@@ -25,12 +25,21 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
       debug('Incoming update request', body);
       collection.relations.forEach((relation) => {
         if (body[relation.field]) {
-          if (relation.multiple && Array.isArray(body[relation.field]) && body[relation.field].length > 0) {
+          if (
+            relation.multiple &&
+            Array.isArray(body[relation.field]) &&
+            body[relation.field].length > 0
+          ) {
             // check if an array of strings was provided, if so, we translate it to an array of empty objects with the id attribute set.
             if (typeof body[relation.field][0] === 'string') {
-              body[relation.field] = body[relation.field].map((relationId: string) => ({ id: relationId }));
+              body[relation.field] = body[relation.field].map(
+                (relationId: string) => ({ id: relationId })
+              );
             }
-          } else if (!relation.multiple && typeof body[relation.field] === 'string') {
+          } else if (
+            !relation.multiple &&
+            typeof body[relation.field] === 'string'
+          ) {
             // the relation is provided as a string, map it to an empty object with an id attribute.
             body[relation.field] = {
               id: body[relation.field],
@@ -51,13 +60,16 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
         if (hooks.updateBefore) {
           // hook
           try {
-            updatedEntity = await hooks.updateBefore(collection, request, res, updatedEntity);
-          } catch (error: unknown | HookError) {
+            updatedEntity = await hooks.updateBefore(
+              collection,
+              request,
+              res,
+              updatedEntity
+            );
+          } catch (error: unknown) {
             debug('Error thrown in updateBeforeHook %o', error);
-            // @ts-expect-error Error has type unknown.
-            const code = error?.statusCode ?? 500;
-            // @ts-expect-error Error has type unknown.
-            res.status(code).json({ message: error.message });
+            const code = (error as { statusCode?: number })?.statusCode ?? 500;
+            res.status(code).json({ message: (error as Error).message });
             return;
           }
         }
@@ -66,13 +78,16 @@ export default (collection: ManagedCollection): ((request: Request, res: Respons
 
       // transform hook
       try {
-        updatedResult = await transform(collection, request, res, updatedResult);
-      } catch (error: unknown | HookError) {
+        updatedResult = await transform(
+          collection,
+          request,
+          res,
+          updatedResult
+        );
+      } catch (error: unknown) {
         debug('Error thrown in updateById transform %o', error);
-        // @ts-expect-error Error has type unknown.
-        const code = error?.statusCode ?? 500;
-        // @ts-expect-error Error has type unknown.
-        res.status(code).json({ message: error.message });
+        const code = (error as { statusCode?: number })?.statusCode ?? 500;
+        res.status(code).json({ message: (error as Error).message });
         return;
       }
 
