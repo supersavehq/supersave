@@ -58,5 +58,25 @@ jobs:
       - name: Build package
         run: pnpm build
 
-      - name: Run tests
+      - name: Run sqlite tests
         run: pnpm test
+
+      - name: Run mysql tests
+        run: |
+          docker run -d --rm \
+            --name mysql-test \
+            -e MYSQL_ROOT_PASSWORD=testpassword \
+            -e MYSQL_DATABASE=supersave \
+            -e MYSQL_USER=supersave \
+            -e MYSQL_PASSWORD=savesuper \
+            -p 3306:3306 \
+            mariadb:11.7.2
+
+          # Wait for MySQL to be ready
+          docker exec mysql-test mariadb-admin ping -h localhost -u root -ptestpassword --wait=30
+
+          pnpm test:mysql
+
+      - name: Stop MySQL container
+        if: always()
+        run: docker stop mysql-test

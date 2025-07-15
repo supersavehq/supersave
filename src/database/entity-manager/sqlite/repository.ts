@@ -142,8 +142,8 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
 
   public async update(object: T): Promise<T> {
     const columns = ['contents'];
-    const simplifiedObject: any = this.simplifyRelations(object);
-    delete simplifiedObject.id;
+    const simplifiedObject: any = await this.simplifyRelations(object);
+    simplifiedObject.id = undefined;
 
     const valuesObj: Record<string, string | number | boolean | null> = {
       contents: JSON.stringify(simplifiedObject),
