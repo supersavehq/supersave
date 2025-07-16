@@ -89,7 +89,10 @@ class Repository<T extends BaseEntity> extends BaseRepository<T> {
     if (query.getSort().length > 0) {
       sqlQuery = `${sqlQuery} ORDER BY ${query
         .getSort()
-        .map((sort: QuerySort) => `"${sort.field}" ${sort.direction}`)
+        .map(
+          (sort: QuerySort) =>
+            `"${sort.field}" COLLATE NOCASE ${sort.direction}`
+        )
         .join(',')}`;
     }
     if (query.getLimit()) {
