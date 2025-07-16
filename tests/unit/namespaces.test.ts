@@ -1,3 +1,4 @@
+import { beforeEach, expect, test } from 'vitest';
 import { type EntityDefinition, type Repository, SuperSave } from '../../build';
 import getConnection from '../connection';
 import { moonEntity, planetEntity } from '../entities';

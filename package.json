@@ -1,6 +1,6 @@
 {
   "name": "supersave",
-  "version": "0.17.0",
+  "version": "0.20.0",
   "description": "A package to create a simple datastore with a generic API for side projects.",
   "main": "build/index.js",
   "packageManager": "pnpm@10.10.0",
@@ -11,10 +11,11 @@
     "lint:tsc": "tsc --noEmit",
     "lint:biome": "biome ci",
     "format": "biome check --write",
-    "test": "jest",
-    "test:mysql": "cross-env CONN=mysql://supersave:savesuper@127.0.0.1:3306/supersave jest --runInBand --forceExit",
-    "test:watch": "cross-env DEBUG=supersave:* jest --watch",
-    "test:watch:mysql": "cross-env DEBUG=supersave:* CONN=mysql://supersave:savesuper@127.0.0.1:3306/supersave jest --runInBand --forceExit --watch",
+    "test": "vitest run",
+    "test:mysql": "cross-env CONN=mysql://supersave:savesuper@127.0.0.1:3306/supersave vitest run --poolOptions.forks.singleFork",
+    "test:watch": "cross-env DEBUG=supersave:* vitest",
+    "test:watch:mysql": "cross-env DEBUG=supersave:* CONN=mysql://supersave:savesuper@127.0.0.1:3306/supersave vitest run --poolOptions.forks.singleFork",
+    "test:ui": "vitest --ui",
     "clean": "rimraf build",
     "start": "nodemon tests/run.js"
   },
@@ -54,7 +55,6 @@
     "@types/better-sqlite3": "^7.6.13",
     "@types/debug": "^4.1.12",
     "@types/express": "^4.17.23",
-    "@types/jest": "^27.5.2",
     "@types/node": "^14.18.63",
     "@types/pluralize": "0.0.29",
     "@types/slug": "^0.9.1",
@@ -64,14 +64,13 @@
     "cross-env": "^7.0.3",
     "express": "^4.21.2",
     "husky": "^4.3.8",
-    "jest": "^29.7.0",
     "mysql2": "^3.14.2",
     "nodemon": "^3.1.10",
     "rimraf": "^6.0.1",
     "superagent": "^10.2.2",
     "supertest": "^7.1.3",
-    "ts-jest": "^29.4.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "better-sqlite3": "^11.1.2",
