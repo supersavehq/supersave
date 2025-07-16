@@ -1,3 +1,4 @@
+import { expect, test } from 'vitest';
 import { SuperSave } from '../../build';
 import getConnection from '../connection';
 
