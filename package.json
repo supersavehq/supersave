@@ -33,6 +33,9 @@
   "engines": {
     "node": ">=18"
   },
+  "files": [
+    "build"
+  ],
   "keywords": [
     "sqlite",
     "database",
